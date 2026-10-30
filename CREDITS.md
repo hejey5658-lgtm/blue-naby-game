@@ -9,7 +9,7 @@
 ## 글꼴 (모두 SIL Open Font License 1.1 — 웹에 넣어 배포 가능)
 | 글꼴 | 쓰는 곳 | 저작권 | 라이선스 파일 |
 |---|---|---|---|
-| 주아 (Jua) | 제목·버튼 | Copyright Woowahan Brothers | `public/fonts/OFL-Jua.txt` |
+| 주아 (Jua) | 제목·버튼 | Copyright 2018 The Jua Project Authors | `public/fonts/OFL-Jua.txt` |
 | 고운돋움 (Gowun Dodum) | 대사·설명 | Copyright 2021 The Gowun Dodum Project Authors | `public/fonts/OFL-GowunDodum.txt` |
 
 원본: https://github.com/google/fonts (`ofl/jua`, `ofl/gowundodum`). 게임에는 자주 쓰는 한글 2,350자만 남긴 작은 파일을 넣었다(`scripts/subset-fonts.py`).

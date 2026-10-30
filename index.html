@@ -10,7 +10,12 @@
     <meta name="apple-mobile-web-app-title" content="블루나비" />
     <meta name="description" content="파란 애벌레 블루나비가 미로와 대결을 지나 나비가 되어 세상으로 날아가는 귀여운 모험" />
     <title>블루나비의 세상여행</title>
+    <link rel="preload" href="/fonts/Jua-subset.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/GowunDodum-subset.woff2" as="font" type="font/woff2" crossorigin />
     <style>
+      /* 글꼴: 제목·버튼 주아(Jua), 대사·설명 고운돋움(Gowun Dodum). 둘 다 SIL OFL 1.1, public/fonts/OFL-*.txt */
+      @font-face { font-family: 'Jua'; src: url('/fonts/Jua-subset.woff2') format('woff2'); font-display: swap; }
+      @font-face { font-family: 'Gowun Dodum'; src: url('/fonts/GowunDodum-subset.woff2') format('woff2'); font-display: swap; }
       :root {
         --sat: env(safe-area-inset-top, 0px);
         --sab: env(safe-area-inset-bottom, 0px);
@@ -38,7 +43,7 @@
         position: fixed; inset: 0; z-index: 10;
         display: none; flex-direction: column; align-items: center; justify-content: center; gap: 20px;
         background: var(--theme); color: var(--ink);
-        font: 600 22px/1.4 "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif;
+        font: 24px/1.4 'Jua', "Apple SD Gothic Neo", "Noto Sans KR", system-ui, sans-serif;
         text-align: center; padding: 16px;
       }
       #rotate.show { display: flex; }
@@ -58,7 +63,7 @@
         <ellipse cx="24" cy="31" rx="3" ry="2" fill="#ff9fb8" />
         <ellipse cx="40" cy="31" rx="3" ry="2" fill="#ff9fb8" />
       </svg>
-      <div>폰을 세워 주세요<br /><span style="font-size:17px;font-weight:500;opacity:.75">블루나비는 세로 화면에서 놀아요</span></div>
+      <div>폰을 세워 주세요<br /><span style="font: 17px/1.5 'Gowun Dodum', system-ui, sans-serif; opacity:.8">블루나비는 세로 화면에서 놀아요</span></div>
     </div>
     <script type="module" src="/src/main.js"></script>
   </body>

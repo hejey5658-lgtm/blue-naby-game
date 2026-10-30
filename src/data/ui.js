@@ -7,6 +7,7 @@ export const UI = {
   fontSize: { dialogue: 34, button: 36, hud: 30, title: 72, small: 22 },
   swipeMinPx: 40,
   vibrate: { collect: 15, bump: 40, special: [30, 40, 30], cocoon: 20, stamp: 40 },
-  // 임시 글꼴. 글꼴이 정해지면(주아·고운돋움 제안) 여기만 바꾼다.
-  font: '"Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif',
+  // 글꼴: 제목·버튼은 주아, 대사·설명은 고운돋움 (public/fonts, 자주 쓰는 한글 2,350자만 담음)
+  fontTitle: '"Jua", "Apple SD Gothic Neo", "Noto Sans KR", system-ui, sans-serif',
+  font: '"Gowun Dodum", "Apple SD Gothic Neo", "Noto Sans KR", system-ui, sans-serif',
 };

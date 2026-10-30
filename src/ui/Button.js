@@ -17,7 +17,7 @@ export class Button extends Phaser.GameObjects.Container {
     top.fillStyle(color, 1).fillRoundedRect(-width / 2, -height / 2, width, height, r);
     top.fillStyle(0xffffff, 0.22).fillRoundedRect(-width / 2 + 18, -height / 2 + 10, width - 36, height * 0.28, r * 0.6);
     this.text = scene.add.text(0, 0, label, {
-      fontFamily: UI.font, fontSize: `${fontSize}px`, fontStyle: 'bold', color: textColor,
+      fontFamily: UI.fontTitle, fontSize: `${fontSize}px`, color: textColor,
     }).setOrigin(0.5);
     this.face.add([top, this.text]);
     this.add([under, this.face]);

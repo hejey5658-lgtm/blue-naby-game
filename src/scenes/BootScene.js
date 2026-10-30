@@ -46,6 +46,11 @@ export class BootScene extends Phaser.Scene {
 
   create() {
     createPlaceholders(this);
-    this.scene.start('Title');
+    // 캔버스 글자는 글꼴이 준비된 뒤에 그려야 기본 글꼴로 그려지지 않는다. 느린 망에서는 3초까지만 기다린다.
+    const fonts = document.fonts
+      ? Promise.all([document.fonts.load('40px "Jua"', '블루나비'), document.fonts.load('34px "Gowun Dodum"', '블루나비')])
+      : Promise.resolve();
+    const timeout = new Promise((r) => setTimeout(r, 3000));
+    Promise.race([fonts, timeout]).catch(() => {}).then(() => this.scene.start('Title'));
   }
 }

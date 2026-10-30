@@ -107,6 +107,9 @@
 ## 6. 기획에서 바뀐 점
 
 - 화면 방향: **"창문이 넓어진다"(장마다 창틀 모양의 화면 틀, 엔딩에서 사라짐) + 여행 지도 = "스탬프 투어 수첩"** (2026-10-30, 사용자 승인). 상세는 `docs/design-brief.md`, 방향 계약은 `.impeccable/surfaces/`.
+- 글꼴: **제목·버튼 주아(Jua), 대사·설명 고운돋움(Gowun Dodum)** (2026-10-30). `public/fonts/`에 자주 쓰는 한글 2,350자만 담은 woff2(약 510KB). 글자가 더 필요하면 `scripts/subset-fonts.py`로 다시 만든다. 캔버스 글자는 Boot에서 글꼴 로딩을 기다린 뒤 그린다.
+- 그림 마련 방법: **Claude가 벡터(SVG)로 그리기** (그림 트랙 방법 B, 2026-10-30). `art/palette.json` → `art/gen/*.mjs` → `npm run build:art` → `art/source/*.svg`, `art/preview.html`. 패키지 `@resvg/resvg-js` `2.6.2`.
+- 그림 트랙 A2: 블루나비 캐릭터 시트 v1(`art/character-sheet-v1.png`) **기획자 승인 대기**. 승인 전에는 다른 캐릭터·배경 그림을 만들지 않는다.
 - 호스팅: 기획서 추천(Netlify/Cloudflare Pages) 대신 **Firebase Hosting** 사용 (2026-10-30, 사용자 지시). 무료 정적 호스팅이라 "서버 없음" 원칙은 유지.
 
 ## 7. 사용자 지시 기록 (최신이 아래)
@@ -119,6 +122,7 @@
 | 2026-10-30 | 설치된 스킬을 쓰되 **기획은 impeccable**로. 기획서는 다시 읽지 말고, 다시 봐야 하면 읽고 개발 기획부터 진행 | impeccable 설치(사용자가 GitHub 설치 선택), 0-1절 |
 | 2026-10-30 | (답변) 주 플레이어는 **어른 친구들**, 주로 **갤럭시 폰 + 카카오톡**으로 링크를 연다, 기획은 **게임 전체 화면**을 한 번에 | `PRODUCT.md`, `docs/design-brief.md` |
 | 2026-10-30 | 화면 방향은 **제안 방향**("창문이 넓어진다" + "스탬프 투어 수첩")으로 | 6절, `docs/design-brief.md` 승인 표시, 1단계 개발 시작 |
+| 2026-10-30 | 글꼴은 제목 **주아**, 대사 **고운돋움** / 그림은 **Claude가 벡터로** 그려라 | 6절, 글꼴 적용, 캐릭터 시트 v1 제작 |
 | 2026-10-30 | 작업 브랜치: `claude/firebase-server-integration-84bkga`에서 개발·커밋·푸시 (다른 브랜치로 푸시 금지, PR은 요청할 때만) | — |
 
 ## 8. 참고 문서 (스킬 `blue-butterfly-game`의 `references/`)

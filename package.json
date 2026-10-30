@@ -9,9 +9,11 @@
     "preview": "vite preview --host",
     "deploy": "npm run build && npx firebase-tools deploy --only hosting",
     "check:maze": "node scripts/check-maze.mjs",
-    "check:assets": "node scripts/check-assets.mjs"
+    "check:assets": "node scripts/check-assets.mjs",
+    "build:art": "node scripts/build-art.mjs"
   },
   "devDependencies": {
+    "@resvg/resvg-js": "2.6.2",
     "vite": "6.4.4"
   },
   "dependencies": {

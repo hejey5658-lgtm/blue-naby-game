@@ -10,3 +10,6 @@ firebase-debug.log*
 .impeccable/mocks/
 .impeccable/build/
 .impeccable/config.local.json
+
+# 그림 확인용 PNG (npm run build:art 로 다시 만듦)
+art/out/

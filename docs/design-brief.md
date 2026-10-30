@@ -1,4 +1,4 @@
-# 블루나비의 세상여행 — 화면 기획서 (impeccable shape)
+# 블루나비의 세계여행 — 화면 기획서 (impeccable shape)
 
 > 상태: **방향 승인됨 (2026-10-30)** — "창문이 넓어진다" + "스탬프 투어 수첩". 글꼴(주아·고운돋움)과 그림 방법(Claude 벡터) 결정됨.
 > 근거: `PRODUCT.md`(제품 기록), 기획서 `references/`(scenario·systems·tech-spec·web-release·art-guide).

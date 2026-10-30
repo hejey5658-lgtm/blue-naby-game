@@ -68,7 +68,49 @@ function drawCaterpillar(g, s) {
   g.strokePath();
 }
 
+// 잎사귀 (1장 수집품): 통통한 초록 잎 + 잎맥 + 하이라이트
+function drawLeaf(g, s) {
+  g.fillStyle(PAL.ink, 0.14).fillEllipse(50 * s, 88 * s, 46 * s, 8 * s);
+  g.fillStyle(PAL.ink, 1).fillEllipse(50 * s, 50 * s, 56 * s, 76 * s);
+  g.fillStyle(0x3f8f3c, 1).fillEllipse(50 * s, 50 * s, 48 * s, 68 * s);
+  g.fillStyle(0x6cc35a, 1).fillEllipse(46 * s, 46 * s, 38 * s, 58 * s);
+  g.lineStyle(3 * s, 0x3f8f3c, 1).lineBetween(50 * s, 22 * s, 50 * s, 82 * s);
+  g.lineBetween(50 * s, 44 * s, 38 * s, 34 * s).lineBetween(50 * s, 58 * s, 62 * s, 48 * s);
+  g.lineStyle(4 * s, PAL.ink, 1).lineBetween(50 * s, 84 * s, 54 * s, 94 * s);
+  g.fillStyle(PAL.white, 0.8).fillEllipse(40 * s, 34 * s, 8 * s, 14 * s);
+}
+
+// 윙윙 청소기 (1장 순찰): 둥근 로봇청소기, 초록 불빛, 졸린 듯 귀여운 눈
+function drawVacuum(g, s) {
+  g.fillStyle(PAL.ink, 0.16).fillEllipse(50 * s, 86 * s, 80 * s, 12 * s);
+  g.fillStyle(PAL.ink, 1).fillCircle(50 * s, 52 * s, 40 * s);
+  g.fillStyle(0x8e8ea3, 1).fillCircle(50 * s, 52 * s, 36 * s);
+  g.fillStyle(0xc9c9d6, 1).fillCircle(48 * s, 48 * s, 31 * s);
+  g.fillStyle(0xe6e6ee, 1).fillCircle(44 * s, 42 * s, 12 * s);
+  g.fillStyle(0x6cd36a, 1).fillCircle(50 * s, 30 * s, 6 * s);
+  g.fillStyle(PAL.white, 0.9).fillCircle(48 * s, 28 * s, 2 * s);
+  g.fillStyle(PAL.ink, 1).fillEllipse(40 * s, 54 * s, 6 * s, 8 * s).fillEllipse(60 * s, 54 * s, 6 * s, 8 * s);
+  g.fillStyle(PAL.cheek, 0.8).fillEllipse(33 * s, 62 * s, 8 * s, 5 * s).fillEllipse(67 * s, 62 * s, 8 * s, 5 * s);
+}
+
+// 도트 (무당벌레 길잡이): 빨간 등, 검은 점, 노란 안경
+function drawDot(g, s) {
+  g.fillStyle(PAL.ink, 1).fillCircle(50 * s, 58 * s, 36 * s);
+  g.fillStyle(0xff4d4d, 1).fillCircle(50 * s, 58 * s, 32 * s);
+  g.fillStyle(0xff8080, 1).fillCircle(42 * s, 50 * s, 12 * s);
+  g.fillStyle(PAL.ink, 1).fillCircle(36 * s, 66 * s, 6 * s).fillCircle(64 * s, 66 * s, 6 * s).fillCircle(50 * s, 80 * s, 5 * s);
+  g.lineStyle(3 * s, PAL.ink, 1).lineBetween(50 * s, 40 * s, 50 * s, 90 * s);
+  // 머리
+  g.fillStyle(PAL.ink, 1).fillCircle(50 * s, 30 * s, 20 * s);
+  g.lineStyle(3.5 * s, 0xffd84a, 1).strokeCircle(42 * s, 28 * s, 7 * s).strokeCircle(58 * s, 28 * s, 7 * s);
+  g.fillStyle(PAL.white, 1).fillCircle(42 * s, 28 * s, 3 * s).fillCircle(58 * s, 28 * s, 3 * s);
+  g.lineStyle(3 * s, PAL.ink, 1).lineBetween(42 * s, 12 * s, 36 * s, 4 * s).lineBetween(58 * s, 12 * s, 64 * s, 4 * s);
+}
+
 export function createPlaceholders(scene) {
+  makeTexture(scene, 'item_leaf', 128, drawLeaf);
+  makeTexture(scene, 'enemy_vacuum', 128, drawVacuum);
+  makeTexture(scene, 'npc_dot', 128, drawDot);
   makeTexture(scene, 'blue_caterpillar', 128, drawCaterpillar);
   makeTexture(scene, 'blue_caterpillar_battle', 480, drawCaterpillar);
 }

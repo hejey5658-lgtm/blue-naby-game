@@ -5,6 +5,8 @@ import { BootScene } from './scenes/BootScene.js';
 import { TitleScene } from './scenes/TitleScene.js';
 import { DialogueScene } from './scenes/DialogueScene.js';
 import { SettingsScene } from './scenes/SettingsScene.js';
+import { MazeScene } from './scenes/MazeScene.js';
+import { PauseScene } from './scenes/PauseScene.js';
 import { save } from './state.js';
 import { suspendAudio, unlockAudio } from './ui/feedback.js';
 
@@ -21,7 +23,7 @@ const game = new Phaser.Game({
   },
   input: { activePointers: 2 },
   render: { antialias: true, powerPreference: 'high-performance' },
-  scene: [BootScene, TitleScene, DialogueScene, SettingsScene],
+  scene: [BootScene, TitleScene, MazeScene, DialogueScene, PauseScene, SettingsScene],
 });
 
 // 브라우저 기본 동작 막기: 당겨서 새로고침, 두 번 탭 확대, 길게 눌러 메뉴, 핀치 확대.
@@ -59,6 +61,7 @@ checkOrientation();
 // 다른 앱·탭으로 가면 멈추고, 돌아오면 이어서 (저장·일시정지 메뉴는 6단계)
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) {
+    game.events.emit('app-hidden');
     save();
     suspendAudio();
     game.loop.sleep();
@@ -68,6 +71,10 @@ document.addEventListener('visibilitychange', () => {
   }
 });
 window.addEventListener('pagehide', () => save());
-window.addEventListener('pageshow', (e) => { if (e.persisted) checkOrientation(); });
+window.addEventListener('pageshow', (e) => {
+  if (!e.persisted) return;
+  game.events.emit('app-hidden');
+  checkOrientation();
+});
 
 if (import.meta.env.DEV) window.__game = game;

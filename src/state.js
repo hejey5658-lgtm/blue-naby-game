@@ -17,6 +17,8 @@ function fresh() {
     friends: [],
     stars: {},
     records: {},
+    mazeState: null,
+    mazeTimeStar: {},
     nickname: '',
     settings: { ...DEFAULT_SETTINGS },
     puzzle: { cleared: {}, best: {} },

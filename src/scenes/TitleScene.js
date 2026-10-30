@@ -264,8 +264,12 @@ export class TitleScene extends Phaser.Scene {
     }
     this.time.delayedCall(hasProgress() ? 200 : 820, () => {
       this.opening = false;
+      if (state.step.endsWith('_maze')) {
+        this.scene.start('Maze', { chapter: `ch${state.chapter}` });
+        return;
+      }
       if (hasProgress()) {
-        this.toast('이어하기는 1장 미로(3단계)를 만들면 열려요');
+        this.toast('먼지몽과의 대결은 4단계에서 만나요!');
         return;
       }
       this.playPrologue();
@@ -277,11 +281,11 @@ export class TitleScene extends Phaser.Scene {
     this.tweens.add({ targets: [this.startBtn, this.puzzleBtn, this.logo, this.version, this.gear], alpha: 0, duration: 200 });
     this.game.events.once('dialogue-done', () => {
       state.step = 'ch1_maze';
+      state.chapter = 1;
+      state.mazeState = null;
       save();
-      this.input.enabled = true;
-      this.startBtn.text.setText('여행 이어하기');
-      this.tweens.add({ targets: [this.startBtn, this.puzzleBtn, this.logo, this.version, this.gear], alpha: 1, duration: 260 });
-      this.toast('1장 집 미로는 다음 단계(3단계)에서 만나요!');
+      this.cameras.main.fadeOut(300, 233, 216, 180);
+      this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('Maze', { chapter: 'ch1', fresh: true }));
     });
     this.scene.launch('Dialogue', { key: 'prologue', frame: 'woodWindow', form: 'caterpillar' });
   }

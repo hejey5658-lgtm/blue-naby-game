@@ -1,0 +1,15 @@
+{
+  "name": "blue-naby-game",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host",
+    "build": "vite build",
+    "preview": "vite preview --host",
+    "deploy": "npm run build && npx firebase-tools deploy --only hosting"
+  },
+  "devDependencies": {
+    "vite": "^6.3.5"
+  }
+}

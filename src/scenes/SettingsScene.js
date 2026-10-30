@@ -19,6 +19,7 @@ export class SettingsScene extends Phaser.Scene {
   init(data) {
     this.frame = data.frame ?? 'woodWindow';
     this.from = data.from;
+    this.closing = false; // 씬은 다시 쓰이므로 지난번 상태를 지운다
   }
 
   create() {

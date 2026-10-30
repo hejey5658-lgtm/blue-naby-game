@@ -38,6 +38,8 @@ export class TitleScene extends Phaser.Scene {
   constructor() { super('Title'); }
 
   create() {
+    this.windowOpen = false;
+    this.opening = false;
     setTheme(CHAPTERS[0].theme, '#f3e3c3');
     this.drawRoom();
     this.drawOutside();
@@ -264,16 +266,17 @@ export class TitleScene extends Phaser.Scene {
     }
     this.time.delayedCall(hasProgress() ? 200 : 820, () => {
       this.opening = false;
+      const playing = state.playing ?? `ch${state.chapter}`;
       if (state.step.endsWith('_maze')) {
-        this.scene.start('Maze', { chapter: `ch${state.chapter}` });
+        this.scene.start('Maze', { chapter: playing });
         return;
       }
       if (state.step.endsWith('_boss')) {
-        this.scene.start('Battle', { chapter: `ch${state.chapter}`, bossIndex: state.bossIndex ?? 0 });
+        this.scene.start('Battle', { chapter: playing, bossIndex: state.bossIndex ?? 0 });
         return;
       }
       if (hasProgress()) {
-        this.toast('다음 장(밤 골목)은 5단계에서 만나요!');
+        this.scene.start('Map');
         return;
       }
       this.playPrologue();
@@ -286,6 +289,7 @@ export class TitleScene extends Phaser.Scene {
     this.game.events.once('dialogue-done', () => {
       state.step = 'ch1_maze';
       state.chapter = 1;
+      state.playing = 'ch1';
       state.mazeState = null;
       save();
       this.cameras.main.fadeOut(300, 233, 216, 180);

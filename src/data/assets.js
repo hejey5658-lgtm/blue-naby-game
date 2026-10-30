@@ -14,12 +14,19 @@ const boss = (key, group) => [
 
 export const ASSETS = [
   ...boss('dustmong', 'ch1'),
+  ...boss('silsili', 'ch2'),
+  ...boss('jjakjjak', 'ch3'),
+  ...boss('bbangbbang', 'ch4'),
+  ...boss('sappuni', 'ch5'),
+  ...boss('dotori', 'ch6'),
+  ...boss('damdam', 'ch7'),
+  ...boss('buzzboss', 'ch7'),
   ...blue('caterpillar', 'boot'),
   ...blue('moth', 'ch3'),       // 3장 끝에 나방으로 진화
   ...blue('butterfly', 'ch5'),  // 5장 끝에 나비로 진화
 ];
 // 그림을 바꾸면 올려서 브라우저 캐시를 피한다.
-export const ASSET_VERSION = 3;
+export const ASSET_VERSION = 4;
 
 // 애니메이션 (프레임 번호는 art-guide.md 4절 칸 순서: 미로 = 대기 2 + 이동 4, 대결 = 대기 2·놀자·버티기·특기·지침·기쁨)
 const blueAnims = (form) => [

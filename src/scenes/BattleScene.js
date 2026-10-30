@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { UI } from '../data/ui.js';
+import { waitForAssets } from './PreloadScene.js';
 import { CHAPTERS } from '../data/chapters.js';
 import { FORMS } from '../data/forms.js';
 import { BOSSES } from '../data/bosses.js';
@@ -8,10 +9,11 @@ import { BATTLE } from '../data/battle.js';
 import { state, save } from '../state.js';
 import { setTheme } from '../ui/theme.js';
 import { getSafeInsets } from '../ui/safeArea.js';
-import { drawPanel } from '../ui/frames.js';
+import { drawPanel, FRAME_STYLE } from '../ui/frames.js';
 import { Button } from '../ui/Button.js';
 import { sfx, vibrate } from '../ui/feedback.js';
 import { josa } from '../ui/josa.js';
+import { afterChapter } from '../flow.js';
 import { iconPlay, iconGuard, iconStar, iconLeaf, iconBossMove } from '../ui/icons.js';
 
 // 대결: 턴제. 블루나비 차례에 아래 큰 버튼 4개 중 하나 → 보스 차례 자동.
@@ -25,15 +27,20 @@ export class BattleScene extends Phaser.Scene {
   constructor() { super('Battle'); }
 
   init(data) {
+    this.initData = data;
     this.chapter = CHAPTERS.find((c) => c.id === (data.chapter ?? 'ch1'));
     this.bossIndex = data.bossIndex ?? 0;
     this.bossKey = this.chapter.bosses[this.bossIndex];
     this.boss = BOSSES[this.bossKey];
     this.form = FORMS[this.chapter.form];
     this.skipIntro = !!data.retry;
+    // 씬은 다시 쓰이므로 지난번 대결의 상태를 지운다
+    Object.assign(this, { timing: null, bossActing: false, guarding: false });
   }
 
   create() {
+    if (waitForAssets(this, [`blue_${this.chapter.form}_battle`, `boss_${this.bossKey}`, `face_${this.bossKey}`], this.initData)) return;
+    this.tweens.timeScale = this.time.timeScale = 1;
     setTheme(this.chapter.theme, this.chapter.theme);
     this.insets = getSafeInsets(this.game);
     this.add.rectangle(0, 0, UI.width, UI.height, Phaser.Display.Color.HexStringToColor(this.chapter.theme).color).setOrigin(0);
@@ -63,6 +70,7 @@ export class BattleScene extends Phaser.Scene {
     this.showNextMove();
 
     state.step = `${this.chapter.id}_boss`;
+    state.playing = this.chapter.id;
     state.bossIndex = this.bossIndex;
     save();
 
@@ -87,9 +95,12 @@ export class BattleScene extends Phaser.Scene {
   makeHud() {
     const top = this.insets.top;
     const g = this.add.graphics();
-    g.fillStyle(0x8f6440, 1).fillRoundedRect(8, 8 + top, UI.width - 16, 100, 26);
-    g.fillStyle(0xb98a5e, 1).fillRoundedRect(12, 10 + top, UI.width - 24, 90, 24);
-    g.fillStyle(0xd2a679, 1).fillRoundedRect(28, 14 + top, UI.width - 56, 6, 3);
+    // 그 장의 창틀 색 (캐나다는 틀 없이 파란 하늘 띠)
+    const fs = FRAME_STYLE[this.chapter.frame] ?? FRAME_STYLE.woodWindow;
+    const [h0, h1, h2] = this.chapter.frame === 'cloud' ? [0x2f7bff, 0x4f8dff, 0xffffff] : [fs.outer, fs.mid, fs.light];
+    g.fillStyle(h0, 1).fillRoundedRect(8, 8 + top, UI.width - 16, 100, 26);
+    g.fillStyle(h1, 1).fillRoundedRect(12, 10 + top, UI.width - 24, 90, 24);
+    g.fillStyle(h2, 1).fillRoundedRect(28, 14 + top, UI.width - 56, 6, 3);
     const pb = this.add.container(64, 58 + top);
     const pg = this.add.graphics();
     pg.fillStyle(0xfffaf0, 1).fillCircle(0, 0, 34);
@@ -537,11 +548,14 @@ export class BattleScene extends Phaser.Scene {
     const lines = [
       `${turns}턴 만에 심술을 풀었어!`,
       reward ? `받은 선물: ${reward.name}` : '',
-      lastBoss ? '다음 장(밤 골목)은 5단계에서 만나요!' : '',
+      lastBoss ? '' : `다음은 ${BOSSES[this.chapter.bosses[this.bossIndex + 1]].name}!`,
     ].filter(Boolean);
+    const next = lastBoss
+      ? ['여행 계속', () => afterChapter(this, id)]
+      : ['다음 대결', () => this.scene.restart({ chapter: id, bossIndex: this.bossIndex + 1 })];
     this.panel(`${josa(this.boss.name, '과', '와')} 친구가 됐어!`, lines, [
+      next,
       ['대결 다시', () => this.scene.restart({ chapter: id, bossIndex: this.bossIndex, retry: true })],
-      ['타이틀로', () => this.scene.start('Title')],
     ], lastBoss ? stars : null);
   }
 

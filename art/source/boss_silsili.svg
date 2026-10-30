@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><defs><radialGradient id="bcheek" cx="50%" cy="50%" r="50%">
+  <stop offset="0" stop-color="#ff9fb8" stop-opacity="0.95"/><stop offset="1" stop-color="#ff9fb8" stop-opacity="0"/></radialGradient><radialGradient id="bpupil" cx="40%" cy="35%" r="70%"><stop offset="0" stop-color="#5a5fa8"/><stop offset="1" stop-color="#2b2d5a"/></radialGradient><radialGradient id="silBody" cx="35%" cy="30%" r="75%">
+    <stop offset="0" stop-color="#c9a8ef"/><stop offset="0.55" stop-color="#a77bd6"/><stop offset="1" stop-color="#7f58b0"/>
+  </radialGradient></defs><g transform="translate(0 0) rotate(0 100 150) translate(100 190) scale(1 1) translate(-100 -190)"><ellipse cx="100" cy="190" rx="74" ry="9" fill="#2b2d5a" opacity="0.14"/><path d="M50 120 q-22 -14 -40 6" fill="none" stroke="#2b2d5a" stroke-width="12" stroke-linecap="round"/>
+      <path d="M50 120 q-22 -14 -40 6" fill="none" stroke="#a77bd6" stroke-width="6" stroke-linecap="round"/><path d="M150 120 q22 -14 40 6" fill="none" stroke="#2b2d5a" stroke-width="12" stroke-linecap="round"/>
+      <path d="M150 120 q22 -14 40 6" fill="none" stroke="#a77bd6" stroke-width="6" stroke-linecap="round"/><path d="M50 136 q-22 -14 -40 10" fill="none" stroke="#2b2d5a" stroke-width="12" stroke-linecap="round"/>
+      <path d="M50 136 q-22 -14 -40 10" fill="none" stroke="#c9a8ef" stroke-width="6" stroke-linecap="round"/><path d="M150 136 q22 -14 40 10" fill="none" stroke="#2b2d5a" stroke-width="12" stroke-linecap="round"/>
+      <path d="M150 136 q22 -14 40 10" fill="none" stroke="#c9a8ef" stroke-width="6" stroke-linecap="round"/><path d="M50 152 q-22 -14 -40 14" fill="none" stroke="#2b2d5a" stroke-width="12" stroke-linecap="round"/>
+      <path d="M50 152 q-22 -14 -40 14" fill="none" stroke="#a77bd6" stroke-width="6" stroke-linecap="round"/><path d="M150 152 q22 -14 40 14" fill="none" stroke="#2b2d5a" stroke-width="12" stroke-linecap="round"/>
+      <path d="M150 152 q22 -14 40 14" fill="none" stroke="#a77bd6" stroke-width="6" stroke-linecap="round"/><path d="M50 168 q-22 -14 -40 18" fill="none" stroke="#2b2d5a" stroke-width="12" stroke-linecap="round"/>
+      <path d="M50 168 q-22 -14 -40 18" fill="none" stroke="#c9a8ef" stroke-width="6" stroke-linecap="round"/><path d="M150 168 q22 -14 40 18" fill="none" stroke="#2b2d5a" stroke-width="12" stroke-linecap="round"/>
+      <path d="M150 168 q22 -14 40 18" fill="none" stroke="#c9a8ef" stroke-width="6" stroke-linecap="round"/>
+      <ellipse cx="100" cy="122" rx="62" ry="56" fill="url(#silBody)" stroke="#2b2d5a" stroke-width="6" /><ellipse cx="72" cy="96" rx="13" ry="8" fill="#fff" opacity="0.75" transform="rotate(-30 72 96)"/>
+      <path d="M48 92 Q100 30 152 92 Z" fill="#ff9fb8" stroke="#2b2d5a" stroke-width="6" stroke-linejoin="round"/>
+      <path d="M50 92 L150 92" stroke="#2b2d5a" stroke-width="6"/>
+      <path d="M62 80 l8 -10 M80 70 l6 -12 M100 66 l0 -12 M120 70 l-6 -12 M138 80 l-8 -10" stroke="#fff" stroke-width="3" opacity="0.6" stroke-linecap="round"/>
+      <circle cx="100" cy="40" r="12" fill="#ff9fb8" stroke="#2b2d5a" stroke-width="6" />
+      <ellipse cx="65.8" cy="140" rx="14" ry="9.1" fill="url(#bcheek)"/>
+    <ellipse cx="134.2" cy="140" rx="14" ry="9.1" fill="url(#bcheek)"/>
+    <ellipse cx="81" cy="124" rx="11" ry="13.2" fill="#fff" stroke="#2b2d5a" stroke-width="3.2"/>
+    <ellipse cx="80" cy="126" rx="7.48" ry="8.8" fill="url(#bpupil)"/>
+    <circle cx="76.7" cy="121.25" r="3.3" fill="#fff"/>
+    <circle cx="83.3" cy="128.95" r="1.54" fill="#fff"/><path d="M94 111 L69 102" stroke="#2b2d5a" stroke-width="4.5" stroke-linecap="round"/><ellipse cx="119" cy="124" rx="11" ry="13.2" fill="#fff" stroke="#2b2d5a" stroke-width="3.2"/>
+    <ellipse cx="120" cy="126" rx="7.48" ry="8.8" fill="url(#bpupil)"/>
+    <circle cx="116.7" cy="121.25" r="3.3" fill="#fff"/>
+    <circle cx="123.3" cy="128.95" r="1.54" fill="#fff"/><path d="M106 111 L131 102" stroke="#2b2d5a" stroke-width="4.5" stroke-linecap="round"/>
+    <path d="M91 152 Q100 144 109 152" fill="none" stroke="#2b2d5a" stroke-width="4" stroke-linecap="round"/></g></svg>

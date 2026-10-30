@@ -27,5 +27,48 @@
     "body": "#b8b8c8",
     "shade": "#8e8ea3",
     "light": "#e2e2ec"
+  },
+  "silsili": {
+    "body": "#a77bd6",
+    "light": "#c9a8ef",
+    "shade": "#7f58b0",
+    "hat": "#ff9fb8"
+  },
+  "jjakjjak": {
+    "body": "#c98a5a",
+    "light": "#e0aa7e",
+    "wing": "#a8673c",
+    "belly": "#f7e3c6",
+    "beak": "#ffb347"
+  },
+  "panda": {
+    "body": "#f4f4f8",
+    "shade": "#cfcfe0",
+    "black": "#3a3c5e"
+  },
+  "deer": {
+    "body": "#d99a62",
+    "light": "#f0bf8c",
+    "shade": "#b0703e",
+    "muzzle": "#fbe3c4"
+  },
+  "squirrel": {
+    "body": "#e08a4a",
+    "light": "#f2b27a",
+    "shade": "#b8642c",
+    "belly": "#fbe3c4"
+  },
+  "beaver": {
+    "body": "#9a6a44",
+    "light": "#c08a5e",
+    "shade": "#6e4a2e",
+    "tail": "#5a3e2a",
+    "muzzle": "#e9c9a4"
+  },
+  "bee": {
+    "body": "#ffd84a",
+    "light": "#ffeaa0",
+    "shade": "#e6b52a",
+    "hat": "#ff4d4d"
   }
 }

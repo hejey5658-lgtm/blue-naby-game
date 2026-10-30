@@ -88,7 +88,177 @@ function dustmong(P, mood) {
   };
 }
 
-const BOSSES = { dustmong };
+// ── 공통: 친구들 얼굴 (블루나비와 같은 눈: 흰자 + 그라데이션 눈동자 + 반짝점 2개) ──
+const pupilDef = (P) => `<radialGradient id="bpupil" cx="40%" cy="35%" r="70%"><stop offset="0" stop-color="#5a5fa8"/><stop offset="1" stop-color="${P.ink}"/></radialGradient>`;
+
+function roundEye(x, y, mood, P, side, r = 11, happyStroke = P.ink) {
+  if (mood === 'happy') return `<path d="M${x - r} ${y + 4} Q${x} ${y - r} ${x + r} ${y + 4}" fill="none" stroke="${happyStroke}" stroke-width="5" stroke-linecap="round"/>`;
+  const brow = mood === 'angry' || mood === 'skill'
+    ? `<path d="M${x - (r + 2) * side} ${y - r - 2} L${x + (r + 1) * side} ${y - r - 11}" stroke="${P.ink}" stroke-width="4.5" stroke-linecap="round"/>`
+    : mood === 'sad'
+      ? `<path d="M${x - (r + 1) * side} ${y - r - 11} L${x + (r + 1) * side} ${y - r - 3}" stroke="${P.ink}" stroke-width="4" stroke-linecap="round"/>`
+      : '';
+  return `<ellipse cx="${x}" cy="${y}" rx="${r}" ry="${r * 1.2}" fill="#fff" stroke="${P.ink}" stroke-width="3.2"/>
+    <ellipse cx="${x + side}" cy="${y + 2}" rx="${r * 0.68}" ry="${r * 0.8}" fill="url(#bpupil)"/>
+    <circle cx="${x + side - r * 0.3}" cy="${y - r * 0.25}" r="${r * 0.3}" fill="#fff"/>
+    <circle cx="${x + side + r * 0.3}" cy="${y + r * 0.45}" r="${r * 0.14}" fill="#fff"/>${brow}`;
+}
+
+function face(cx, cy, mood, P, gap = 36, r = 11, mouthDy = 22, happyStroke = P.ink) {
+  const puff = mood === 'angry' || mood === 'skill' ? 14 : 11;
+  return `<ellipse cx="${cx - gap * 0.9}" cy="${cy + 16}" rx="${puff}" ry="${puff * 0.65}" fill="url(#bcheek)"/>
+    <ellipse cx="${cx + gap * 0.9}" cy="${cy + 16}" rx="${puff}" ry="${puff * 0.65}" fill="url(#bcheek)"/>
+    ${roundEye(cx - gap / 2, cy, mood, P, -1, r, happyStroke)}${roundEye(cx + gap / 2, cy, mood, P, 1, r, happyStroke)}
+    ${bossMouth(cx, cy + mouthDy, mood, P)}`;
+}
+
+const blobC = (cx, cy, r, fill, P, extra = '') => `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${fill}" stroke="${P.ink}" stroke-width="${LINE}" ${extra}/>`;
+const blobE = (cx, cy, rx, ry, fill, P, extra = '') => `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="${fill}" stroke="${P.ink}" stroke-width="${LINE}" ${extra}/>`;
+const shine = (x, y, rx = 13, ry = 8) => `<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" fill="#fff" opacity="0.75" transform="rotate(-30 ${x} ${y})"/>`;
+const groundShadow = (P, rx = 74) => `<ellipse cx="100" cy="190" rx="${rx}" ry="9" fill="${P.ink}" opacity="0.14"/>`;
+const defs = (P, ...g) => cheekDef(P) + pupilDef(P) + g.join('');
+
+// ── 실실이: 동글동글 보라 거미 + 분홍 털모자 ──
+function silsili(P, mood) {
+  const C = P.silsili;
+  let legs = '';
+  for (let i = 0; i < 4; i++) {
+    const y = 120 + i * 16;
+    for (const d of [-1, 1]) legs += `<path d="M${100 + d * 50} ${y} q${d * 22} ${-14} ${d * 40} ${6 + i * 4}" fill="none" stroke="${P.ink}" stroke-width="12" stroke-linecap="round"/>
+      <path d="M${100 + d * 50} ${y} q${d * 22} ${-14} ${d * 40} ${6 + i * 4}" fill="none" stroke="${i % 2 ? C.light : C.body}" stroke-width="6" stroke-linecap="round"/>`;
+  }
+  const yarn = mood === 'skill' ? `<path d="M150 150 q20 -10 30 10 q-10 16 -24 4" fill="none" stroke="${C.hat}" stroke-width="4"/><circle cx="176" cy="158" r="10" fill="${C.hat}" stroke="${P.ink}" stroke-width="3"/>` : '';
+  return {
+    defs: defs(P, grad('silBody', C.light, C.body, C.shade)),
+    body: `${groundShadow(P)}${legs}
+      ${blobE(100, 122, 62, 56, 'url(#silBody)', P)}${shine(72, 96)}
+      <path d="M48 92 Q100 30 152 92 Z" fill="${C.hat}" stroke="${P.ink}" stroke-width="${LINE}" stroke-linejoin="round"/>
+      <path d="M50 92 L150 92" stroke="${P.ink}" stroke-width="${LINE}"/>
+      <path d="M62 80 l8 -10 M80 70 l6 -12 M100 66 l0 -12 M120 70 l-6 -12 M138 80 l-8 -10" stroke="#fff" stroke-width="3" opacity="0.6" stroke-linecap="round"/>
+      ${blobC(100, 40, 12, C.hat, P)}
+      ${face(100, 124, mood, P, 38)}${yarn}`,
+  };
+}
+
+// ── 짹짹이: 갈색 동그란 참새, 크림 배, 주황 부리, 머리 깃털 한 가닥 ──
+function jjakjjak(P, mood) {
+  const C = P.jjakjjak;
+  const wingUp = mood === 'skill' ? -30 : 0;
+  return {
+    defs: defs(P, grad('jjakBody', C.light, C.body, C.wing)),
+    body: `${groundShadow(P, 60)}
+      <path d="M150 140 l34 -6 l-10 16 z" fill="${C.wing}" stroke="${P.ink}" stroke-width="5" stroke-linejoin="round"/>
+      <rect x="82" y="168" width="8" height="18" rx="4" fill="${C.beak}" stroke="${P.ink}" stroke-width="3"/><rect x="110" y="168" width="8" height="18" rx="4" fill="${C.beak}" stroke="${P.ink}" stroke-width="3"/>
+      ${blobC(100, 112, 66, 'url(#jjakBody)', P)}
+      <ellipse cx="100" cy="140" rx="40" ry="34" fill="${C.belly}"/>
+      <path d="M100 48 q-6 -24 10 -30 q-4 14 2 28" fill="${C.wing}" stroke="${P.ink}" stroke-width="4" stroke-linejoin="round"/>
+      <g transform="rotate(${wingUp} 44 120)"><ellipse cx="40" cy="124" rx="18" ry="30" fill="${C.wing}" stroke="${P.ink}" stroke-width="${LINE}"/></g>
+      <g transform="rotate(${-wingUp} 156 120)"><ellipse cx="160" cy="124" rx="18" ry="30" fill="${C.wing}" stroke="${P.ink}" stroke-width="${LINE}"/></g>
+      ${shine(70, 76)}
+      ${face(100, 98, mood, P, 40, 11, 26)}
+      <path d="M90 112 L110 112 L100 126 Z" fill="${C.beak}" stroke="${P.ink}" stroke-width="4" stroke-linejoin="round"/>`,
+  };
+}
+
+// ── 빵빵이: 아기 판다 ──
+function bbangbbang(P, mood) {
+  const C = P.panda;
+  const bamboo = mood === 'skill' ? `<rect x="150" y="70" width="12" height="90" rx="6" fill="#7cc56a" stroke="${P.ink}" stroke-width="4" transform="rotate(20 156 115)"/>` : '';
+  return {
+    defs: defs(P, grad('pandaBody', '#ffffff', C.body, C.shade)),
+    body: `${groundShadow(P, 66)}
+      ${blobE(100, 152, 50, 38, C.black, P)}
+      ${blobC(52, 52, 20, C.black, P)}${blobC(148, 52, 20, C.black, P)}
+      ${blobC(100, 102, 64, 'url(#pandaBody)', P)}${shine(70, 70)}
+      <ellipse cx="80" cy="104" rx="16" ry="20" fill="${C.black}" transform="rotate(20 80 104)"/>
+      <ellipse cx="120" cy="104" rx="16" ry="20" fill="${C.black}" transform="rotate(-20 120 104)"/>
+      ${face(100, 104, mood, P, 40, 9, 24, '#ffffff')}
+      <ellipse cx="100" cy="118" rx="7" ry="5" fill="${P.ink}"/>${bamboo}`,
+  };
+}
+
+// ── 사뿐이: 꽃사슴 (흰 점, 작은 뿔, 큰 귀) ──
+function sappuni(P, mood) {
+  const C = P.deer;
+  const hop = mood === 'skill' ? -8 : 0;
+  return {
+    defs: defs(P, grad('deerBody', C.light, C.body, C.shade)),
+    body: `${groundShadow(P, 56)}
+      <g transform="translate(0 ${hop})">
+      ${blobE(100, 158, 40, 30, 'url(#deerBody)', P)}
+      <circle cx="84" cy="152" r="4" fill="#fff"/><circle cx="110" cy="160" r="4" fill="#fff"/><circle cx="98" cy="146" r="3" fill="#fff"/>
+      <path d="M70 46 q-10 -24 4 -32 M70 34 l-12 -8 M130 46 q10 -24 -4 -32 M130 34 l12 -8" fill="none" stroke="#a8673c" stroke-width="7" stroke-linecap="round"/>
+      ${blobE(46, 78, 26, 14, C.body, P, 'transform="rotate(-25 46 78)"')}${blobE(154, 78, 26, 14, C.body, P, 'transform="rotate(25 154 78)"')}
+      <ellipse cx="48" cy="78" rx="14" ry="6" fill="${P.cheek}" transform="rotate(-25 48 78)"/><ellipse cx="152" cy="78" rx="14" ry="6" fill="${P.cheek}" transform="rotate(25 152 78)"/>
+      ${blobC(100, 100, 56, 'url(#deerBody)', P)}${shine(74, 72)}
+      <ellipse cx="100" cy="126" rx="26" ry="18" fill="${C.muzzle}"/>
+      ${face(100, 96, mood, P, 38, 10, 30)}
+      <ellipse cx="100" cy="118" rx="6" ry="4" fill="${P.ink}"/>
+      <path d="M78 60 l4 -6 l4 6 M120 64 l4 -6 l4 6" stroke="${P.cheek}" stroke-width="4" fill="none" stroke-linecap="round"/>
+      </g>`,
+  };
+}
+
+// ── 도토리대장: 다람쥐 (큰 꼬리, 도토리) ──
+function dotori(P, mood) {
+  const C = P.squirrel;
+  return {
+    defs: defs(P, grad('sqBody', C.light, C.body, C.shade)),
+    body: `${groundShadow(P, 62)}
+      <path d="M140 170 q60 -10 44 -80 q-10 -40 -40 -30 q30 20 10 60 q-10 30 -20 40 z" fill="url(#sqBody)" stroke="${P.ink}" stroke-width="${LINE}" stroke-linejoin="round"/>
+      <path d="M160 80 q14 20 4 50" fill="none" stroke="${C.belly}" stroke-width="6" stroke-linecap="round"/>
+      ${blobE(92, 150, 42, 34, 'url(#sqBody)', P)}<ellipse cx="92" cy="156" rx="24" ry="20" fill="${C.belly}"/>
+      ${blobE(60, 46, 12, 18, C.body, P)}${blobE(124, 46, 12, 18, C.body, P)}
+      ${blobC(92, 96, 52, 'url(#sqBody)', P)}${shine(66, 70)}
+      <ellipse cx="92" cy="118" rx="24" ry="16" fill="${C.belly}"/>
+      ${face(92, 94, mood, P, 36, 10, 24)}
+      <ellipse cx="92" cy="110" rx="5" ry="4" fill="${P.ink}"/>
+      <g transform="translate(${mood === 'skill' ? 30 : 0} ${mood === 'skill' ? -40 : 0})">
+        <ellipse cx="92" cy="166" rx="12" ry="14" fill="#c98a5a" stroke="${P.ink}" stroke-width="4"/><ellipse cx="92" cy="154" rx="15" ry="7" fill="#8a5a3a" stroke="${P.ink}" stroke-width="4"/></g>`,
+  };
+}
+
+// ── 댐댐이: 비버 (앞니, 넓적한 꼬리) ──
+function damdam(P, mood) {
+  const C = P.beaver;
+  const slap = mood === 'skill' ? -25 : 0;
+  return {
+    defs: defs(P, grad('bvBody', C.light, C.body, C.shade)),
+    body: `${groundShadow(P, 70)}
+      <g transform="rotate(${slap} 140 168)"><ellipse cx="158" cy="170" rx="30" ry="14" fill="${C.tail}" stroke="${P.ink}" stroke-width="${LINE}"/>
+        <path d="M140 166 l36 0 M146 174 l26 0" stroke="${C.shade}" stroke-width="3"/></g>
+      ${blobE(98, 150, 50, 36, 'url(#bvBody)', P)}
+      ${blobC(58, 54, 12, C.body, P)}${blobC(138, 54, 12, C.body, P)}
+      ${blobC(98, 100, 58, 'url(#bvBody)', P)}${shine(70, 72)}
+      <ellipse cx="98" cy="122" rx="28" ry="18" fill="${C.muzzle}"/>
+      ${face(98, 96, mood, P, 38, 10, 18)}
+      <ellipse cx="98" cy="112" rx="7" ry="5" fill="${P.ink}"/>
+      <rect x="90" y="124" width="8" height="12" rx="2" fill="#fff" stroke="${P.ink}" stroke-width="3"/><rect x="98" y="124" width="8" height="12" rx="2" fill="#fff" stroke="${P.ink}" stroke-width="3"/>`,
+  };
+}
+
+// ── 붕붕대장: 꿀벌 (노란 줄무늬, 빨간 대장 모자 + 별, 반투명 날개) ──
+function buzzboss(P, mood) {
+  const C = P.bee;
+  const flap = mood === 'skill' ? 0.7 : 1;
+  const wing = (d) => `<ellipse cx="${100 + d * 44}" cy="62" rx="${30 * flap}" ry="40" fill="#e8f4ff" opacity="0.85" stroke="${P.ink}" stroke-width="4" transform="rotate(${d * 30} ${100 + d * 44} 62)"/>`;
+  return {
+    defs: defs(P, grad('beeBody', C.light, C.body, C.shade)),
+    body: `${groundShadow(P, 66)}${wing(-1)}${wing(1)}
+      <path d="M100 176 l-8 14 l16 0 z" fill="${P.ink}"/>
+      ${blobE(100, 112, 66, 62, 'url(#beeBody)', P)}
+      <path d="M40 132 Q100 156 160 132" fill="none" stroke="${P.ink}" stroke-width="12" stroke-linecap="round"/>
+      <path d="M50 156 Q100 176 150 156" fill="none" stroke="${P.ink}" stroke-width="10" stroke-linecap="round"/>
+      ${shine(68, 80)}
+      ${face(100, 98, mood, P, 40, 11, 20)}
+      <path d="M58 58 Q100 18 142 58 Z" fill="${C.hat}" stroke="${P.ink}" stroke-width="${LINE}" stroke-linejoin="round"/>
+      <rect x="50" y="54" width="100" height="12" rx="6" fill="${C.hat}" stroke="${P.ink}" stroke-width="5"/>
+      <path d="M100 30 l4 9 l10 1 l-8 6 l3 10 l-9 -6 l-9 6 l3 -10 l-8 -6 l10 -1 z" fill="#ffd84a" stroke="${P.ink}" stroke-width="2"/>
+      <path d="M80 30 q-8 -16 -18 -14 M120 30 q8 -16 18 -14" fill="none" stroke="${P.ink}" stroke-width="4" stroke-linecap="round"/>`,
+  };
+}
+
+const BOSSES = { dustmong, silsili, jjakjjak, bbangbbang, sappuni, dotori, damdam, buzzboss };
 
 export function bossFrame(P, key, pose = {}) {
   const { defs, body } = BOSSES[key](P, pose.mood ?? 'angry');
@@ -104,5 +274,8 @@ export const BOSS_POSES = [
   { mood: 'skill', sx: 1.08, sy: 0.94 },
 ];
 export const BOSS_FACE_MOODS = ['angry', 'happy'];
-export const BOSS_FACE_BOX = { dustmong: [14, 28, 172] };
+export const BOSS_FACE_BOX = {
+  dustmong: [14, 28, 172], silsili: [20, 20, 160], jjakjjak: [24, 14, 156], bbangbbang: [22, 22, 156],
+  sappuni: [18, 10, 164], dotori: [22, 18, 150], damdam: [26, 28, 148], buzzboss: [26, 10, 150],
+};
 export const BOSS_KEYS = Object.keys(BOSSES);

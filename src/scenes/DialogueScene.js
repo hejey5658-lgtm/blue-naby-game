@@ -36,6 +36,8 @@ export class DialogueScene extends Phaser.Scene {
     this.pages = [];
     this.page = 0;
     this.typing = null;
+    // 씬은 다시 쓰이므로 지난번 대사창의 '끝남' 표시를 지운다 (안 지우면 두 번째 대사부터 넘어가지 않음)
+    this.finished = false;
   }
 
   create() {

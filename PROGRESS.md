@@ -104,7 +104,7 @@
 - 저장소: https://github.com/hejey5658-lgtm/blue-naby-game (브랜치 `claude/firebase-server-integration-84bkga`, 2026-10-30 첫 업로드)
 
 ## 미리보기 주소 (지금 폰에서 해 볼 수 있는 곳)
-- **https://blue-naby-game--preview-3mdmw72m.web.app** — **v0.5.0**(7장 전체), 2026-10-30 배포, **2026-11-29까지** 열림
+- **https://blue-naby-game--preview-3mdmw72m.web.app** — **v0.6.0**(7장 + 엔딩 + 퍼즐 + 저장 코드), 2026-10-30 배포, **2026-11-29까지** 열림
 - Claude가 사용자의 서비스 계정 키로 직접 올림(`firebase hosting:channel:deploy preview --expires 30d`, firebase-tools 15.33.0). 키는 git에 넣지 않음.
 - GitHub 자동 배포는 Secret 값이 아직 열쇠 내용이 아니라서 실패 중(Actions 실행 1·2번: `"firebase-se..." is not valid JSON`). Secret을 고치기 전까지는 새 버전을 Claude가 직접 올린다.
 

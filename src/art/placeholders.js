@@ -10,6 +10,8 @@ export const PAL = {
 };
 
 // 100×100 단위로 설계한 그림을 size 픽셀 텍스처로 만든다.
+// 그림 파일이 이미 있으면 건너뛴다. 임시 그림은 한 칸짜리지만 프레임 0을 붙여
+// 스프라이트 시트와 같은 방식(frame 0)으로 쓸 수 있게 한다.
 function makeTexture(scene, key, size, draw) {
   if (scene.textures.exists(key)) return;
   const g = scene.make.graphics({ x: 0, y: 0 }, false);
@@ -17,6 +19,7 @@ function makeTexture(scene, key, size, draw) {
   draw(g, s);
   g.generateTexture(key, size, size);
   g.destroy();
+  scene.textures.get(key).add(0, 0, 0, 0, size, size);
 }
 
 // 외곽선 → 그림자 면 → 몸 → 하이라이트 순서로 동그란 마디 하나

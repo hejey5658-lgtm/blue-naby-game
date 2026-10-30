@@ -19,7 +19,7 @@
     <circle cx="70" cy="150" r="28" fill="url(#catBody)" stroke="#2b2d5a" stroke-width="6"/>
     <circle cx="74.2" cy="159.8" r="5.6000000000000005" fill="#d6efff"/>
     <ellipse cx="58.8" cy="137.4" rx="6.16" ry="3.64" fill="#fff" opacity="0.8" transform="rotate(-30 58.8 137.4)"/>
-    <path d="M12 132 c-6 -9 4 -17 10 -10 c6 -7 16 1 10 10 l-10 10 z" fill="#ff9fb8" stroke="#2b2d5a" stroke-width="4" stroke-linejoin="round"/>
+    <path transform="translate(0 0)" d="M12 132 c-6 -9 4 -17 10 -10 c6 -7 16 1 10 10 l-10 10 z" fill="#ff9fb8" stroke="#2b2d5a" stroke-width="4" stroke-linejoin="round"/>
     <path d="M100 58 Q92 30 80 24" fill="none" stroke="#2b2d5a" stroke-width="5" stroke-linecap="round"/>
     <path d="M140 58 Q150 30 164 26" fill="none" stroke="#2b2d5a" stroke-width="5" stroke-linecap="round"/>
     <circle cx="79" cy="23" r="8" fill="url(#catBody)" stroke="#2b2d5a" stroke-width="4.5"/>

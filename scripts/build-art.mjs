@@ -5,7 +5,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { Resvg } from '@resvg/resvg-js';
-import { blueSvg, MOODS, FORM_NAMES } from '../art/gen/blue.mjs';
+import { blueSvg, blueFrame, MOODS, FORM_NAMES, MAZE_POSES, BATTLE_POSES, FACE_MOODS, FACE_BOX } from '../art/gen/blue.mjs';
 
 const P = JSON.parse(fs.readFileSync('art/palette.json', 'utf8'));
 fs.mkdirSync('art/source', { recursive: true });
@@ -22,6 +22,26 @@ for (const form of Object.keys(FORM_NAMES)) {
     items.push({ key, form, mood });
   }
 }
+
+// ── 게임용 스프라이트 시트 (승인된 그림만, public/assets/) ──────────────
+// 칸을 가로로 이어 붙인 한 장. 칸마다 여백 4px 이상(200 단위 그림이 칸 안에 들어가게 살짝 줄여 그림).
+function sheet(frames, cell, box = [0, 0, 200]) {
+  const [bx, by, bs] = box;
+  const pad = bs * 0.04;
+  // 칸 밖으로 넘친 부분이 옆 칸에 보이지 않게 칸마다 잘라 낸다
+  const inner = frames.map((f, i) => `<clipPath id="cell${i}"><rect x="${i * cell}" y="0" width="${cell}" height="${cell}"/></clipPath>
+    <g clip-path="url(#cell${i})"><svg x="${i * cell}" y="0" width="${cell}" height="${cell}" viewBox="${bx - pad} ${by - pad} ${bs + pad * 2} ${bs + pad * 2}">
+    <defs>${f.defs}</defs>${f.body}</svg></g>`).join('');
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${cell * frames.length}" height="${cell}" viewBox="0 0 ${cell * frames.length} ${cell}">${inner}</svg>`;
+  return new Resvg(svg, { fitTo: { mode: 'original' } }).render().asPng();
+}
+const write = (file, png) => { fs.mkdirSync(path.dirname(file), { recursive: true }); fs.writeFileSync(file, png); };
+for (const form of Object.keys(FORM_NAMES)) {
+  write(`public/assets/char/blue_${form}.png`, sheet(MAZE_POSES[form].map((p) => blueFrame(P, form, p)), 128, [-2, -8, 204]));
+  write(`public/assets/char/blue_${form}_battle.png`, sheet(BATTLE_POSES.map((p) => blueFrame(P, form, p)), 480, [-6, -16, 212]));
+  write(`public/assets/face/face_blue_${form}.png`, sheet(FACE_MOODS.map((mood) => blueFrame(P, form, { mood })), 280, FACE_BOX[form]));
+}
+console.log('게임용 시트: public/assets/char/blue_*.png, public/assets/face/face_blue_*.png');
 
 const MOOD_NAMES = { normal: '기본', joy: '기쁨', surprise: '놀람', sleepy: '졸림', sad: '시무룩' };
 const rows = Object.keys(FORM_NAMES).map((form) => {

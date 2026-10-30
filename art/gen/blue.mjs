@@ -74,7 +74,8 @@ function face(cx, cy, mood, P, gap = 34) {
 }
 
 // ── 애벌레 ─────────────────────────────────────────
-function caterpillar(P, mood) {
+function caterpillar(P, mood, o = {}) {
+  const w = o.wave ?? [0, 0];
   const C = P.caterpillar;
   const seg = (x, y, r) => `
     <circle cx="${x}" cy="${y}" r="${r}" fill="url(#catBody)" stroke="${P.ink}" stroke-width="${LINE}"/>
@@ -86,9 +87,9 @@ function caterpillar(P, mood) {
     body: `
     ${shadow(100, 182, 84, P)}
     ${foot(40, 176)}${foot(72, 177)}
-    ${seg(38, 154, 23)}
-    ${seg(70, 150, 28)}
-    <path d="M12 132 c-6 -9 4 -17 10 -10 c6 -7 16 1 10 10 l-10 10 z" fill="${P.cheek}" stroke="${P.ink}" stroke-width="4" stroke-linejoin="round"/>
+    ${seg(38, 154 - w[0], 23)}
+    ${seg(70, 150 - w[1], 28)}
+    <path transform="translate(0 ${-w[0]})" d="M12 132 c-6 -9 4 -17 10 -10 c6 -7 16 1 10 10 l-10 10 z" fill="${P.cheek}" stroke="${P.ink}" stroke-width="4" stroke-linejoin="round"/>
     <path d="M100 58 Q92 30 80 24" fill="none" stroke="${P.ink}" stroke-width="5" stroke-linecap="round"/>
     <path d="M140 58 Q150 30 164 26" fill="none" stroke="${P.ink}" stroke-width="5" stroke-linecap="round"/>
     <circle cx="79" cy="23" r="8" fill="url(#catBody)" stroke="${P.ink}" stroke-width="4.5"/>
@@ -101,7 +102,8 @@ function caterpillar(P, mood) {
 }
 
 // ── 나방 ───────────────────────────────────────────
-function moth(P, mood) {
+function moth(P, mood, o = {}) {
+  const flap = (str) => `<g transform="translate(100 0) scale(${o.wing ?? 1} 1) translate(-100 0)">${str}</g>`;
   const M = P.moth;
   const wingUp = `
     <path d="M100 118 C 70 60, 10 52, 12 100 C 14 138, 62 146, 100 132 Z" fill="url(#mothWing)" stroke="${P.ink}" stroke-width="${LINE}" stroke-linejoin="round"/>
@@ -131,8 +133,7 @@ function moth(P, mood) {
     defs: grad('mothWing', '#a3afef', M.wing, M.deep) + grad('mothBody', '#8d9be6', M.light, M.body),
     body: `
     ${shadow(100, 188, 70, P)}
-    ${wingLow}${mirror(wingLow)}
-    ${wingUp}${mirror(wingUp)}
+    ${flap(wingLow + mirror(wingLow) + wingUp + mirror(wingUp))}
     <ellipse cx="100" cy="156" rx="30" ry="32" fill="url(#mothBody)" stroke="${P.ink}" stroke-width="${LINE}"/>
     <path d="M78 160 Q100 168 122 160 M80 172 Q100 180 120 172" fill="none" stroke="${M.fur}" stroke-width="3" stroke-linecap="round" opacity="0.8"/>
     ${fur}
@@ -145,7 +146,8 @@ function moth(P, mood) {
 }
 
 // ── 나비 ───────────────────────────────────────────
-function butterfly(P, mood) {
+function butterfly(P, mood, o = {}) {
+  const flap = (str) => `<g transform="translate(100 0) scale(${o.wing ?? 1} 1) translate(-100 0)">${str}</g>`;
   const B = P.butterfly;
   const C = P.caterpillar;
   const heart = (x, y, s) => `<path transform="translate(${x} ${y}) scale(${s})" d="M0 4 C -6 -4, -14 2, 0 12 C 14 2, 6 -4, 0 4 Z" fill="${B.heart}"/>`;
@@ -167,8 +169,7 @@ function butterfly(P, mood) {
     defs: grad('bfWing', '#7fb2ff', B.wing, B.deep) + grad('bfBody', C.light, C.body, C.shade),
     body: `
     ${shadow(100, 190, 66, P)}
-    ${wingLow}${mirror(wingLow)}
-    ${wingUp}${mirror(wingUp)}
+    ${flap(wingLow + mirror(wingLow) + wingUp + mirror(wingUp))}
     <ellipse cx="100" cy="150" rx="19" ry="34" fill="url(#bfBody)" stroke="${P.ink}" stroke-width="${LINE}"/>
     <path d="M86 146 Q100 152 114 146 M87 160 Q100 166 113 160" fill="none" stroke="${C.shade}" stroke-width="3" stroke-linecap="round"/>
     ${antenna(-1)}${antenna(1)}
@@ -187,6 +188,33 @@ export function blueSvg(P, form, mood = 'normal') {
   ${body}
 </svg>`;
 }
+
+// 애니메이션 한 칸. pose: { mood, wing, wave, sx, sy, dy, rot } — 몸 전체는 발밑(100,190)을 기준으로 늘이고 줄인다.
+export function blueFrame(P, form, pose = {}) {
+  const { defs, body } = FORMS[form](P, pose.mood ?? 'normal', pose);
+  const t = `translate(0 ${pose.dy ?? 0}) rotate(${pose.rot ?? 0} 100 150) translate(100 190) scale(${pose.sx ?? 1} ${pose.sy ?? 1}) translate(-100 -190)`;
+  return { defs: commonDefs(P) + defs, body: `<g transform="${t}">${body}</g>` };
+}
+
+// 얼굴 칸(대사창용)을 자를 영역 [x, y, 크기] (200 단위)
+export const FACE_BOX = { caterpillar: [50, 42, 140], moth: [36, 24, 128], butterfly: [38, 28, 124] };
+
+// 스프라이트 시트 포즈 (art-guide.md 4절 칸 순서)
+export const MAZE_POSES = {
+  caterpillar: [{}, { sy: 0.95, sx: 1.03 }, { wave: [6, 0] }, { wave: [3, 6], dy: -2 }, { wave: [0, 3] }, { wave: [0, 0], sy: 0.97 }],
+  moth: [{}, { sy: 0.96, sx: 1.02, wing: 0.9 }, { wing: 0.65, dy: -4 }, { wing: 0.3, dy: -6 }, { wing: 0.65, dy: -4 }, { wing: 1, dy: -1 }],
+  butterfly: [{}, { sy: 0.96, sx: 1.02, wing: 0.92 }, { wing: 0.6, dy: -4 }, { wing: 0.25, dy: -7 }, { wing: 0.6, dy: -4 }, { wing: 1, dy: -1 }],
+};
+// 대결: 대기 2, 놀자 1, 버티기 1, 특기 1, 지침 1, 기쁨 1
+export const BATTLE_POSES = [
+  {}, { sy: 0.95, sx: 1.03, wing: 0.85 },
+  { mood: 'joy', rot: 8, dy: -6 },
+  { mood: 'sleepy', sy: 0.88, sx: 1.06, wing: 0.55 },
+  { mood: 'surprise', sx: 1.06, sy: 1.06, dy: -10, wing: 0.35 },
+  { mood: 'sad', sy: 0.9, sx: 1.04, rot: -6, wing: 0.7 },
+  { mood: 'joy', dy: -14, wing: 0.4 },
+];
+export const FACE_MOODS = ['joy', 'surprise', 'sleepy', 'sad'];
 
 export const MOODS = ['normal', 'joy', 'surprise', 'sleepy', 'sad'];
 export const FORM_NAMES = { caterpillar: '애벌레', moth: '나방', butterfly: '나비' };

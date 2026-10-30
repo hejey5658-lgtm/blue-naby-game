@@ -12,14 +12,13 @@
   </radialGradient></defs>
   
     <ellipse cx="100" cy="190" rx="66" ry="7.26" fill="#2b2d5a" opacity="0.14"/>
-    
+    <g transform="translate(100 0) scale(1 1) translate(-100 0)">
     <path d="M102 128 C 66 130, 30 150, 42 178 C 54 200, 92 186, 102 146 Z" fill="url(#bfWing)" stroke="#2b2d5a" stroke-width="6" stroke-linejoin="round"/>
     <path d="M98 136 C 74 142, 56 156, 60 170 C 72 176, 92 160, 98 140 Z" fill="#8fc2ff" opacity="0.85"/>
     <circle cx="50" cy="178" r="3.4" fill="#fff"/><circle cx="44" cy="164" r="3" fill="#fff"/><g transform="translate(200 0) scale(-1 1)">
     <path d="M102 128 C 66 130, 30 150, 42 178 C 54 200, 92 186, 102 146 Z" fill="url(#bfWing)" stroke="#2b2d5a" stroke-width="6" stroke-linejoin="round"/>
     <path d="M98 136 C 74 142, 56 156, 60 170 C 72 176, 92 160, 98 140 Z" fill="#8fc2ff" opacity="0.85"/>
     <circle cx="50" cy="178" r="3.4" fill="#fff"/><circle cx="44" cy="164" r="3" fill="#fff"/></g>
-    
     <path d="M102 112 C 96 44, 40 4, 14 36 C -6 62, 26 112, 102 126 Z" fill="url(#bfWing)" stroke="#2b2d5a" stroke-width="6" stroke-linejoin="round"/>
     <path d="M98 114 C 82 82, 58 62, 40 64 C 30 78, 56 104, 98 118 Z" fill="#8fc2ff" opacity="0.9"/>
     <path d="M100 116 C 80 80, 52 42, 30 40 M100 120 C 70 106, 40 96, 22 74" fill="none" stroke="#1f5fd6" stroke-width="2.4" stroke-linecap="round" opacity="0.6"/>
@@ -29,7 +28,7 @@
     <path d="M98 114 C 82 82, 58 62, 40 64 C 30 78, 56 104, 98 118 Z" fill="#8fc2ff" opacity="0.9"/>
     <path d="M100 116 C 80 80, 52 42, 30 40 M100 120 C 70 106, 40 96, 22 74" fill="none" stroke="#1f5fd6" stroke-width="2.4" stroke-linecap="round" opacity="0.6"/>
     <circle cx="26" cy="46" r="4" fill="#fff"/><circle cx="16" cy="62" r="3.4" fill="#fff"/><circle cx="40" cy="28" r="3.4" fill="#fff"/>
-    <path transform="translate(46 50) scale(1.6)" d="M0 4 C -6 -4, -14 2, 0 12 C 14 2, 6 -4, 0 4 Z" fill="#ffffff"/></g>
+    <path transform="translate(46 50) scale(1.6)" d="M0 4 C -6 -4, -14 2, 0 12 C 14 2, 6 -4, 0 4 Z" fill="#ffffff"/></g></g>
     <ellipse cx="100" cy="150" rx="19" ry="34" fill="url(#bfBody)" stroke="#2b2d5a" stroke-width="6"/>
     <path d="M86 146 Q100 152 114 146 M87 160 Q100 166 113 160" fill="none" stroke="#4fa3e6" stroke-width="3" stroke-linecap="round"/>
     

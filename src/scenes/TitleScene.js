@@ -160,8 +160,8 @@ export class TitleScene extends Phaser.Scene {
     g.lineStyle(5, C.leaf, 1).lineBetween(px, top, px - 6, top - 50);
 
     // 화분 테두리 위의 블루나비 (창밖을 보는 중)
-    this.blue = this.add.image(px - 60, top + 6, 'blue_caterpillar_battle').setOrigin(0.5, 0.9).setScale(0.42).setFlipX(true);
-    this.tweens.add({ targets: this.blue, scaleY: 0.39, scaleX: 0.44, duration: 520, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    this.blue = this.add.sprite(px - 60, top + 10, 'blue_caterpillar_battle', 0).setOrigin(0.5, 0.92).setScale(0.46).setFlipX(true);
+    if (this.anims.exists('blue_caterpillar_battle_idle')) this.blue.play('blue_caterpillar_battle_idle');
   }
 
   drawLogo() {

@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { ASSETS, ASSET_VERSION } from '../data/assets.js';
+import { ASSETS, ASSET_VERSION, ANIMS } from '../data/assets.js';
 import { UI } from '../data/ui.js';
 import { createPlaceholders } from '../art/placeholders.js';
 
@@ -46,6 +46,12 @@ export class BootScene extends Phaser.Scene {
 
   create() {
     createPlaceholders(this);
+    // 애니메이션은 그 그림(실제 파일)이 있고 프레임이 다 있을 때만 만든다
+    for (const a of ANIMS) {
+      const tex = this.textures.exists(a.texture) && this.textures.get(a.texture);
+      if (!tex || this.anims.exists(a.key) || !a.frames.every((f) => tex.has(f))) continue;
+      this.anims.create({ key: a.key, frames: this.anims.generateFrameNumbers(a.texture, { frames: a.frames }), frameRate: a.fps, repeat: a.repeat });
+    }
     // 캔버스 글자는 글꼴이 준비된 뒤에 그려야 기본 글꼴로 그려지지 않는다. 느린 망에서는 3초까지만 기다린다.
     const fonts = document.fonts
       ? Promise.all([document.fonts.load('40px "Jua"', '블루나비'), document.fonts.load('34px "Gowun Dodum"', '블루나비')])

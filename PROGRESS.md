@@ -3,7 +3,8 @@
 ## 현재 상태
 - 버전: **v0.1.0 (테스트 버전)**
 - 완료: **1단계 프로젝트 세팅** (2026-10-30)
-- 그림 트랙: A1 방법 결정(Claude 벡터), **A2 블루나비 캐릭터 시트 v1 승인 대기** (`art/character-sheet-v1.png`)
+- 컨셉 v2 승인: 한국·중국·일본·미국·캐나다 7장 (`docs/concept-v2.md`)
+- 그림 트랙: A1 Claude 벡터, **A2 블루나비 캐릭터 시트 v1 승인**, 게임용 스프라이트(미로·대결·얼굴) 완성 (`art/sprites-v1.png`)
 - 다음: 2단계 타이틀 + 대화 씬 + 설정
 
 ## 1단계에서 만든 것
@@ -18,6 +19,12 @@
 - 테스트 버전 표시 `src/data/version.js`
 - 데이터 파일: `src/data/` (ui, chapters, mazes, assets, version)
 - 검사: `npm run check:maze` (4개 미로 모두 통과), `npm run check:assets`
+
+## 컨셉 v2 반영 (2026-10-30)
+- `src/data/`: chapters(7장·여권 페이지), mazes(7개, 새 미로 3개는 `scripts/gen-maze.mjs` 시드 404·505·606), forms, bosses(8명), items, puzzles(5단계), dialogue(전체 대사)
+- `npm run check:maze` 7개 모두 통과, 대사 글자 440자 모두 글꼴에 들어 있음
+- 블루나비 스프라이트: `public/assets/char/blue_{caterpillar,moth,butterfly}.png`(미로 6칸), `_battle.png`(대결 7칸), `public/assets/face/face_blue_*.png`(표정 4칸) — `npm run check:assets` 통과, 총 1.7MB
+- 타이틀의 블루나비가 임시 그림 대신 실제 그림으로 바뀜
 
 ## 확인한 기기·화면
 | 화면 | 결과 |
@@ -52,6 +59,5 @@
 - 블루나비 캐릭터 시트 v1: 애벌레·나방·나비 × 기본·기쁨·놀람·졸림·시무룩, 밤 바탕·미로 크기 확인 포함
 
 ## 남은 결정
-- **컨셉 변경안 v2 승인** (`docs/concept-v2.md`: 한국·중국·일본·미국·캐나다 7장, 나라별 보스, 여권 지도)
-- 캐릭터 시트 v1 승인 (고칠 점이 있으면 말해 주기)
+- 없음 (2단계 진행 가능)
 - 기준 구현 `blue_butterfly_game.html` 있으면 받기

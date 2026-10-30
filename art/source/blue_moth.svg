@@ -12,12 +12,11 @@
   </radialGradient></defs>
   
     <ellipse cx="100" cy="188" rx="70" ry="7.7" fill="#2b2d5a" opacity="0.14"/>
-    
+    <g transform="translate(100 0) scale(1 1) translate(-100 0)">
     <path d="M100 136 C 76 140, 42 158, 50 180 C 58 196, 90 182, 100 152 Z" fill="url(#mothWing)" stroke="#2b2d5a" stroke-width="6" stroke-linejoin="round"/>
     <circle cx="68" cy="168" r="7" fill="#9aa8ef" opacity="0.9"/><g transform="translate(200 0) scale(-1 1)">
     <path d="M100 136 C 76 140, 42 158, 50 180 C 58 196, 90 182, 100 152 Z" fill="url(#mothWing)" stroke="#2b2d5a" stroke-width="6" stroke-linejoin="round"/>
     <circle cx="68" cy="168" r="7" fill="#9aa8ef" opacity="0.9"/></g>
-    
     <path d="M100 118 C 70 60, 10 52, 12 100 C 14 138, 62 146, 100 132 Z" fill="url(#mothWing)" stroke="#2b2d5a" stroke-width="6" stroke-linejoin="round"/>
     <path d="M96 122 C 72 100, 44 86, 26 92 M96 126 C 70 118, 46 120, 30 126" fill="none" stroke="#9aa8ef" stroke-width="2.6" stroke-linecap="round" opacity="0.7"/>
     <circle cx="46" cy="102" r="15" fill="#9aa8ef" stroke="#2b2d5a" stroke-width="3.5"/>
@@ -27,7 +26,7 @@
     <path d="M96 122 C 72 100, 44 86, 26 92 M96 126 C 70 118, 46 120, 30 126" fill="none" stroke="#9aa8ef" stroke-width="2.6" stroke-linecap="round" opacity="0.7"/>
     <circle cx="46" cy="102" r="15" fill="#9aa8ef" stroke="#2b2d5a" stroke-width="3.5"/>
     <circle cx="46" cy="102" r="7" fill="#2e3c80"/>
-    <circle cx="43" cy="99" r="2.4" fill="#fff"/></g>
+    <circle cx="43" cy="99" r="2.4" fill="#fff"/></g></g>
     <ellipse cx="100" cy="156" rx="30" ry="32" fill="url(#mothBody)" stroke="#2b2d5a" stroke-width="6"/>
     <path d="M78 160 Q100 168 122 160 M80 172 Q100 180 120 172" fill="none" stroke="#9aa8ef" stroke-width="3" stroke-linecap="round" opacity="0.8"/>
     <circle cx="138.74332644514524" cy="128.98427864597826" r="14" fill="#9aa8ef" stroke="#2b2d5a" stroke-width="4"/><circle cx="130.82052971103158" cy="133.64908787698428" r="14" fill="#9aa8ef" stroke="#2b2d5a" stroke-width="4"/><circle cx="117.0311716626029" cy="136.85792462959225" r="14" fill="#9aa8ef" stroke="#2b2d5a" stroke-width="4"/><circle cx="100" cy="138" r="14" fill="#9aa8ef" stroke="#2b2d5a" stroke-width="4"/><circle cx="82.9688283373971" cy="136.85792462959225" r="14" fill="#9aa8ef" stroke="#2b2d5a" stroke-width="4"/><circle cx="69.17947028896843" cy="133.64908787698428" r="14" fill="#9aa8ef" stroke="#2b2d5a" stroke-width="4"/><circle cx="61.256673554854764" cy="128.98427864597826" r="14" fill="#9aa8ef" stroke="#2b2d5a" stroke-width="4"/>

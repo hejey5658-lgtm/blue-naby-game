@@ -4,7 +4,10 @@ import { CHAPTERS } from '../data/chapters.js';
 import { VERSION, IS_TEST_BUILD } from '../data/version.js';
 import { Button } from '../ui/Button.js';
 import { getSafeInsets } from '../ui/safeArea.js';
-import { platform, requestFullscreen, vibrate } from '../platform.js';
+import { platform, requestFullscreen } from '../platform.js';
+import { state, save, hasProgress } from '../state.js';
+import { unlockAudio, sfx, vibrate } from '../ui/feedback.js';
+import { iconGear, iconPuzzle } from '../ui/icons.js';
 import { setTheme } from '../ui/theme.js';
 
 // 타이틀: 화면 위쪽은 창가(나무 창틀이 화면의 틀), 유리창 너머로 바깥 세상이 보이고
@@ -65,7 +68,13 @@ export class TitleScene extends Phaser.Scene {
     const clip = this.make.graphics({}, false);
     clip.fillStyle(0xffffff).fillRect(x, y, w, h);
     g.setMask(clip.createGeometryMask());
-    g.fillGradientStyle(C.skyTop, C.skyTop, C.skyBottom, C.skyBottom, 1).fillRect(x, y, w, h);
+    // 하늘: 위는 진하게 아래는 옅게 (그라데이션 대신 띠 12개 — 캔버스 그리기에서도 같게)
+    const top = Phaser.Display.Color.ValueToColor(C.skyTop);
+    const bot = Phaser.Display.Color.ValueToColor(C.skyBottom);
+    for (let i = 0; i < 12; i++) {
+      const c = Phaser.Display.Color.Interpolate.ColorWithColor(top, bot, 11, i);
+      g.fillStyle(Phaser.Display.Color.GetColor(c.r, c.g, c.b), 1).fillRect(x, y + (h / 12) * i, w, h / 12 + 1);
+    }
     // 해와 구름
     g.fillStyle(0xffd84a, 1).fillCircle(x + w - 110, y + 120, 44);
     g.fillStyle(0xffffff, 0.95);
@@ -114,16 +123,11 @@ export class TitleScene extends Phaser.Scene {
 
   drawFrame() {
     const { x, y, w, h, frame: f } = WIN;
+    // 창틀은 유리창 둘레에 굵은 선으로 그린다 (마스크 없이: 캔버스 그리기에서도 같게 보이도록)
     const g = this.add.graphics();
-    g.fillStyle(C.woodDark, 1).fillRoundedRect(x - f, y - f, w + f * 2, h + f * 2, 18);
-    g.fillStyle(C.wood, 1).fillRoundedRect(x - f + 6, y - f + 4, w + f * 2 - 12, h + f * 2 - 12, 14);
+    g.lineStyle(f, C.woodDark, 1).strokeRoundedRect(x - f / 2, y - f / 2, w + f, h + f, 14);
+    g.lineStyle(f - 10, C.wood, 1).strokeRoundedRect(x - f / 2 + 1, y - f / 2 - 1, w + f - 2, h + f - 2, 12);
     g.fillStyle(C.woodLight, 1).fillRoundedRect(x - f + 12, y - f + 8, w + f * 2 - 24, 8, 4);
-    // 유리창 구멍을 다시 비워 바깥이 보이게: 틀은 네 변만 그린다
-    const mask = this.make.graphics({}, false);
-    mask.fillStyle(0xffffff).fillRect(x, y, w, h);
-    const bm = mask.createGeometryMask();
-    bm.setInvertAlpha(true);
-    g.setMask(bm);
     // 커튼 자락 (양옆)
     const curtain = this.add.graphics();
     const drawCurtain = (cx, dir) => {
@@ -178,11 +182,29 @@ export class TitleScene extends Phaser.Scene {
   }
 
   drawControls() {
-    this.startBtn = new Button(this, UI.width / 2, 1010, {
-      label: '여행 시작하기',
+    this.startBtn = new Button(this, UI.width / 2, 960, {
+      label: hasProgress() ? '여행 이어하기' : '여행 시작하기',
       onPress: () => this.onStart(),
     });
-    this.hint = this.add.text(UI.width / 2, 1150, '', {
+    this.puzzleBtn = new Button(this, UI.width / 2, 1110, {
+      width: 320, height: 96, label: '블록 퍼즐', fontSize: 30, color: 0xffb347, shade: 0xd98a2b, textColor: '#2b2d5a',
+      onPress: () => { sfx('tap'); this.toast('블록 퍼즐은 곧 열려요!'); },
+    });
+    const pi = this.add.graphics();
+    iconPuzzle(pi, -112, 0, 40, 0x2b2d5a);
+    this.puzzleBtn.face.add(pi);
+    this.puzzleBtn.text.setX(16);
+
+    // 설정 (오른쪽 위, 커튼봉 위)
+    this.gear = this.add.container(UI.width - 64, 64);
+    const gg = this.add.graphics();
+    gg.fillStyle(0xffffff, 0.95).fillCircle(0, 0, 38);
+    gg.lineStyle(3, 0x2b2d5a, 0.2).strokeCircle(0, 0, 38);
+    iconGear(gg, 0, 0, 46);
+    this.gear.add(gg).setSize(96, 96).setInteractive({ useHandCursor: true })
+      .on('pointerup', () => this.openSettings());
+
+    this.toastText = this.add.text(UI.width / 2, 1200, '', {
       fontFamily: UI.font, fontSize: `${UI.fontSize.small + 4}px`, color: '#2b2d5a', align: 'center',
     }).setOrigin(0.5).setAlpha(0);
 
@@ -192,30 +214,75 @@ export class TitleScene extends Phaser.Scene {
     }).setOrigin(1, 1).setAlpha(0.6);
 
     if (!platform.can.storage) {
-      this.add.text(UI.width / 2, 1190, '이 브라우저에서는 기록이 저장되지 않아요', {
+      this.add.text(24, UI.height - 20, '이 브라우저에서는 기록이 저장되지 않아요', {
         fontFamily: UI.font, fontSize: `${UI.fontSize.small}px`, color: '#a4523a',
-      }).setOrigin(0.5);
+      }).setOrigin(0, 1);
     }
 
-    this.input.keyboard?.on('keydown-ENTER', () => this.startBtn.trigger());
-    this.input.keyboard?.on('keydown-SPACE', () => this.startBtn.trigger());
+    this.input.keyboard?.on('keydown-ENTER', () => this.input.enabled && this.startBtn.trigger());
+    this.input.keyboard?.on('keydown-SPACE', () => this.input.enabled && this.startBtn.trigger());
+
+    const onSettingsClosed = ({ reset }) => {
+      this.input.enabled = true;
+      if (reset) this.startBtn.text.setText('여행 시작하기');
+    };
+    this.game.events.on('settings-closed', onSettingsClosed);
+    this.events.once('shutdown', () => this.game.events.off('settings-closed', onSettingsClosed));
+  }
+
+  toast(msg) {
+    this.toastText.setText(msg).setAlpha(0).setY(1214);
+    this.tweens.killTweensOf(this.toastText);
+    this.tweens.add({ targets: this.toastText, alpha: 1, y: 1200, duration: 220, ease: 'Back.easeOut', hold: 2200, yoyo: true });
+  }
+
+  openSettings() {
+    sfx('tap');
+    unlockAudio();
+    this.input.enabled = false;
+    this.scene.launch('Settings', { frame: 'woodWindow' });
   }
 
   layoutSafeArea() {
-    const { bottom } = getSafeInsets(this.game);
+    const { top, bottom } = getSafeInsets(this.game);
     this.version.y = UI.height - 20 - bottom;
+    this.gear.y = 64 + top;
   }
 
   onStart() {
-    if (this.opened) return;
-    this.opened = true;
+    if (this.opening) return;
+    this.opening = true;
+    unlockAudio();
     requestFullscreen();
-    vibrate(UI.vibrate.collect);
+    sfx('open');
+    vibrate('collect');
     // 창문이 활짝 열린다 — 바깥 세상으로 나가는 첫 장면
-    this.tweens.add({ targets: [this.paneL, this.paneR], scaleX: 0.08, duration: 700, ease: 'Back.easeIn' });
-    this.tweens.add({ targets: this.logo, y: '-=24', alpha: 0.9, duration: 500, ease: 'Sine.easeOut' });
-    this.tweens.add({ targets: this.blue, x: '+=10', y: '-=26', duration: 260, yoyo: true, ease: 'Quad.easeOut' });
-    this.hint.setText('창문이 열렸어요!\n프롤로그는 다음 단계에서 이어져요').setAlpha(0);
-    this.tweens.add({ targets: this.hint, alpha: 1, duration: 400, delay: 500 });
+    if (!this.windowOpen) {
+      this.windowOpen = true;
+      this.tweens.add({ targets: [this.paneL, this.paneR], scaleX: 0.08, duration: 700, ease: 'Back.easeIn' });
+      this.tweens.add({ targets: this.blue, y: '-=26', duration: 260, yoyo: true, ease: 'Quad.easeOut' });
+    }
+    this.time.delayedCall(hasProgress() ? 200 : 820, () => {
+      this.opening = false;
+      if (hasProgress()) {
+        this.toast('이어하기는 1장 미로(3단계)를 만들면 열려요');
+        return;
+      }
+      this.playPrologue();
+    });
+  }
+
+  playPrologue() {
+    this.input.enabled = false;
+    this.tweens.add({ targets: [this.startBtn, this.puzzleBtn, this.logo, this.version, this.gear], alpha: 0, duration: 200 });
+    this.game.events.once('dialogue-done', () => {
+      state.step = 'ch1_maze';
+      save();
+      this.input.enabled = true;
+      this.startBtn.text.setText('여행 이어하기');
+      this.tweens.add({ targets: [this.startBtn, this.puzzleBtn, this.logo, this.version, this.gear], alpha: 1, duration: 260 });
+      this.toast('1장 집 미로는 다음 단계(3단계)에서 만나요!');
+    });
+    this.scene.launch('Dialogue', { key: 'prologue', frame: 'woodWindow', form: 'caterpillar' });
   }
 }

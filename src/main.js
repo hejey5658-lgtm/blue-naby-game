@@ -3,9 +3,14 @@ import { UI } from './data/ui.js';
 import { platform } from './platform.js';
 import { BootScene } from './scenes/BootScene.js';
 import { TitleScene } from './scenes/TitleScene.js';
+import { DialogueScene } from './scenes/DialogueScene.js';
+import { SettingsScene } from './scenes/SettingsScene.js';
+import { save } from './state.js';
+import { suspendAudio, unlockAudio } from './ui/feedback.js';
 
 const game = new Phaser.Game({
-  type: Phaser.AUTO,
+  // 주소 끝에 ?canvas 를 붙이면 WebGL 대신 캔버스로 그린다(자동 화면 확인·오래된 기기 확인용)
+  type: new URLSearchParams(location.search).has('canvas') ? Phaser.CANVAS : Phaser.AUTO,
   parent: 'game',
   transparent: true,
   scale: {
@@ -16,7 +21,7 @@ const game = new Phaser.Game({
   },
   input: { activePointers: 2 },
   render: { antialias: true, powerPreference: 'high-performance' },
-  scene: [BootScene, TitleScene],
+  scene: [BootScene, TitleScene, DialogueScene, SettingsScene],
 });
 
 // 브라우저 기본 동작 막기: 당겨서 새로고침, 두 번 탭 확대, 길게 눌러 메뉴, 핀치 확대.
@@ -53,9 +58,16 @@ checkOrientation();
 
 // 다른 앱·탭으로 가면 멈추고, 돌아오면 이어서 (저장·일시정지 메뉴는 6단계)
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden) game.loop.sleep();
-  else checkOrientation();
+  if (document.hidden) {
+    save();
+    suspendAudio();
+    game.loop.sleep();
+  } else {
+    unlockAudio();
+    checkOrientation();
+  }
 });
+window.addEventListener('pagehide', () => save());
 window.addEventListener('pageshow', (e) => { if (e.persisted) checkOrientation(); });
 
 if (import.meta.env.DEV) window.__game = game;

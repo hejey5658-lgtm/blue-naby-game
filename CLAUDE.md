@@ -109,6 +109,7 @@
 - Firebase 프로젝트 ID: **`blue-naby-game`** (사용자 구글 계정에 연결됨). 공개 주소: `https://blue-naby-game.web.app`.
 - `firebase.json`: `dist` 폴더를 올림. `index.html`·`*.webmanifest`·서비스 워커는 `no-cache`, 해시 붙은 `assets/`는 1년 캐시.
 - `.github/workflows/firebase-hosting.yml`: `main`에 푸시하면 공개 배포, PR이면 미리보기 주소. GitHub Secret `FIREBASE_SERVICE_ACCOUNT_BLUE_NABY_GAME`가 필요(등록 방법은 `PROGRESS.md`).
+- 직접 배포: `GOOGLE_APPLICATION_CREDENTIALS=<키 경로> npx -y firebase-tools@15.33.0 hosting:channel:deploy preview --expires 30d --project blue-naby-game` (키는 저장소 밖에만 둔다). 이 작업 공간의 네트워크는 `*.web.app` 접속이 막혀 있어 배포 결과는 사용자가 폰으로 확인한다.
 - Firebase에서는 **Hosting(정적 파일)만** 쓴다. Firestore·Auth·Analytics 등은 2절 원칙에 따라 사용자 결정 전까지 넣지 않는다.
 
 ## 6. 기획에서 바뀐 점
@@ -139,6 +140,7 @@
 | 2026-10-30 | GitHub 권한 연결 완료(사용자가 직접) | 쌓인 커밋을 브랜치에 처음 올림. 이후 작업은 커밋마다 바로 푸시 |
 | 2026-10-30 | **3단계 진행** | 1장 미로(쓱 밀기·방향 버튼·키보드, 잎사귀, 청소기, 출구, 일시정지, 기록, 이어하기) — v0.3.0 |
 | 2026-10-30 | **4단계 진행** | 대결 씬(등장 연출·버튼 4개·특기 타이밍·심술 게이지·친구 되기·별), 먼지몽 그림 — v0.4.0 |
+| 2026-10-30 | GitHub Secret 대신 **Claude가 직접 배포**(2번 방법)하라 | 미리보기 채널 `preview`(30일)에 v0.4.0 배포. Secret이 고쳐지기 전까지 새 버전은 Claude가 직접 올림. 배포 워크플로에 `workflow_dispatch`(직접 실행 → 미리보기) 추가 |
 | 2026-10-30 | 작업 브랜치: `claude/firebase-server-integration-84bkga`에서 개발·커밋·푸시 (다른 브랜치로 푸시 금지, PR은 요청할 때만) | — |
 
 ## 8. 참고 문서 (스킬 `blue-butterfly-game`의 `references/`)

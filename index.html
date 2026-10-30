@@ -2,27 +2,64 @@
 <html lang="ko">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#7ec8ff" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#e9d8b4" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="블루나비" />
+    <meta name="description" content="파란 애벌레 블루나비가 미로와 대결을 지나 나비가 되어 세상으로 날아가는 귀여운 모험" />
     <title>블루나비의 세상여행</title>
     <style>
-      html, body { margin: 0; height: 100%; background: #eaf6ff; overscroll-behavior: none; }
-      body {
-        display: flex; flex-direction: column; align-items: center; justify-content: center;
-        font-family: system-ui, -apple-system, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
-        color: #23527c; text-align: center; padding: 16px; box-sizing: border-box;
+      :root {
+        --sat: env(safe-area-inset-top, 0px);
+        --sab: env(safe-area-inset-bottom, 0px);
+        --ink: #2b2d5a;
+        --theme: #e9d8b4;
+        --theme-bottom: #f3e3c3;
       }
-      .bug { font-size: 72px; }
-      h1 { font-size: 28px; margin: 12px 0 8px; }
-      p { margin: 4px 0; }
-      small { margin-top: 24px; opacity: .6; }
+      html, body {
+        margin: 0;
+        height: 100%;
+        background: linear-gradient(var(--theme) 50%, var(--theme-bottom) 50%);
+        overflow: hidden;
+        touch-action: none;
+        overscroll-behavior: none;
+        -webkit-user-select: none;
+        user-select: none;
+        -webkit-tap-highlight-color: transparent;
+        -webkit-touch-callout: none;
+      }
+      #game { position: fixed; inset: 0; }
+      #game canvas { display: block; }
+
+      /* 폰을 가로로 들었을 때만 보이는 덮개 */
+      #rotate {
+        position: fixed; inset: 0; z-index: 10;
+        display: none; flex-direction: column; align-items: center; justify-content: center; gap: 20px;
+        background: var(--theme); color: var(--ink);
+        font: 600 22px/1.4 "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif;
+        text-align: center; padding: 16px;
+      }
+      #rotate.show { display: flex; }
+      #rotate svg { width: 88px; height: 88px; animation: tilt 1.6s cubic-bezier(.34,1.56,.64,1) infinite alternate; }
+      @keyframes tilt { from { transform: rotate(-90deg); } to { transform: rotate(0deg); } }
+      @media (prefers-reduced-motion: reduce) { #rotate svg { animation: none; } }
     </style>
   </head>
   <body>
-    <div class="bug">🐛</div>
-    <h1>블루나비의 세상여행</h1>
-    <p>블루나비가 여행 준비 중이에요!</p>
-    <p>조금만 기다려 주세요.</p>
-    <small>v0.0.1 · Firebase Hosting 연결 확인용 화면</small>
+    <div id="game"></div>
+    <div id="rotate" role="alert" aria-live="polite">
+      <svg viewBox="0 0 64 64" aria-hidden="true">
+        <rect x="18" y="6" width="28" height="52" rx="7" fill="#7ec8ff" stroke="#2b2d5a" stroke-width="3.5" />
+        <circle cx="32" cy="50" r="3" fill="#2b2d5a" />
+        <circle cx="27" cy="24" r="2.6" fill="#2b2d5a" />
+        <circle cx="37" cy="24" r="2.6" fill="#2b2d5a" />
+        <ellipse cx="24" cy="31" rx="3" ry="2" fill="#ff9fb8" />
+        <ellipse cx="40" cy="31" rx="3" ry="2" fill="#ff9fb8" />
+      </svg>
+      <div>폰을 세워 주세요<br /><span style="font-size:17px;font-weight:500;opacity:.75">블루나비는 세로 화면에서 놀아요</span></div>
+    </div>
+    <script type="module" src="/src/main.js"></script>
   </body>
 </html>

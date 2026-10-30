@@ -63,6 +63,8 @@
 - **단일 HTML 파일 버전**(`blue_butterfly_game.html`, 외부 파일 없음)과 게임장 `eunyoug_3st_index.html`(게임을 base64로 넣어 iframe `srcdoc`로 띄움, 404 방지)도 함께 만든다.
 
 **코드 원칙**
+- 패키지 버전: vite `6.4.4`, phaser `3.80.1` (정확한 버전 고정. 나온 지 2주 안 된 6.4.5는 피함).
+- 아이콘은 이모지 대신 직접 그린 그림(SVG/Graphics)으로 (impeccable craft-floor). 기획서 문구 속 이모지는 공개용 그림 단계에서 그림 아이콘으로 바꾼다.
 - 기술: **Phaser 3 (`phaser@3.80.1`) + Vite, JavaScript(ES 모듈), TypeScript 안 씀.** 패키지는 `--save-exact`로 버전 고정, 나온 지 2주 안 된 버전 피하기.
 - **데이터와 코드 분리**: 대사·미로·보스·형태·UI 수치·그림 목록·버전은 `src/data/`(`dialogue.js`, `mazes.js`, `forms.js`, `bosses.js`, `chapters.js`, `ui.js`, `assets.js`, `version.js`). 기획자가 코드 없이 고칠 수 있게.
 - **브라우저 차이는 `src/platform.js` 한 곳에서만** 판별하고, 모든 기능 호출은 `can.*` 확인 + try/catch.
@@ -104,6 +106,7 @@
 
 ## 6. 기획에서 바뀐 점
 
+- 화면 방향: **"창문이 넓어진다"(장마다 창틀 모양의 화면 틀, 엔딩에서 사라짐) + 여행 지도 = "스탬프 투어 수첩"** (2026-10-30, 사용자 승인). 상세는 `docs/design-brief.md`, 방향 계약은 `.impeccable/surfaces/`.
 - 호스팅: 기획서 추천(Netlify/Cloudflare Pages) 대신 **Firebase Hosting** 사용 (2026-10-30, 사용자 지시). 무료 정적 호스팅이라 "서버 없음" 원칙은 유지.
 
 ## 7. 사용자 지시 기록 (최신이 아래)
@@ -115,6 +118,7 @@
 | 2026-10-30 | 앞으로 놓치기 쉽거나 중요한 지시는 항상 `CLAUDE.md`에 반영해 최신으로 관리하라 | 0절 규칙으로 고정 |
 | 2026-10-30 | 설치된 스킬을 쓰되 **기획은 impeccable**로. 기획서는 다시 읽지 말고, 다시 봐야 하면 읽고 개발 기획부터 진행 | impeccable 설치(사용자가 GitHub 설치 선택), 0-1절 |
 | 2026-10-30 | (답변) 주 플레이어는 **어른 친구들**, 주로 **갤럭시 폰 + 카카오톡**으로 링크를 연다, 기획은 **게임 전체 화면**을 한 번에 | `PRODUCT.md`, `docs/design-brief.md` |
+| 2026-10-30 | 화면 방향은 **제안 방향**("창문이 넓어진다" + "스탬프 투어 수첩")으로 | 6절, `docs/design-brief.md` 승인 표시, 1단계 개발 시작 |
 | 2026-10-30 | 작업 브랜치: `claude/firebase-server-integration-84bkga`에서 개발·커밋·푸시 (다른 브랜치로 푸시 금지, PR은 요청할 때만) | — |
 
 ## 8. 참고 문서 (스킬 `blue-butterfly-game`의 `references/`)

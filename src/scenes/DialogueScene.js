@@ -97,6 +97,8 @@ export class DialogueScene extends Phaser.Scene {
     this.index = i;
     const line = this.lines[i];
     this.drawSpeaker(line);
+    // 엔딩처럼 대사에 맞춰 연출하는 씬을 위해 알린다
+    this.game.events.emit('dialogue-line', { key: this.key, index: i, speaker: line.speaker });
     // 3줄씩 쪽으로 나눈다
     const wrapped = this.body.getWrappedText(line.text);
     this.pages = [];

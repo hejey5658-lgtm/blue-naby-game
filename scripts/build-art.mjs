@@ -5,7 +5,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { Resvg } from '@resvg/resvg-js';
-import { bossFrame, BOSS_POSES, BOSS_FACE_MOODS, BOSS_FACE_BOX, BOSS_KEYS } from '../art/gen/bosses.mjs';
+import { bossFrame, BOSS_POSES, BOSS_FACE_MOODS, BOSS_FACE_BOX, BOSS_KEYS, npcFrame, NPC_KEYS, NPC_POSES, NPC_FACE_BOX } from '../art/gen/bosses.mjs';
 import { blueSvg, blueFrame, MOODS, FORM_NAMES, MAZE_POSES, BATTLE_POSES, FACE_MOODS, FACE_BOX } from '../art/gen/blue.mjs';
 
 const P = JSON.parse(fs.readFileSync('art/palette.json', 'utf8'));
@@ -46,6 +46,10 @@ for (const key of BOSS_KEYS) {
   write(`public/assets/char/boss_${key}.png`, sheet(BOSS_POSES.map((p) => bossFrame(P, key, p)), 480, [-6, -14, 212]));
   write(`public/assets/face/face_${key}.png`, sheet(BOSS_FACE_MOODS.map((mood) => bossFrame(P, key, { mood })), 280, BOSS_FACE_BOX[key]));
   fs.writeFileSync(`art/source/boss_${key}.svg`, `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><defs>${bossFrame(P, key).defs}</defs>${bossFrame(P, key).body}</svg>`);
+}
+for (const key of NPC_KEYS) {
+  write(`public/assets/char/npc_${key}.png`, sheet(NPC_POSES.map((p) => npcFrame(P, key, p)), key === 'dot' ? 128 : 480, [-6, -10, 212]));
+  write(`public/assets/face/face_${key}.png`, sheet(['normal', 'happy'].map((mood) => npcFrame(P, key, { mood })), 280, NPC_FACE_BOX[key]));
 }
 console.log('게임용 시트: public/assets/char/{blue,boss}_*.png, public/assets/face/face_*.png');
 

@@ -70,5 +70,9 @@
     "light": "#ffeaa0",
     "shade": "#e6b52a",
     "hat": "#ff4d4d"
+  },
+  "flower": {
+    "petal": "#4f8dff",
+    "outer": "#2f6fe0"
   }
 }

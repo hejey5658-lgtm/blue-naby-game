@@ -6,12 +6,14 @@ import { platform } from '../platform.js';
 import { drawPanel } from '../ui/frames.js';
 import { iconClose } from '../ui/icons.js';
 import { sfx, vibrate } from '../ui/feedback.js';
+import { openBox } from '../ui/htmlBox.js';
+import { makeSaveCode, readSaveCode, applySaveCode, describe } from '../saveCode.js';
 
 // 설정: 다른 씬 위에 띄운다. scene.launch('Settings', { frame, from })
 // 소리 · 진동(지원 기기만) · 미로 조작 · 대사 속도 · 만든 사람들 · 처음부터 다시 하기
 // (저장 코드·홈 화면 안내·개인정보·의견 보내기는 6·7단계에서 이 화면에 더한다)
-const PANEL = { x: 30, y: 150, w: 660, h: 980 };
-const ROW_H = 120;
+const PANEL = { x: 30, y: 110, w: 660, h: 1070 };
+const ROW_H = 104;
 
 export class SettingsScene extends Phaser.Scene {
   constructor() { super('Settings'); }
@@ -50,10 +52,14 @@ export class SettingsScene extends Phaser.Scene {
     root.add(this.add.text(UI.width / 2, y - 6, '소리가 안 나면 폰의 무음 모드를 확인해 주세요', {
       fontFamily: UI.font, fontSize: '22px', color: '#5a5c88',
     }).setOrigin(0.5));
-    y += 60;
+    y += 54;
 
+    this.makeLinkRow(root, y, '저장 코드 복사하기', () => this.copyCode());
+    y += 98;
+    this.makeLinkRow(root, y, '저장 코드 넣기', () => this.pasteCode());
+    y += 98;
     this.makeLinkRow(root, y, '만든 사람들', () => this.showCredits());
-    y += 104;
+    y += 98;
     if (hasProgress()) this.makeLinkRow(root, y, '처음부터 다시 하기', () => this.confirmReset(), '#a4523a');
 
     root.add(this.add.text(UI.width / 2, PANEL.y + PANEL.h - 40, `블루나비의 세계여행 · ${VERSION}`, {
@@ -144,6 +150,59 @@ export class SettingsScene extends Phaser.Scene {
     });
     layer.alpha = 0;
     this.tweens.add({ targets: layer, alpha: 1, duration: 180 });
+  }
+
+  // 저장 코드: 다른 브라우저로 진행을 옮긴다 (복사는 클립보드, 안 되면 글자 상자에서 직접)
+  copyCode() {
+    const code = makeSaveCode();
+    openBox({
+      title: '저장 코드',
+      text: '이 글자를 다른 브라우저의 [저장 코드 넣기]에 붙여 넣으면 여기까지 이어서 할 수 있어요. 미로 안 위치는 장 처음부터예요.',
+      value: code,
+      readonly: true,
+      buttons: [
+        { label: '복사하기', onClick: async (b) => {
+          try {
+            if (!platform.can.clipboard) throw new Error();
+            await navigator.clipboard.writeText(code);
+            b.say('복사했어요!');
+          } catch {
+            b.textarea.select();
+            b.say('글자를 길게 눌러 복사해 주세요', true);
+          }
+        } },
+        { label: '닫기', sub: true, onClick: (b) => b.close() },
+      ],
+    });
+  }
+
+  pasteCode() {
+    openBox({
+      title: '저장 코드 넣기',
+      text: 'BB1- 로 시작하는 저장 코드를 붙여 넣어 주세요.',
+      placeholder: 'BB1-…',
+      buttons: [
+        { label: '이어서 하기', onClick: (b) => {
+          const d = readSaveCode(b.value());
+          if (!d) { b.say('코드가 맞지 않아요. 다시 확인해 주세요.', true); return; }
+          if (b.confirming !== b.value()) {
+            b.confirming = b.value();
+            b.say(`${describe(d)} — 이걸로 이어서 할까요? 한 번 더 누르면 바뀌어요.`);
+            return;
+          }
+          applySaveCode(d);
+          b.close();
+          // 지금 떠 있는 장면을 모두 닫고 타이틀을 새로 연다 (타이틀은 멈췄다 켜면 순서가 꼬여 restart로)
+          const title = this.game.scene.getScene('Title');
+          this.game.scene.getScenes(true)
+            .filter((sc) => !['Preload', 'Title'].includes(sc.scene.key))
+            .forEach((sc) => sc.scene.stop());
+          if (title.scene.isActive() || title.scene.isPaused()) title.scene.restart();
+          else this.game.scene.start('Title');
+        } },
+        { label: '닫기', sub: true, onClick: (b) => b.close() },
+      ],
+    });
   }
 
   showCredits() {

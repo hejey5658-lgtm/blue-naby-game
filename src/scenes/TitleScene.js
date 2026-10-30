@@ -93,6 +93,14 @@ export class TitleScene extends Phaser.Scene {
       }
       g.fillStyle(0xffffff, 1).fillCircle(fx, fy, 5);
     }
+    // 엔딩을 본 뒤에는 창밖을 나는 진짜 블루나비 (scenario 9절)
+    if (state.cleared && this.textures.exists('blue_butterfly')) {
+      this.dream = this.add.sprite(x + 470, y + 420, 'blue_butterfly', 2).setDisplaySize(110, 110);
+      if (this.anims.exists('blue_butterfly_move')) this.dream.play('blue_butterfly_move');
+      this.tweens.add({ targets: this.dream, x: '-=200', y: '-=30', duration: 4200, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+      this.tweens.add({ targets: this.dream, y: '-=14', duration: 600, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+      return;
+    }
     // 멀리 나는 파란 나비 (블루나비가 될 꿈)
     this.dream = this.add.graphics({ x: x + 420, y: y + 230 });
     this.dream.fillStyle(0x2f7bff, 1).fillEllipse(-9, -4, 16, 20).fillEllipse(9, -4, 16, 20);
@@ -190,7 +198,7 @@ export class TitleScene extends Phaser.Scene {
     });
     this.puzzleBtn = new Button(this, UI.width / 2, 1110, {
       width: 320, height: 96, label: '블록 퍼즐', fontSize: 30, color: 0xffb347, shade: 0xd98a2b, textColor: '#2b2d5a',
-      onPress: () => { sfx('tap'); this.toast('블록 퍼즐은 곧 열려요!'); },
+      onPress: () => { sfx('tap'); unlockAudio(); this.scene.start('PuzzleList'); },
     });
     const pi = this.add.graphics();
     iconPuzzle(pi, -112, 0, 40, 0x2b2d5a);

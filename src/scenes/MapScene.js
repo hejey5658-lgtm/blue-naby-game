@@ -199,7 +199,10 @@ export class MapScene extends Phaser.Scene {
         onPress: () => { sfx('tap'); startChapter(this, next); },
       });
     } else {
-      this.add.text(UI.width / 2 + 70, y, '모든 나라를 여행했어!\n엔딩은 곧 열려요', { fontFamily: UI.fontTitle, fontSize: '28px', color: '#ffd84a', align: 'center' }).setOrigin(0.5);
+      this.continueBtn = new Button(this, UI.width / 2 + 70, y, {
+        width: 440, height: 110, fontSize: 32, label: '엔딩 다시 보기', color: 0xffd84a, shade: 0xd9a92b, textColor: '#2b2d5a',
+        onPress: () => { sfx('tap'); this.scene.start('Ending'); },
+      });
     }
     new Button(this, 110, y, {
       width: 160, height: 110, fontSize: 26, label: '타이틀', color: 0xfdf7ea, shade: 0xc9c0ae, textColor: '#2b2d5a',

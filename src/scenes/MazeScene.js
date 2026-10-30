@@ -592,7 +592,7 @@ export class MazeScene extends Phaser.Scene {
     const bottom = this.insets.bottom;
     this.dpad = state.settings.control === 'dpad';
     const by = (this.dpad ? 1036 : 1185) - (this.dpad ? 0 : bottom);
-    this.dot = this.add.image(70, by, 'npc_dot').setDisplaySize(84, 84).setDepth(8).setAlpha(0);
+    this.dot = this.add.image(70, by, 'npc_dot', 0).setDisplaySize(84, 84).setDepth(8).setAlpha(0);
     this.bubble = this.add.container(0, 0).setDepth(8).setAlpha(0);
     this.bubbleG = this.add.graphics();
     this.bubbleText = this.add.text(140, by, '', {

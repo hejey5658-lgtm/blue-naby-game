@@ -80,6 +80,8 @@
 - 장 흐름은 `src/flow.js`(`afterChapter`, `startChapter`, `nextChapterId`)로만 넘긴다. 저장: `state.chapter` = 지금까지 열린 가장 먼 장, `state.playing` = 지금 하는 장, `state.step` = `chN_maze` / `chN_boss` / `map`.
 - 나중 장 그림은 `PreloadScene`이 뒤에서 받는다. 새 씬이 나중 장 그림을 쓰면 create 맨 앞에서 `waitForAssets(this, [키…], data)`를 부른다.
 - 자동 완주 시험은 headless에서 게임 시계가 느리게 가므로 오래 걸린다(7장 전체 수십 분). 백그라운드로 돌린다.
+- 글자 입력·복사가 필요한 곳은 HTML 상자(`src/ui/htmlBox.js`)로. 상자 위 손가락이 게임으로 새지 않게 막아 두었다(Phaser는 window에서 손 뗌을 듣는다).
+- 텍스처에 프레임을 `add`하면 그 텍스처의 기본 프레임이 바뀐다. 그림 전체를 보여 줄 때는 프레임 `'__BASE'`를 꼭 지정한다(퍼즐에서 난 버그).
 - 한국어 조사는 `src/ui/josa.js`의 `josa(단어, '을', '를')`로 받침에 맞춘다(장마다 수집품 이름이 달라서).
 - 비밀 정보(호스팅 토큰, Firebase 서비스 계정 키 JSON 등)는 **절대 git에 올리지 않는다**.
 
@@ -146,6 +148,7 @@
 | 2026-10-30 | **4단계 진행** | 대결 씬(등장 연출·버튼 4개·특기 타이밍·심술 게이지·친구 되기·별), 먼지몽 그림 — v0.4.0 |
 | 2026-10-30 | GitHub Secret 대신 **Claude가 직접 배포**(2번 방법)하라 | 미리보기 채널 `preview`(30일)에 v0.4.0 배포. Secret이 고쳐지기 전까지 새 버전은 Claude가 직접 올림. 배포 워크플로에 `workflow_dispatch`(직접 실행 → 미리보기) 추가 |
 | 2026-10-30 | **5단계 진행**(나눠서 묻지 말고 바로) | 장 흐름·여권·진화·2~7장 미로 장치·보스 7명 그림·그림 나눠 받기 — v0.5.0, `CHANGELOG.md` 시작 |
+| 2026-10-30 | **6단계 진행** | 엔딩, 저장 코드, 블록 퍼즐 5단계, 꽃님·도트 그림 — v0.6.0 |
 | 2026-10-30 | 작업 브랜치: `claude/firebase-server-integration-84bkga`에서 개발·커밋·푸시 (다른 브랜치로 푸시 금지, PR은 요청할 때만) | — |
 
 ## 8. 참고 문서 (스킬 `blue-butterfly-game`의 `references/`)

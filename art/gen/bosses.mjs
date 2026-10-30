@@ -279,3 +279,66 @@ export const BOSS_FACE_BOX = {
   sappuni: [18, 10, 164], dotori: [22, 18, 150], damdam: [26, 28, 148], buzzboss: [26, 10, 150],
 };
 export const BOSS_KEYS = Object.keys(BOSSES);
+
+// ── 도트: 무당벌레 길잡이 (빨간 광택 등껍질, 검은 점, 노란 안경) ──
+function dot(P, mood) {
+  const m = mood === 'happy' ? 'happy' : 'normal';
+  return {
+    defs: defs(P, grad('dotShell', '#ff8a8a', '#ff4d4d', '#d63a3a'), grad('dotHead', '#5a5c88', P.ink, '#1c1d3c')),
+    body: `${groundShadow(P, 60)}
+      ${blobE(100, 132, 62, 52, 'url(#dotShell)', P)}
+      <path d="M100 82 L100 184" stroke="${P.ink}" stroke-width="5"/>
+      <circle cx="70" cy="122" r="11" fill="${P.ink}"/><circle cx="130" cy="122" r="11" fill="${P.ink}"/>
+      <circle cx="78" cy="158" r="9" fill="${P.ink}"/><circle cx="122" cy="158" r="9" fill="${P.ink}"/>
+      ${shine(70, 100, 16, 9)}
+      <path d="M82 38 q-8 -20 -20 -22 M118 38 q8 -20 20 -22" fill="none" stroke="${P.ink}" stroke-width="4.5" stroke-linecap="round"/>
+      <circle cx="61" cy="16" r="6" fill="${P.ink}"/><circle cx="139" cy="16" r="6" fill="${P.ink}"/>
+      ${blobC(100, 70, 40, 'url(#dotHead)', P)}
+      <ellipse cx="68" cy="84" rx="9" ry="6" fill="url(#bcheek)"/><ellipse cx="132" cy="84" rx="9" ry="6" fill="url(#bcheek)"/>
+      ${m === 'happy'
+        ? `<path d="M74 70 Q84 58 94 70 M106 70 Q116 58 126 70" fill="none" stroke="#fff" stroke-width="4.5" stroke-linecap="round"/>`
+        : `<circle cx="84" cy="68" r="9" fill="#fff"/><circle cx="116" cy="68" r="9" fill="#fff"/><circle cx="86" cy="70" r="5" fill="${P.ink}"/><circle cx="118" cy="70" r="5" fill="${P.ink}"/>`}
+      <circle cx="84" cy="68" r="15" fill="none" stroke="#ffd84a" stroke-width="4"/><circle cx="116" cy="68" r="15" fill="none" stroke="#ffd84a" stroke-width="4"/>
+      <path d="M99 68 L101 68" stroke="#ffd84a" stroke-width="4"/>
+      <path d="M92 88 Q100 ${m === 'happy' ? 98 : 93} 108 88" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>`,
+  };
+}
+
+// ── 꽃님: 세계에서 제일 큰 파란 꽃 (겹꽃잎, 노란 가운데, 따뜻한 얼굴) ──
+function flower(P, mood) {
+  const F = P.flower;
+  let petals = '';
+  for (const [n, r, w, col, off] of [[8, 66, 30, F.outer, 0], [8, 46, 24, F.petal, Math.PI / 8]]) {
+    for (let i = 0; i < n; i++) {
+      const a = off + (i / n) * Math.PI * 2;
+      const x = 100 + Math.cos(a) * r * 0.62;
+      const y = 92 + Math.sin(a) * r * 0.62;
+      petals += `<ellipse cx="${x}" cy="${y}" rx="${w}" ry="${r * 0.5}" fill="${col}" stroke="${P.ink}" stroke-width="5" transform="rotate(${(a * 180) / Math.PI + 90} ${x} ${y})"/>`;
+    }
+  }
+  const sway = mood === 'happy' ? 4 : 0;
+  return {
+    defs: defs(P, grad('flCenter', '#fff3b0', '#ffd84a', '#f0b52a')),
+    body: `${groundShadow(P, 50)}
+      <path d="M100 150 Q96 172 100 196" stroke="${P.ink}" stroke-width="14" fill="none"/>
+      <path d="M100 150 Q96 172 100 196" stroke="#4f9f4c" stroke-width="8" fill="none"/>
+      <ellipse cx="72" cy="176" rx="22" ry="10" fill="#6cc35a" stroke="${P.ink}" stroke-width="4" transform="rotate(-20 72 176)"/>
+      <ellipse cx="128" cy="172" rx="22" ry="10" fill="#6cc35a" stroke="${P.ink}" stroke-width="4" transform="rotate(20 128 172)"/>
+      <g transform="rotate(${sway} 100 150)">${petals}
+      ${blobC(100, 92, 34, 'url(#flCenter)', P)}
+      <circle cx="88" cy="80" r="2.5" fill="#e0a020"/><circle cx="112" cy="80" r="2.5" fill="#e0a020"/><circle cx="100" cy="74" r="2.5" fill="#e0a020"/>
+      <path d="M86 92 Q91 86 96 92 M104 92 Q109 86 114 92" fill="none" stroke="${P.ink}" stroke-width="3.5" stroke-linecap="round"/>
+      <ellipse cx="80" cy="102" rx="7" ry="4.5" fill="url(#bcheek)"/><ellipse cx="120" cy="102" rx="7" ry="4.5" fill="url(#bcheek)"/>
+      <path d="M92 104 Q100 112 108 104" fill="none" stroke="${P.ink}" stroke-width="3.5" stroke-linecap="round"/></g>`,
+  };
+}
+
+const NPCS = { dot, flower };
+export function npcFrame(P, key, pose = {}) {
+  const { defs: d, body } = NPCS[key](P, pose.mood ?? 'normal');
+  const t = `translate(0 ${pose.dy ?? 0}) translate(100 190) scale(${pose.sx ?? 1} ${pose.sy ?? 1}) translate(-100 -190)`;
+  return { defs: d, body: `<g transform="${t}">${body}</g>` };
+}
+export const NPC_KEYS = Object.keys(NPCS);
+export const NPC_POSES = [{}, { sy: 0.97, sx: 1.02, mood: 'happy' }];
+export const NPC_FACE_BOX = { dot: [40, 16, 120], flower: [30, 22, 140] };

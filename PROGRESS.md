@@ -45,6 +45,9 @@
 | PC 1440×900 | 가운데 세로 화면 (QR 안내는 8단계) |
 | 실제 갤럭시 폰 카카오톡 | **아직 확인 안 함** — 공개 주소가 생기면 확인 |
 
+## GitHub
+- 저장소: https://github.com/hejey5658-lgtm/blue-naby-game (브랜치 `claude/firebase-server-integration-84bkga`, 2026-10-30 첫 업로드)
+
 ## 공개 주소 (Firebase Hosting)
 - 프로젝트 ID: `blue-naby-game`
 - 공개 주소: https://blue-naby-game.web.app (자동 배포 설정 후)

@@ -18,6 +18,7 @@ function fresh() {
     stars: {},
     records: {},
     mazeState: null,
+    bossIndex: 0,
     mazeTimeStar: {},
     nickname: '',
     settings: { ...DEFAULT_SETTINGS },

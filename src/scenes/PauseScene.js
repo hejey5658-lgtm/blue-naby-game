@@ -5,7 +5,7 @@ import { Button } from '../ui/Button.js';
 import { sfx, unlockAudio } from '../ui/feedback.js';
 
 // 일시정지: 멈춘 씬(미로·대결) 위에 띄운다. scene.launch('Pause', { chapter, frame })
-// 계속하기 · 미로 처음부터 · 설정 · 타이틀로. 다른 앱에 갔다 오면 이 화면이 떠 있다.
+// 계속하기 · (미로/대결) 처음부터 · 설정 · 타이틀로. 다른 앱에 갔다 오면 이 화면이 떠 있다.
 export class PauseScene extends Phaser.Scene {
   constructor() { super('Pause'); }
 
@@ -13,6 +13,8 @@ export class PauseScene extends Phaser.Scene {
     this.chapter = data.chapter;
     this.frame = data.frame ?? 'woodWindow';
     this.under = data.under ?? 'Maze';
+    this.restartLabel = data.restartLabel ?? '미로 처음부터';
+    this.restartData = data.restartData ?? { chapter: data.chapter, fresh: true };
   }
 
   create() {
@@ -25,7 +27,7 @@ export class PauseScene extends Phaser.Scene {
 
     const buttons = [
       ['계속하기', 0x2f7bff, 0x1f5fd6, '#ffffff', () => this.resume()],
-      ['미로 처음부터', 0xfffaf0, 0xd8c8a8, '#2b2d5a', () => this.restart()],
+      [this.restartLabel, 0xfffaf0, 0xd8c8a8, '#2b2d5a', () => this.restart()],
       ['설정', 0xfffaf0, 0xd8c8a8, '#2b2d5a', () => this.openSettings()],
       ['타이틀로', 0xffb347, 0xd98a2b, '#2b2d5a', () => this.toTitle()],
     ];
@@ -53,7 +55,7 @@ export class PauseScene extends Phaser.Scene {
 
   restart() {
     this.scene.stop(this.under);
-    this.scene.start(this.under, { chapter: this.chapter, fresh: true });
+    this.scene.start(this.under, this.restartData);
   }
 
   openSettings() {

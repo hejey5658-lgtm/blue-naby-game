@@ -3,7 +3,29 @@
   "ink": "#2b2d5a",
   "cheek": "#ff9fb8",
   "white": "#ffffff",
-  "caterpillar": { "body": "#7ec8ff", "shade": "#4fa3e6", "belly": "#d6efff", "light": "#c4e6ff" },
-  "moth": { "body": "#3d4f9f", "wing": "#5b6fc7", "fur": "#9aa8ef", "light": "#6f80d2", "deep": "#2e3c80" },
-  "butterfly": { "wing": "#2f7bff", "inner": "#8fc2ff", "heart": "#ffffff", "antennaTip": "#ffd84a", "deep": "#1f5fd6" }
+  "caterpillar": {
+    "body": "#7ec8ff",
+    "shade": "#4fa3e6",
+    "belly": "#d6efff",
+    "light": "#c4e6ff"
+  },
+  "moth": {
+    "body": "#3d4f9f",
+    "wing": "#5b6fc7",
+    "fur": "#9aa8ef",
+    "light": "#6f80d2",
+    "deep": "#2e3c80"
+  },
+  "butterfly": {
+    "wing": "#2f7bff",
+    "inner": "#8fc2ff",
+    "heart": "#ffffff",
+    "antennaTip": "#ffd84a",
+    "deep": "#1f5fd6"
+  },
+  "dustmong": {
+    "body": "#b8b8c8",
+    "shade": "#8e8ea3",
+    "light": "#e2e2ec"
+  }
 }

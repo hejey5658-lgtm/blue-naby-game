@@ -39,3 +39,67 @@ export function iconPuzzle(g, cx, cy, s, color = INK) {
   g.fillCircle(cx + q, cy, s * 0.13);
   g.fillStyle(0xffffff, 1).fillCircle(cx - q, cy, s * 0.12);
 }
+
+// ── 대결 버튼 아이콘 ──
+// 놀자: 마주 잡은 두 동그란 손
+export function iconPlay(g, cx, cy, s, color = INK) {
+  g.fillStyle(color, 1);
+  g.fillCircle(cx - s * 0.2, cy, s * 0.22).fillCircle(cx + s * 0.2, cy, s * 0.22);
+  g.fillRoundedRect(cx - s * 0.2, cy - s * 0.12, s * 0.4, s * 0.24, s * 0.1);
+  g.fillCircle(cx, cy - s * 0.32, s * 0.08);
+}
+
+// 꼬옥 버티기: 둥근 방패
+export function iconGuard(g, cx, cy, s, color = INK) {
+  g.fillStyle(color, 1);
+  g.fillPoints([
+    { x: cx - s * 0.36, y: cy - s * 0.36 }, { x: cx + s * 0.36, y: cy - s * 0.36 },
+    { x: cx + s * 0.32, y: cy + s * 0.08 }, { x: cx, y: cy + s * 0.42 }, { x: cx - s * 0.32, y: cy + s * 0.08 },
+  ], true);
+  g.fillStyle(0xffffff, 0.5).fillRoundedRect(cx - s * 0.06, cy - s * 0.26, s * 0.12, s * 0.48, s * 0.05);
+}
+
+// 특기·별
+export function iconStar(g, cx, cy, s, color = INK) {
+  const pts = [];
+  for (let i = 0; i < 10; i++) {
+    const r = i % 2 ? s * 0.2 : s * 0.46;
+    const a = -Math.PI / 2 + (i * Math.PI) / 5;
+    pts.push({ x: cx + Math.cos(a) * r, y: cy + Math.sin(a) * r });
+  }
+  g.fillStyle(color, 1).fillPoints(pts, true);
+}
+
+// 냠냠 간식: 잎사귀
+export function iconLeaf(g, cx, cy, s, color = INK) {
+  g.fillStyle(color, 1).fillEllipse(cx, cy, s * 0.5, s * 0.8);
+  g.lineStyle(s * 0.06, 0xffffff, 0.7).lineBetween(cx, cy - s * 0.3, cx, cy + s * 0.36);
+}
+
+// 보스 다음 기술 표시
+export function iconBossMove(g, cx, cy, s, move) {
+  const c = { attack: 0x8e8ea3, rush: 0xe8584a, hide: 0x9a8bb5, wrap: 0xa77bd6, heal: 0xff9fb8 }[move] ?? INK;
+  g.fillStyle(c, 1);
+  if (move === 'attack') {
+    g.fillCircle(cx - s * 0.18, cy + s * 0.05, s * 0.2).fillCircle(cx + s * 0.16, cy + s * 0.05, s * 0.22).fillCircle(cx, cy - s * 0.14, s * 0.22);
+  } else if (move === 'rush') {
+    for (const o of [-0.18, 0.12]) g.fillTriangle(cx + s * (o - 0.14), cy - s * 0.3, cx + s * (o - 0.14), cy + s * 0.3, cx + s * (o + 0.2), cy);
+  } else if (move === 'hide') {
+    g.fillCircle(cx, cy, s * 0.36);
+    g.fillStyle(0xffffff, 0.8).fillRect(cx - s * 0.2, cy - s * 0.04, s * 0.4, s * 0.08);
+  } else if (move === 'wrap') {
+    g.lineStyle(s * 0.1, c, 1);
+    g.beginPath();
+    for (let i = 0; i <= 40; i++) {
+      const a = (i / 40) * Math.PI * 4;
+      const r = s * 0.04 + (i / 40) * s * 0.34;
+      const x = cx + Math.cos(a) * r;
+      const y = cy + Math.sin(a) * r;
+      if (i === 0) g.moveTo(x, y); else g.lineTo(x, y);
+    }
+    g.strokePath();
+  } else if (move === 'heal') {
+    g.fillCircle(cx - s * 0.16, cy - s * 0.08, s * 0.2).fillCircle(cx + s * 0.16, cy - s * 0.08, s * 0.2);
+    g.fillTriangle(cx - s * 0.36, cy, cx + s * 0.36, cy, cx, cy + s * 0.4);
+  }
+}

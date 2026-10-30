@@ -7,13 +7,19 @@ const blue = (form, group) => [
   { key: `face_blue_${form}`, file: `assets/face/face_blue_${form}.png`, width: 1120, height: 280, frameWidth: 280, frameHeight: 280, release: true, group },
 ];
 
+const boss = (key, group) => [
+  { key: `boss_${key}`, file: `assets/char/boss_${key}.png`, width: 2880, height: 480, frameWidth: 480, frameHeight: 480, release: true, group },
+  { key: `face_${key}`, file: `assets/face/face_${key}.png`, width: 560, height: 280, frameWidth: 280, frameHeight: 280, release: true, group },
+];
+
 export const ASSETS = [
+  ...boss('dustmong', 'ch1'),
   ...blue('caterpillar', 'boot'),
   ...blue('moth', 'ch3'),       // 3장 끝에 나방으로 진화
   ...blue('butterfly', 'ch5'),  // 5장 끝에 나비로 진화
 ];
 // 그림을 바꾸면 올려서 브라우저 캐시를 피한다.
-export const ASSET_VERSION = 2;
+export const ASSET_VERSION = 3;
 
 // 애니메이션 (프레임 번호는 art-guide.md 4절 칸 순서: 미로 = 대기 2 + 이동 4, 대결 = 대기 2·놀자·버티기·특기·지침·기쁨)
 const blueAnims = (form) => [

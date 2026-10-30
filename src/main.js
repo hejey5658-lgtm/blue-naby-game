@@ -7,6 +7,7 @@ import { DialogueScene } from './scenes/DialogueScene.js';
 import { SettingsScene } from './scenes/SettingsScene.js';
 import { MazeScene } from './scenes/MazeScene.js';
 import { PauseScene } from './scenes/PauseScene.js';
+import { BattleScene } from './scenes/BattleScene.js';
 import { save } from './state.js';
 import { suspendAudio, unlockAudio } from './ui/feedback.js';
 
@@ -23,7 +24,7 @@ const game = new Phaser.Game({
   },
   input: { activePointers: 2 },
   render: { antialias: true, powerPreference: 'high-performance' },
-  scene: [BootScene, TitleScene, MazeScene, DialogueScene, PauseScene, SettingsScene],
+  scene: [BootScene, TitleScene, MazeScene, BattleScene, DialogueScene, PauseScene, SettingsScene],
 });
 
 // 브라우저 기본 동작 막기: 당겨서 새로고침, 두 번 탭 확대, 길게 눌러 메뉴, 핀치 확대.

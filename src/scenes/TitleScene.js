@@ -268,8 +268,12 @@ export class TitleScene extends Phaser.Scene {
         this.scene.start('Maze', { chapter: `ch${state.chapter}` });
         return;
       }
+      if (state.step.endsWith('_boss')) {
+        this.scene.start('Battle', { chapter: `ch${state.chapter}`, bossIndex: state.bossIndex ?? 0 });
+        return;
+      }
       if (hasProgress()) {
-        this.toast('먼지몽과의 대결은 4단계에서 만나요!');
+        this.toast('다음 장(밤 골목)은 5단계에서 만나요!');
         return;
       }
       this.playPrologue();

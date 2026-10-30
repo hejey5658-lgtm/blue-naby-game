@@ -117,8 +117,11 @@ export class DialogueScene extends Phaser.Scene {
     let tagX = BOX.x + 36;
     const faceKey = sp === 'blue' ? `face_blue_${this.form}` : `face_${sp}`;
     if (this.textures.exists(faceKey)) {
-      const frame = MOOD_FRAME[line.mood ?? guessMood(line.text)] ?? 0;
       const tex = this.textures.get(faceKey);
+      // 블루나비 얼굴은 4칸(기쁨·놀람·졸림·시무룩), 친구들 얼굴은 2칸(화남·웃음): 친구가 된 뒤와 엔딩은 웃는 얼굴
+      const frame = sp === 'blue'
+        ? MOOD_FRAME[line.mood ?? guessMood(line.text)] ?? 0
+        : line.mood === 'happy' || /friend|ending/.test(this.key) ? 1 : 0;
       this.face.setTexture(faceKey, tex.has(frame) ? frame : undefined).setDisplaySize(140, 140).setVisible(true);
       this.face.setPosition(BOX.x + 96, boxY - 34);
       this.tweens.add({ targets: this.face, scale: this.face.scale * 1.06, duration: 120, yoyo: true });

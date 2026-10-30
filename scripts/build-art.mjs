@@ -5,6 +5,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { Resvg } from '@resvg/resvg-js';
+import { bossFrame, BOSS_POSES, BOSS_FACE_MOODS, BOSS_FACE_BOX, BOSS_KEYS } from '../art/gen/bosses.mjs';
 import { blueSvg, blueFrame, MOODS, FORM_NAMES, MAZE_POSES, BATTLE_POSES, FACE_MOODS, FACE_BOX } from '../art/gen/blue.mjs';
 
 const P = JSON.parse(fs.readFileSync('art/palette.json', 'utf8'));
@@ -41,7 +42,12 @@ for (const form of Object.keys(FORM_NAMES)) {
   write(`public/assets/char/blue_${form}_battle.png`, sheet(BATTLE_POSES.map((p) => blueFrame(P, form, p)), 480, [-6, -16, 212]));
   write(`public/assets/face/face_blue_${form}.png`, sheet(FACE_MOODS.map((mood) => blueFrame(P, form, { mood })), 280, FACE_BOX[form]));
 }
-console.log('게임용 시트: public/assets/char/blue_*.png, public/assets/face/face_blue_*.png');
+for (const key of BOSS_KEYS) {
+  write(`public/assets/char/boss_${key}.png`, sheet(BOSS_POSES.map((p) => bossFrame(P, key, p)), 480, [-6, -14, 212]));
+  write(`public/assets/face/face_${key}.png`, sheet(BOSS_FACE_MOODS.map((mood) => bossFrame(P, key, { mood })), 280, BOSS_FACE_BOX[key]));
+  fs.writeFileSync(`art/source/boss_${key}.svg`, `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><defs>${bossFrame(P, key).defs}</defs>${bossFrame(P, key).body}</svg>`);
+}
+console.log('게임용 시트: public/assets/char/{blue,boss}_*.png, public/assets/face/face_*.png');
 
 const MOOD_NAMES = { normal: '기본', joy: '기쁨', surprise: '놀람', sleepy: '졸림', sad: '시무룩' };
 const rows = Object.keys(FORM_NAMES).map((form) => {

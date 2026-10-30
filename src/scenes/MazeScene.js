@@ -9,7 +9,6 @@ import { setTheme } from '../ui/theme.js';
 import { getSafeInsets } from '../ui/safeArea.js';
 import { drawPanel } from '../ui/frames.js';
 import { sfx, vibrate } from '../ui/feedback.js';
-import { Button } from '../ui/Button.js';
 import { josa } from '../ui/josa.js';
 
 // 미로: 쓱 밀면 그 방향으로 벽·갈림길·수집품까지 미끄러져 간다. 톡 누르면 멈춘다.
@@ -589,25 +588,23 @@ export class MazeScene extends Phaser.Scene {
     this.time.delayedCall(700, () => this.showResult(sec, newRecord && prevBest != null));
   }
 
+  // 짧게 기록을 보여 주고 바로 대결로 (systems.md 4절: 출구에 닿으면 바로 대결 화면)
   showResult(sec, newRecord) {
-    const layer = this.add.container(0, 0).setDepth(20);
-    const dim = this.add.rectangle(0, 0, UI.width, UI.height, 0x2b2d5a, 0.45).setOrigin(0).setInteractive();
+    const c = this.add.container(UI.width / 2, 600).setDepth(20);
     const g = this.add.graphics();
-    const y = 300;
-    drawPanel(g, 50, y, 620, 620, this.chapter.frame);
+    drawPanel(g, -280, -110, 560, 220, this.chapter.frame);
     const star = sec <= this.chapter.starSec;
-    const lines = [
-      this.add.text(UI.width / 2, y + 90, '다락방 계단 도착!', { fontFamily: UI.fontTitle, fontSize: '46px', color: '#2b2d5a' }).setOrigin(0.5),
-      this.add.text(UI.width / 2, y + 180, `미로 기록 ${fmtTime(sec)}${newRecord ? '  새 기록!' : ''}`, { fontFamily: UI.fontTitle, fontSize: '36px', color: '#2f7bff' }).setOrigin(0.5),
-      this.add.text(UI.width / 2, y + 236, star ? `별 기준 ${fmtTime(this.chapter.starSec)} 안에 성공!` : `별 기준 ${fmtTime(this.chapter.starSec)} — 다음엔 더 빨리!`, { fontFamily: UI.font, fontSize: '26px', color: '#2b2d5a' }).setOrigin(0.5),
-      this.add.text(UI.width / 2, y + 280, `데구르르 ${this.rolls}번`, { fontFamily: UI.font, fontSize: '26px', color: '#5a5c88' }).setOrigin(0.5),
-      this.add.text(UI.width / 2, y + 356, '먼지몽과의 대결은\n다음 단계(4단계)에서 만나요!', { fontFamily: UI.font, fontSize: '27px', color: '#2b2d5a', align: 'center', lineSpacing: 8 }).setOrigin(0.5),
-    ];
-    layer.add([dim, g, ...lines]);
-    const again = new Button(this, UI.width / 2 - 140, y + 520, { width: 250, height: 100, fontSize: 30, label: '미로 다시', onPress: () => this.scene.start('Maze', { chapter: this.chapter.id, fresh: true }) });
-    const home = new Button(this, UI.width / 2 + 140, y + 520, { width: 250, height: 100, fontSize: 30, label: '타이틀로', color: 0xffb347, shade: 0xd98a2b, textColor: '#2b2d5a', onPress: () => this.scene.start('Title') });
-    layer.add([again, home]);
-    layer.alpha = 0;
-    this.tweens.add({ targets: layer, alpha: 1, duration: 260 });
+    c.add([
+      g,
+      this.add.text(0, -36, `미로 기록 ${fmtTime(sec)}${newRecord ? '  새 기록!' : ''}`, { fontFamily: UI.fontTitle, fontSize: '38px', color: '#2f7bff' }).setOrigin(0.5),
+      this.add.text(0, 24, star ? `별 기준 ${fmtTime(this.chapter.starSec)} 안에 성공!` : `별 기준 ${fmtTime(this.chapter.starSec)} — 다음엔 더 빨리!`, { fontFamily: UI.font, fontSize: '26px', color: '#2b2d5a' }).setOrigin(0.5),
+      this.add.text(0, 62, `데구르르 ${this.rolls}번`, { fontFamily: UI.font, fontSize: '22px', color: '#5a5c88' }).setOrigin(0.5),
+    ]);
+    c.setScale(0.7).setAlpha(0);
+    this.tweens.add({ targets: c, scale: 1, alpha: 1, duration: 260, ease: 'Back.easeOut' });
+    this.time.delayedCall(1900, () => {
+      this.cameras.main.fadeOut(280, 233, 216, 180);
+      this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('Battle', { chapter: this.chapter.id, bossIndex: 0 }));
+    });
   }
 }

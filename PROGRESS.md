@@ -15,6 +15,7 @@
 - 만든 사람들: 설정 → [만든 사람들], `CREDITS.md`(글꼴 OFL, Phaser·qrcode-generator·Workbox MIT)
 - 버전 1.0.0, 테스트 표시 없앰(`IS_TEST_BUILD = false`)
 - 한 파일 버전 `npm run build:single`: `release/blue_butterfly_game.html`(그림은 `window.BB_FILES` data URI) + 게임장 `release/eunyoug_3st_index.html`(게임 base64 → iframe srcdoc, `BB_EMBED`, 타이틀·엔딩 [← 게임장], 뒤로 가기로 닫기). 파일·게임장 안에서는 서비스 워커·홈 화면 설치 끔(`platform.isFile` = http/https가 아님)
+- 1.0.0 자동 완주 시험: 1~7장 + 엔딩, 대결 0번 짐, 친구 8명, 별 17/21, 콘솔 오류 없음(작업 공간 재시작으로 7장부터 이어서 한 번 더 돌림)
 - 체크리스트 `docs/release-checklist.md`, 단톡방 공지 `docs/friend-test.md`
 - 게임 등급: 비영리라 면제 대상일 수 있음. 널리 알리기 전에 게임물관리위원회(grac.or.kr)에 확인받기 — **결과: (아직 안 물어봄)**
 

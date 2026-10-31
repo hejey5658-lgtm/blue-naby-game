@@ -12,6 +12,7 @@ import { sfx, vibrate } from '../ui/feedback.js';
 import { chapterById, isCleared, nextChapterId, startChapter } from '../flow.js';
 import { updateBand } from '../ui/bands.js';
 import { canOfferInstall, offerInstall } from '../ui/helpers7.js';
+import { openShareMenu, activeChallenge, fmt as fmtShort } from '../social/social.js';
 
 // 여행 지도 = 블루나비 여권 (concept-v2 5절). 나라마다 한 쪽, 깬 장에는 입국 도장이 '쾅'.
 // 도장 속 별 칸 = 그 장의 별, 도장 옆 스티커 = 친구가 된 보스. 깬 도장을 톡 → 그 장 다시 하기.
@@ -24,6 +25,7 @@ export class MapScene extends Phaser.Scene {
   constructor() { super('Map'); }
 
   init(data) {
+    this.initData = { ...data, justCleared: null };
     this.justCleared = data.justCleared ?? null;
   }
 
@@ -52,6 +54,14 @@ export class MapScene extends Phaser.Scene {
     this.makeNav();
     this.makeBottom();
     updateBand(this, 1060);
+    // 친구와 함께: 기록 카드·도전장·도전장함 (왼쪽 위)
+    if (Object.keys(state.stars).length || (state.challenges ?? []).length) {
+      const sc = this.add.container(92, 64 + top).setDepth(5);
+      const sg = this.add.graphics();
+      sg.fillStyle(0xffffff, 1).fillRoundedRect(-80, -26, 160, 52, 26);
+      sc.add([sg, this.add.text(0, 0, '자랑하기', { fontFamily: UI.fontTitle, fontSize: '22px', color: '#2f7bff' }).setOrigin(0.5)]);
+      sc.setSize(170, 80).setInteractive({ useHandCursor: true }).on('pointerup', () => { sfx('tap'); openShareMenu(this.game, () => this.scene.restart(this.initData)); });
+    }
     // 1장을 깬 뒤 홈 화면 설치 안내 (처음 들어오자마자 띄우지 않기)
     if (isCleared('ch1') && canOfferInstall()) {
       const c = this.add.container(UI.width - 92, 64 + top).setDepth(5);
@@ -173,6 +183,18 @@ export class MapScene extends Phaser.Scene {
         c.add(this.add.text(0, r * 0.3, `${ch.id.slice(2)}장 · ${ch.place}`, { fontFamily: UI.font, fontSize: `${Math.round(r * 0.15)}px`, color: '#2b2d5a', align: 'center', wordWrap: { width: r * 1.6 } }).setOrigin(0.5));
         this.tweens.add({ targets: c, scale: 1.05, duration: 700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
       }
+    }
+    // 도전 중인 친구의 기록 깃발
+    const rival = activeChallenge();
+    const rt = rival?.times[id];
+    if (rt) {
+      const f = this.add.container(x - r * 0.15, y + r + 16);
+      const fg = this.add.graphics();
+      fg.fillStyle(0x2b2d5a, 1).fillRect(-46, -40, 4, 54);
+      fg.fillStyle(0xff9fb8, 1).fillTriangle(-42, -40, -42, -14, 0, -27);
+      const label = this.add.text(-30, 4, `${rival.nick} ${fmtShort(rt)}`, { fontFamily: UI.fontTitle, fontSize: '22px', color: '#c0563a', backgroundColor: '#ffffffd9', padding: { x: 8, y: 2 } }).setOrigin(0, 0.5);
+      f.add([fg, label]);
+      L.add(f);
     }
     L.add(c);
   }

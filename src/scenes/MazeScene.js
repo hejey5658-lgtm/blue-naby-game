@@ -11,6 +11,7 @@ import { getSafeInsets } from '../ui/safeArea.js';
 import { drawPanel } from '../ui/frames.js';
 import { sfx, vibrate } from '../ui/feedback.js';
 import { josa } from '../ui/josa.js';
+import { activeChallenge, challengeResult, fmt as fmtShort } from '../social/social.js';
 
 // 미로: 쓱 밀면 그 방향으로 벽·갈림길·수집품까지 미끄러져 간다. 톡 누르면 멈춘다.
 // 수집품을 다 모으면 출구가 열린다. 순찰하는 방해물에 닿으면 체크포인트로 데구르르.
@@ -574,7 +575,10 @@ export class MazeScene extends Phaser.Scene {
     this.timerText = this.add.text(UI.width - 40, 46 + top, '0:00', {
       fontFamily: UI.fontTitle, fontSize: '34px', color: '#fffaf0',
     }).setOrigin(1, 0.5);
-    this.targetText = this.add.text(UI.width - 40, 82 + top, `별 기준 ${fmtTime(this.chapter.starSec)}`, {
+    // 도전 중인 친구 기록이 있으면 타이머 아래에 함께 (systems.md 10절)
+    const rival = activeChallenge();
+    const rivalSec = rival?.times[this.chapter.id];
+    this.targetText = this.add.text(UI.width - 40, 82 + top, rivalSec ? `${rival.nick} ${fmtShort(rivalSec)}` : `별 기준 ${fmtTime(this.chapter.starSec)}`, {
       fontFamily: UI.font, fontSize: '18px', color: '#ffe9a8',
     }).setOrigin(1, 0.5);
   }
@@ -859,9 +863,22 @@ export class MazeScene extends Phaser.Scene {
       this.add.text(0, 24, star ? `별 기준 ${fmtTime(this.chapter.starSec)} 안에 성공!` : `별 기준 ${fmtTime(this.chapter.starSec)} — 다음엔 더 빨리!`, { fontFamily: UI.font, fontSize: '26px', color: '#2b2d5a' }).setOrigin(0.5),
       this.add.text(0, 62, `데구르르 ${this.rolls}번`, { fontFamily: UI.font, fontSize: '22px', color: '#5a5c88' }).setOrigin(0.5),
     ]);
+    // 친구 도전 결과: 이기면 축하, 져도 "아깝다! 다시 도전?" (놀리는 말 없이)
+    const ch = challengeResult(this.chapter.id, sec);
+    let wait = 1900;
+    if (ch) {
+      wait = 3200;
+      const cg = this.add.graphics();
+      drawPanel(cg, -280, 124, 560, 120, 'cloud');
+      const txt = ch.win
+        ? `${josa(ch.nick, '을', '를')} 이겼어요! (${fmtShort(ch.theirs)})\n여권 → 자랑하기에서 결과를 보내 봐요`
+        : `아깝다! ${ch.nick} ${fmtShort(ch.theirs)}\n여권에서 이 장을 다시 도전할 수 있어요`;
+      c.add([cg, this.add.text(0, 184, txt, { fontFamily: UI.font, fontSize: '24px', color: ch.win ? '#c0563a' : '#2b2d5a', align: 'center', lineSpacing: 6 }).setOrigin(0.5)]);
+      if (ch.win) vibrate('special');
+    }
     c.setScale(0.7).setAlpha(0);
     this.tweens.add({ targets: c, scale: 1, alpha: 1, duration: 260, ease: 'Back.easeOut' });
-    this.time.delayedCall(1900, () => {
+    this.time.delayedCall(wait, () => {
       this.cameras.main.fadeOut(280, 233, 216, 180);
       this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('Battle', { chapter: this.chapter.id, bossIndex: 0 }));
     });

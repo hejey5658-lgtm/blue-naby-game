@@ -16,7 +16,12 @@ import { PuzzleListScene } from './scenes/PuzzleListScene.js';
 import { PuzzleScene } from './scenes/PuzzleScene.js';
 import { save } from './state.js';
 import { setupPWA } from './pwa.js';
+import { readChallengeFromUrl } from './social/social.js';
+import { setupPcPanel } from './pcPanel.js';
 import { suspendAudio, unlockAudio } from './ui/feedback.js';
+
+// 도전 링크(#c=…)로 들어왔으면 도전장함에 넣는다
+readChallengeFromUrl();
 
 const game = new Phaser.Game({
   // 주소 끝에 ?canvas 를 붙이면 WebGL 대신 캔버스로 그린다(자동 화면 확인·오래된 기기 확인용)
@@ -86,4 +91,5 @@ window.addEventListener('pageshow', (e) => {
 });
 
 setupPWA(game);
+setupPcPanel();
 if (import.meta.env.DEV) window.__game = game;

@@ -9,12 +9,22 @@ export function takePhoto(game, filename = 'bluenabi.png') {
         c.width = img.width;
         c.height = img.height;
         c.getContext('2d').drawImage(img, 0, 0);
+        shareCanvas(c, filename).then(resolve);
+      } catch { resolve('fail'); }
+    });
+  });
+}
+
+// 캔버스 그림을 공유 창으로(카카오톡 선택 가능), 안 되면 내려받기. 결과: 'shared' | 'downloaded' | 'fail'
+export function shareCanvas(c, filename, text = '') {
+  return new Promise((resolve) => {
+      try {
         c.toBlob(async (blob) => {
           if (!blob) { resolve('fail'); return; }
           const file = new File([blob], filename, { type: 'image/png' });
           try {
             if (platform.can.share && navigator.canShare?.({ files: [file] })) {
-              await navigator.share({ files: [file], title: '블루나비의 세계여행' });
+              await navigator.share({ files: [file], title: '블루나비의 세계여행', text });
               resolve('shared');
               return;
             }
@@ -31,6 +41,5 @@ export function takePhoto(game, filename = 'bluenabi.png') {
           } catch { resolve('fail'); }
         }, 'image/png');
       } catch { resolve('fail'); }
-    });
   });
 }

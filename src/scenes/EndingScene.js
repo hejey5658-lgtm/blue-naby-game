@@ -9,6 +9,7 @@ import { iconStar } from '../ui/icons.js';
 import { sfx, vibrate } from '../ui/feedback.js';
 import { takePhoto } from '../ui/photo.js';
 import { sendFeedback } from '../ui/helpers7.js';
+import { sendRecordCard } from '../social/social.js';
 
 // 엔딩 (scenario 9절, concept-v2 3절): 캐나다 튤립 꽃밭 한가운데 가장 큰 파란 꽃(꽃님).
 // 블루나비가 날아와 꽃 위에 앉고, 대사가 이어질 때마다 친구들이 하나씩 꽃 주위에 나타난다.
@@ -190,6 +191,16 @@ export class EndingScene extends Phaser.Scene {
     fb.add([fg, this.add.text(0, 0, '의견 보내기', { fontFamily: UI.fontTitle, fontSize: '22px', color: '#2f7bff' }).setOrigin(0.5)]);
     fb.setSize(180, 80).setInteractive({ useHandCursor: true }).on('pointerup', () => { sfx('tap'); sendFeedback(); });
     buttons.add(fb);
+    const rc = this.add.container(100, 46).setDepth(11);
+    const rg = this.add.graphics();
+    rg.fillStyle(0xffffff, 0.95).fillRoundedRect(-88, -26, 176, 52, 26);
+    rc.add([rg, this.add.text(0, 0, '기록 카드', { fontFamily: UI.fontTitle, fontSize: '22px', color: '#2f7bff' }).setOrigin(0.5)]);
+    rc.setSize(180, 80).setInteractive({ useHandCursor: true }).on('pointerup', async () => {
+      sfx('tap');
+      const res = await sendRecordCard(this.game);
+      if (res === 'downloaded') this.toast('기록 카드를 저장했어요!');
+    });
+    buttons.add(rc);
     this.tweens.add({ targets: buttons, alpha: 1, duration: 400, delay: 900 });
   }
 

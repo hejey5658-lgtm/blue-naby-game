@@ -3,6 +3,8 @@ import { UI } from '../data/ui.js';
 import { applyUpdate } from '../pwa.js';
 import { shouldShowInAppBand, closeInAppBand, openInBrowser } from './helpers7.js';
 import { sfx } from './feedback.js';
+import { state, save } from '../state.js';
+import { activeChallenge, challengeHeadline } from '../social/social.js';
 
 function band(scene, y, color, text, actionLabel, onAction, onClose) {
   const c = scene.add.container(UI.width / 2, y).setDepth(30);
@@ -41,4 +43,15 @@ export function updateBand(scene, y) {
 export function inAppBand(scene, y) {
   if (!shouldShowInAppBand()) return null;
   return band(scene, y, 0x4f9f4c, '브라우저에서 열면 홈 화면에 추가하고 저장도 더 안전해요', '브라우저로 열기', () => openInBrowser(), () => closeInAppBand());
+}
+
+// 도전 링크로 들어왔을 때 타이틀 띠 (systems.md 10절)
+export function challengeBand(scene, y, onAction) {
+  const c = activeChallenge();
+  if (!c || !state.newChallenge) return null;
+  return band(scene, y, 0xe8584a, challengeHeadline(c), '도전하기', () => {
+    state.newChallenge = false;
+    save();
+    onAction();
+  }, () => { state.newChallenge = false; save(); });
 }

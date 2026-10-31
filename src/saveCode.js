@@ -6,6 +6,7 @@ import { BOSSES } from './data/bosses.js';
 import { ITEMS } from './data/items.js';
 import { PUZZLES } from './data/puzzles.js';
 import { state, save } from './state.js';
+import { pack, unpack } from './social/codec.js';
 
 const FORMS = ['caterpillar', 'moth', 'butterfly'];
 const ITEM_KEYS = Object.keys(ITEMS);
@@ -14,23 +15,6 @@ const PREFIX = 'BB1-';
 
 const bits = (keys, have) => keys.reduce((n, k, i) => (have.includes(k) ? n | (1 << i) : n), 0);
 const unbits = (keys, n) => keys.filter((_, i) => n & (1 << i));
-
-function b64urlEncode(str) {
-  const bytes = new TextEncoder().encode(str);
-  let bin = '';
-  bytes.forEach((b) => { bin += String.fromCharCode(b); });
-  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-}
-function b64urlDecode(s) {
-  const bin = atob(s.replace(/-/g, '+').replace(/_/g, '/'));
-  return new TextDecoder().decode(Uint8Array.from(bin, (c) => c.charCodeAt(0)));
-}
-// 잘못 붙여 넣었는지 알아보는 확인 문자 (FNV-1a → 36진수 4자리)
-function check(s) {
-  let h = 0x811c9dc5;
-  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
-  return (h % 1679616).toString(36).toUpperCase().padStart(4, '0');
-}
 
 export function makeSaveCode() {
   const st = state.settings;
@@ -44,21 +28,15 @@ export function makeSaveCode() {
     (st.sound ? 1 : 0) | (st.vibrate ? 2 : 0) | (st.control === 'dpad' ? 4 : 0) | (st.textSpeed === 'fast' ? 8 : 0),
     state.cleared ? 1 : 0,
   ];
-  const body = b64urlEncode(JSON.stringify(data));
-  return `${PREFIX}${body}-${check(body)}`;
+  return pack(PREFIX, data);
 }
 
 // 코드를 읽어 내용만 돌려준다 (틀리면 null). 적용은 applySaveCode.
 export function readSaveCode(raw) {
   try {
-    const code = String(raw).trim().replace(/\s+/g, '');
-    if (!code.startsWith(PREFIX)) return null;
-    const rest = code.slice(PREFIX.length);
-    const cut = rest.lastIndexOf('-');
-    if (cut < 1) return null;
-    const body = rest.slice(0, cut);
-    if (check(body) !== rest.slice(cut + 1).toUpperCase()) return null;
-    const [chapter, form, items, friends, stars, puzzles, settings, cleared] = JSON.parse(b64urlDecode(body));
+    const data = unpack(PREFIX, raw);
+    if (!Array.isArray(data)) return null;
+    const [chapter, form, items, friends, stars, puzzles, settings, cleared] = data;
     if (!Number.isInteger(chapter) || chapter < 1 || chapter > CHAPTERS.length) return null;
     return {
       chapter,

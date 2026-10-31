@@ -1,7 +1,7 @@
 {
   "name": "blue-naby-game",
   "private": true,
-  "version": "0.6.0",
+  "version": "0.7.0",
   "type": "module",
   "scripts": {
     "dev": "vite --host",
@@ -10,11 +10,13 @@
     "deploy": "npm run build && npx firebase-tools deploy --only hosting",
     "check:maze": "node scripts/check-maze.mjs && node scripts/check-wind.mjs",
     "check:assets": "node scripts/check-assets.mjs",
-    "build:art": "node scripts/build-art.mjs"
+    "build:art": "node scripts/build-art.mjs",
+    "build:icons": "node scripts/build-icons.mjs"
   },
   "devDependencies": {
     "@resvg/resvg-js": "2.6.2",
-    "vite": "6.4.4"
+    "vite": "6.4.4",
+    "vite-plugin-pwa": "1.3.0"
   },
   "dependencies": {
     "phaser": "3.80.1"

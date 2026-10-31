@@ -8,6 +8,7 @@ import { Button } from '../ui/Button.js';
 import { iconStar } from '../ui/icons.js';
 import { sfx, vibrate } from '../ui/feedback.js';
 import { takePhoto } from '../ui/photo.js';
+import { sendFeedback } from '../ui/helpers7.js';
 
 // 엔딩 (scenario 9절, concept-v2 3절): 캐나다 튤립 꽃밭 한가운데 가장 큰 파란 꽃(꽃님).
 // 블루나비가 날아와 꽃 위에 앉고, 대사가 이어질 때마다 친구들이 하나씩 꽃 주위에 나타난다.
@@ -182,6 +183,13 @@ export class EndingScene extends Phaser.Scene {
         onPress: () => { try { parent.postMessage({ type: 'bb-close' }, '*'); } catch { /* 무시 */ } },
       }));
     }
+    // 의견 보내기 (오른쪽 위 작은 버튼)
+    const fb = this.add.container(UI.width - 100, 46).setDepth(11);
+    const fg = this.add.graphics();
+    fg.fillStyle(0xffffff, 0.95).fillRoundedRect(-88, -26, 176, 52, 26);
+    fb.add([fg, this.add.text(0, 0, '의견 보내기', { fontFamily: UI.fontTitle, fontSize: '22px', color: '#2f7bff' }).setOrigin(0.5)]);
+    fb.setSize(180, 80).setInteractive({ useHandCursor: true }).on('pointerup', () => { sfx('tap'); sendFeedback(); });
+    buttons.add(fb);
     this.tweens.add({ targets: buttons, alpha: 1, duration: 400, delay: 900 });
   }
 

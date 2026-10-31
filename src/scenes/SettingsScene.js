@@ -7,6 +7,7 @@ import { drawPanel } from '../ui/frames.js';
 import { iconClose } from '../ui/icons.js';
 import { sfx, vibrate } from '../ui/feedback.js';
 import { openBox } from '../ui/htmlBox.js';
+import { sendFeedback, canOfferInstall, offerInstall } from '../ui/helpers7.js';
 import { makeSaveCode, readSaveCode, applySaveCode, describe } from '../saveCode.js';
 
 // 설정: 다른 씬 위에 띄운다. scene.launch('Settings', { frame, from })
@@ -54,12 +55,14 @@ export class SettingsScene extends Phaser.Scene {
     }).setOrigin(0.5));
     y += 54;
 
-    this.makeLinkRow(root, y, '저장 코드 복사하기', () => this.copyCode());
+    // 두 개씩 나란히 (판 안에 다 들어가게)
+    this.makeLinkRow(root, y, '저장 코드 복사', () => this.copyCode(), '#2b2d5a', 0);
+    this.makeLinkRow(root, y, '저장 코드 넣기', () => this.pasteCode(), '#2b2d5a', 1);
     y += 98;
-    this.makeLinkRow(root, y, '저장 코드 넣기', () => this.pasteCode());
+    this.makeLinkRow(root, y, '의견 보내기', () => sendFeedback(), '#2f7bff', 0);
+    this.makeLinkRow(root, y, '만든 사람들', () => this.showCredits(), '#2b2d5a', 1);
     y += 98;
-    this.makeLinkRow(root, y, '만든 사람들', () => this.showCredits());
-    y += 98;
+    if (canOfferInstall()) { this.makeLinkRow(root, y, '홈 화면에 추가하기', () => offerInstall()); y += 98; }
     if (hasProgress()) this.makeLinkRow(root, y, '처음부터 다시 하기', () => this.confirmReset(), '#a4523a');
 
     root.add(this.add.text(UI.width / 2, PANEL.y + PANEL.h - 40, `블루나비의 세계여행 · ${VERSION}`, {
@@ -115,11 +118,15 @@ export class SettingsScene extends Phaser.Scene {
     });
   }
 
-  makeLinkRow(root, y, label, onPress, color = '#2b2d5a') {
+  // half: 생략하면 한 줄 전체, 0이면 왼쪽 절반, 1이면 오른쪽 절반
+  makeLinkRow(root, y, label, onPress, color = '#2b2d5a', half = null) {
+    const full = PANEL.w - 80;
+    const w = half == null ? full : (full - 16) / 2;
+    const x = PANEL.x + 40 + (half === 1 ? w + 16 : 0);
     const g = this.add.graphics();
-    g.fillStyle(0x2b2d5a, 0.06).fillRoundedRect(PANEL.x + 40, y - 44, PANEL.w - 80, 88, 26);
-    const t = this.add.text(UI.width / 2, y, label, { fontFamily: UI.fontTitle, fontSize: '30px', color }).setOrigin(0.5);
-    const hit = this.add.zone(PANEL.x + 40, y - 48, PANEL.w - 80, 96).setOrigin(0).setInteractive({ useHandCursor: true })
+    g.fillStyle(0x2b2d5a, 0.06).fillRoundedRect(x, y - 44, w, 88, 26);
+    const t = this.add.text(x + w / 2, y, label, { fontFamily: UI.fontTitle, fontSize: half == null ? '30px' : '27px', color }).setOrigin(0.5);
+    const hit = this.add.zone(x, y - 48, w, 96).setOrigin(0).setInteractive({ useHandCursor: true })
       .on('pointerup', () => { sfx('tap'); onPress(); });
     root.add([g, t, hit]);
   }

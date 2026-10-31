@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+  <radialGradient id="pupil" cx="40%" cy="35%" r="70%">
+    <stop offset="0" stop-color="#5a5fa8"/><stop offset="1" stop-color="#2b2d5a"/>
+  </radialGradient>
+  <radialGradient id="cheek" cx="50%" cy="50%" r="50%">
+    <stop offset="0" stop-color="#ff9fb8" stop-opacity="0.95"/><stop offset="1" stop-color="#ff9fb8" stop-opacity="0"/>
+  </radialGradient><radialGradient id="bfWing" cx="35%" cy="30%" r="75%">
+    <stop offset="0" stop-color="#7fb2ff"/><stop offset="0.55" stop-color="#2f7bff"/><stop offset="1" stop-color="#1f5fd6"/>
+  </radialGradient><radialGradient id="bfBody" cx="35%" cy="30%" r="75%">
+    <stop offset="0" stop-color="#c4e6ff"/><stop offset="0.55" stop-color="#7ec8ff"/><stop offset="1" stop-color="#4fa3e6"/>
+  </radialGradient><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8fd3ff"/><stop offset="1" stop-color="#d6efff"/></linearGradient></defs>
+  <rect width="1024" height="1024" rx="220" fill="url(#sky)"/>
+  <circle cx="820" cy="210" r="90" fill="#ffe9a8"/>
+  <ellipse cx="512" cy="1010" rx="620" ry="190" fill="#7cc56a"/>
+  <svg x="10.240000000000009" y="-9.759999999999991" width="1003.52" height="1003.52" viewBox="-6 -10 212 212"><g transform="translate(0 0) rotate(0 100 150) translate(100 190) scale(1 1) translate(-100 -190)">
+    <ellipse cx="100" cy="190" rx="66" ry="7.26" fill="#2b2d5a" opacity="0.14"/>
+    <g transform="translate(100 0) scale(1 1) translate(-100 0)">
+    <path d="M102 128 C 66 130, 30 150, 42 178 C 54 200, 92 186, 102 146 Z" fill="url(#bfWing)" stroke="#2b2d5a" stroke-width="6" stroke-linejoin="round"/>
+    <path d="M98 136 C 74 142, 56 156, 60 170 C 72 176, 92 160, 98 140 Z" fill="#8fc2ff" opacity="0.85"/>
+    <circle cx="50" cy="178" r="3.4" fill="#fff"/><circle cx="44" cy="164" r="3" fill="#fff"/><g transform="translate(200 0) scale(-1 1)">
+    <path d="M102 128 C 66 130, 30 150, 42 178 C 54 200, 92 186, 102 146 Z" fill="url(#bfWing)" stroke="#2b2d5a" stroke-width="6" stroke-linejoin="round"/>
+    <path d="M98 136 C 74 142, 56 156, 60 170 C 72 176, 92 160, 98 140 Z" fill="#8fc2ff" opacity="0.85"/>
+    <circle cx="50" cy="178" r="3.4" fill="#fff"/><circle cx="44" cy="164" r="3" fill="#fff"/></g>
+    <path d="M102 112 C 96 44, 40 4, 14 36 C -6 62, 26 112, 102 126 Z" fill="url(#bfWing)" stroke="#2b2d5a" stroke-width="6" stroke-linejoin="round"/>
+    <path d="M98 114 C 82 82, 58 62, 40 64 C 30 78, 56 104, 98 118 Z" fill="#8fc2ff" opacity="0.9"/>
+    <path d="M100 116 C 80 80, 52 42, 30 40 M100 120 C 70 106, 40 96, 22 74" fill="none" stroke="#1f5fd6" stroke-width="2.4" stroke-linecap="round" opacity="0.6"/>
+    <circle cx="26" cy="46" r="4" fill="#fff"/><circle cx="16" cy="62" r="3.4" fill="#fff"/><circle cx="40" cy="28" r="3.4" fill="#fff"/>
+    <path transform="translate(46 50) scale(1.6)" d="M0 4 C -6 -4, -14 2, 0 12 C 14 2, 6 -4, 0 4 Z" fill="#ffffff"/><g transform="translate(200 0) scale(-1 1)">
+    <path d="M102 112 C 96 44, 40 4, 14 36 C -6 62, 26 112, 102 126 Z" fill="url(#bfWing)" stroke="#2b2d5a" stroke-width="6" stroke-linejoin="round"/>
+    <path d="M98 114 C 82 82, 58 62, 40 64 C 30 78, 56 104, 98 118 Z" fill="#8fc2ff" opacity="0.9"/>
+    <path d="M100 116 C 80 80, 52 42, 30 40 M100 120 C 70 106, 40 96, 22 74" fill="none" stroke="#1f5fd6" stroke-width="2.4" stroke-linecap="round" opacity="0.6"/>
+    <circle cx="26" cy="46" r="4" fill="#fff"/><circle cx="16" cy="62" r="3.4" fill="#fff"/><circle cx="40" cy="28" r="3.4" fill="#fff"/>
+    <path transform="translate(46 50) scale(1.6)" d="M0 4 C -6 -4, -14 2, 0 12 C 14 2, 6 -4, 0 4 Z" fill="#ffffff"/></g></g>
+    <ellipse cx="100" cy="150" rx="19" ry="34" fill="url(#bfBody)" stroke="#2b2d5a" stroke-width="6"/>
+    <path d="M86 146 Q100 152 114 146 M87 160 Q100 166 113 160" fill="none" stroke="#4fa3e6" stroke-width="3" stroke-linecap="round"/>
+    
+    <path d="M90 62 Q82 34 64 16" fill="none" stroke="#2b2d5a" stroke-width="4.5" stroke-linecap="round"/>
+    <circle cx="63" cy="15" r="7.5" fill="#ffd84a" stroke="#2b2d5a" stroke-width="4"/>
+    <path d="M110 62 Q118 34 136 16" fill="none" stroke="#2b2d5a" stroke-width="4.5" stroke-linecap="round"/>
+    <circle cx="137" cy="15" r="7.5" fill="#ffd84a" stroke="#2b2d5a" stroke-width="4"/>
+    <circle cx="100" cy="96" r="42" fill="url(#bfBody)" stroke="#2b2d5a" stroke-width="6"/>
+    <ellipse cx="80" cy="74" rx="10" ry="6.5" fill="#fff" opacity="0.8" transform="rotate(-30 80 74)"/>
+    
+    <ellipse cx="73.6" cy="113" rx="11" ry="7" fill="url(#cheek)"/>
+    <ellipse cx="126.4" cy="113" rx="11" ry="7" fill="url(#cheek)"/>
+    <path d="M72.5 100 Q85 82 97.5 100" fill="none" stroke="#2b2d5a" stroke-width="5" stroke-linecap="round"/>
+    <path d="M102.5 100 Q115 82 127.5 100" fill="none" stroke="#2b2d5a" stroke-width="5" stroke-linecap="round"/>
+    <path d="M91 112 Q100 128 109 112 Z" fill="#2b2d5a"/>
+        <path d="M95 119 Q100 115 105 119 Q100 124 95 119 Z" fill="#ff7f9c"/></g></svg>
+</svg>

@@ -15,6 +15,7 @@ import { EndingScene } from './scenes/EndingScene.js';
 import { PuzzleListScene } from './scenes/PuzzleListScene.js';
 import { PuzzleScene } from './scenes/PuzzleScene.js';
 import { save } from './state.js';
+import { setupPWA } from './pwa.js';
 import { suspendAudio, unlockAudio } from './ui/feedback.js';
 
 const game = new Phaser.Game({
@@ -84,4 +85,5 @@ window.addEventListener('pageshow', (e) => {
   checkOrientation();
 });
 
+setupPWA(game);
 if (import.meta.env.DEV) window.__game = game;

@@ -8,6 +8,7 @@ import { platform, requestFullscreen } from '../platform.js';
 import { state, save, hasProgress } from '../state.js';
 import { unlockAudio, sfx, vibrate } from '../ui/feedback.js';
 import { iconGear, iconPuzzle } from '../ui/icons.js';
+import { updateBand, inAppBand } from '../ui/bands.js';
 import { setTheme } from '../ui/theme.js';
 
 // 타이틀: 화면 위쪽은 창가(나무 창틀이 화면의 틀), 유리창 너머로 바깥 세상이 보이고
@@ -49,6 +50,11 @@ export class TitleScene extends Phaser.Scene {
     this.drawLogo();
     this.drawControls();
     this.layoutSafeArea();
+    // 카카오톡 등 인앱 브라우저 안내 띠(아래), 새 버전 띠(위)
+    const { top, bottom } = getSafeInsets(this.game);
+    this.inApp = inAppBand(this, 1222 - bottom);
+    if (this.inApp) this.version.setVisible(false);
+    updateBand(this, 140 + top);
     this.scale.on('resize', this.layoutSafeArea, this);
     this.events.once('shutdown', () => this.scale.off('resize', this.layoutSafeArea, this));
   }

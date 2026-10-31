@@ -116,6 +116,7 @@
 - `firebase.json`: `dist` 폴더를 올림. `index.html`·`*.webmanifest`·서비스 워커는 `no-cache`, 해시 붙은 `assets/`는 1년 캐시.
 - `.github/workflows/firebase-hosting.yml`: `main`에 푸시하면 공개 배포, PR이면 미리보기 주소. GitHub Secret `FIREBASE_SERVICE_ACCOUNT_BLUE_NABY_GAME`가 필요(등록 방법은 `PROGRESS.md`).
 - 직접 배포: `GOOGLE_APPLICATION_CREDENTIALS=<키 경로> npx -y firebase-tools@15.33.0 hosting:channel:deploy preview --expires 30d --project blue-naby-game` (키는 저장소 밖에만 둔다). 이 작업 공간의 네트워크는 `*.web.app` 접속이 막혀 있어 배포 결과는 사용자가 폰으로 확인한다.
+- **정식 주소(live) 배포**: `npx -y firebase-tools@15.33.0 deploy --only hosting --project blue-naby-game` — 공개되는 일이라 사용자가 그때그때 확인해 준 뒤에만 한다. 미리보기 채널 배포는 그대로 해도 된다.
 - Firebase에서는 **Hosting(정적 파일)만** 쓴다. Firestore·Auth·Analytics 등은 2절 원칙에 따라 사용자 결정 전까지 넣지 않는다.
 
 ## 6. 기획에서 바뀐 점
@@ -149,6 +150,7 @@
 | 2026-10-30 | GitHub Secret 대신 **Claude가 직접 배포**(2번 방법)하라 | 미리보기 채널 `preview`(30일)에 v0.4.0 배포. Secret이 고쳐지기 전까지 새 버전은 Claude가 직접 올림. 배포 워크플로에 `workflow_dispatch`(직접 실행 → 미리보기) 추가 |
 | 2026-10-30 | **5단계 진행**(나눠서 묻지 말고 바로) | 장 흐름·여권·진화·2~7장 미로 장치·보스 7명 그림·그림 나눠 받기 — v0.5.0, `CHANGELOG.md` 시작 |
 | 2026-10-30 | **6단계 진행** | 엔딩, 저장 코드, 블록 퍼즐 5단계, 꽃님·도트 그림 — v0.6.0 |
+| 2026-10-31 | **7단계 진행** | 홈 화면 설치·새 버전 안내·미리보기 카드·인앱 안내·의견 보내기 — v0.7.0. 정식 주소(live) 배포는 자동 권한 검사에서 막혀 **사용자 확인 대기** |
 | 2026-10-30 | 작업 브랜치: `claude/firebase-server-integration-84bkga`에서 개발·커밋·푸시 (다른 브랜치로 푸시 금지, PR은 요청할 때만) | — |
 
 ## 8. 참고 문서 (스킬 `blue-butterfly-game`의 `references/`)

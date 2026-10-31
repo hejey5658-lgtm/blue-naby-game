@@ -10,6 +10,8 @@ import { drawPanel } from '../ui/frames.js';
 import { iconStar } from '../ui/icons.js';
 import { sfx, vibrate } from '../ui/feedback.js';
 import { chapterById, isCleared, nextChapterId, startChapter } from '../flow.js';
+import { updateBand } from '../ui/bands.js';
+import { canOfferInstall, offerInstall } from '../ui/helpers7.js';
 
 // 여행 지도 = 블루나비 여권 (concept-v2 5절). 나라마다 한 쪽, 깬 장에는 입국 도장이 '쾅'.
 // 도장 속 별 칸 = 그 장의 별, 도장 옆 스티커 = 친구가 된 보스. 깬 도장을 톡 → 그 장 다시 하기.
@@ -49,6 +51,15 @@ export class MapScene extends Phaser.Scene {
     this.drawPage(this.page, cleared);
     this.makeNav();
     this.makeBottom();
+    updateBand(this, 1060);
+    // 1장을 깬 뒤 홈 화면 설치 안내 (처음 들어오자마자 띄우지 않기)
+    if (isCleared('ch1') && canOfferInstall()) {
+      const c = this.add.container(UI.width - 92, 64 + top).setDepth(5);
+      const g = this.add.graphics();
+      g.fillStyle(0xffd84a, 1).fillRoundedRect(-80, -26, 160, 52, 26);
+      c.add([g, this.add.text(0, 0, '홈 화면에 추가', { fontFamily: UI.fontTitle, fontSize: '20px', color: '#2b2d5a' }).setOrigin(0.5)]);
+      c.setSize(170, 80).setInteractive({ useHandCursor: true }).on('pointerup', () => { sfx('tap'); offerInstall(); });
+    }
 
     // 좌우로 쓱 밀어 쪽 넘기기
     this.input.on('pointerdown', (p) => { this.swipe = { x: p.x, y: p.y }; });

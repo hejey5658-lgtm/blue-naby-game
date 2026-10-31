@@ -6,6 +6,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { Resvg } from '@resvg/resvg-js';
 import { bossFrame, BOSS_POSES, BOSS_FACE_MOODS, BOSS_FACE_BOX, BOSS_KEYS, npcFrame, NPC_KEYS, NPC_POSES, NPC_FACE_BOX } from '../art/gen/bosses.mjs';
+import { propSvg, PROP_KEYS } from '../art/gen/props.mjs';
 import { blueSvg, blueFrame, MOODS, FORM_NAMES, MAZE_POSES, BATTLE_POSES, FACE_MOODS, FACE_BOX } from '../art/gen/blue.mjs';
 
 const P = JSON.parse(fs.readFileSync('art/palette.json', 'utf8'));
@@ -51,7 +52,15 @@ for (const key of NPC_KEYS) {
   write(`public/assets/char/npc_${key}.png`, sheet(NPC_POSES.map((p) => npcFrame(P, key, p)), key === 'dot' ? 128 : 480, [-6, -10, 212]));
   write(`public/assets/face/face_${key}.png`, sheet(['normal', 'happy'].map((mood) => npcFrame(P, key, { mood })), 280, NPC_FACE_BOX[key]));
 }
-console.log('게임용 시트: public/assets/char/{blue,boss}_*.png, public/assets/face/face_*.png');
+// 수집품·방해물·고치 (한 장짜리 그림): 수집품은 item/, 방해물·고치는 char/
+for (const key of PROP_KEYS) {
+  const svg = propSvg(P, key);
+  fs.writeFileSync(`art/source/${key}.svg`, svg);
+  const size = key === 'cocoon' ? 256 : 128;
+  const dir = key.startsWith('item_') ? 'item' : 'char';
+  write(`public/assets/${dir}/${key}.png`, new Resvg(svg, { fitTo: { mode: 'width', value: size } }).render().asPng());
+}
+console.log('게임용 시트: public/assets/char/{blue,boss}_*.png, public/assets/face/face_*.png, public/assets/item/*.png');
 
 const MOOD_NAMES = { normal: '기본', joy: '기쁨', surprise: '놀람', sleepy: '졸림', sad: '시무룩' };
 const rows = Object.keys(FORM_NAMES).map((form) => {

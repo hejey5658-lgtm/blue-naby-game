@@ -17,7 +17,14 @@ const npc = (key, size, group) => [
   { key: `face_${key}`, file: `assets/face/face_${key}.png`, width: 560, height: 280, frameWidth: 280, frameHeight: 280, release: true, group },
 ];
 
+// 수집품·방해물·고치 (art/gen/props.mjs). 작아서(합쳐 0.2MB 안쪽) 처음에 모두 받는다 —
+// 임시 그림이 Boot에서 먼저 만들어지면 나중에 받은 파일이 덮어쓰지 못하기 때문.
+const prop = (key, size = 128) => ({ key, file: `assets/${key.startsWith('item_') ? 'item' : 'char'}/${key}.png`, width: size, height: size, release: true, group: 'boot' });
+const PROPS = ['leaf', 'moondust', 'seed', 'bambooLeaf', 'petal', 'acorn', 'nectar'].map((k) => prop(`item_${k}`))
+  .concat(['vacuum', 'cart', 'shoot', 'skateboard'].map((k) => prop(`enemy_${k}`)), prop('cocoon', 256));
+
 export const ASSETS = [
+  ...PROPS,
   ...npc('dot', 128, 'boot'),
   ...npc('flower', 480, 'ch7'),
   ...boss('dustmong', 'ch1'),
@@ -33,7 +40,7 @@ export const ASSETS = [
   ...blue('butterfly', 'ch5'),  // 5장 끝에 나비로 진화
 ];
 // 그림을 바꾸면 올려서 브라우저 캐시를 피한다.
-export const ASSET_VERSION = 5;
+export const ASSET_VERSION = 6;
 
 // 애니메이션 (프레임 번호는 art-guide.md 4절 칸 순서: 미로 = 대기 2 + 이동 4, 대결 = 대기 2·놀자·버티기·특기·지침·기쁨)
 const blueAnims = (form) => [

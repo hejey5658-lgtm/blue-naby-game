@@ -38,6 +38,8 @@ export default defineConfig({
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         // 그림 파일은 ?v= 가 붙으므로 주소 뒤 글자를 무시하고 찾는다
         ignoreURLParametersMatching: [/^v$/],
+        // 개인정보 안내 페이지는 게임 화면(index.html)으로 바꿔치기하지 않는다
+        navigateFallbackDenylist: [/^\/privacy/],
       },
     }),
   ],

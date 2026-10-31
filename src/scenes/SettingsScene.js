@@ -9,10 +9,10 @@ import { sfx, vibrate } from '../ui/feedback.js';
 import { openBox } from '../ui/htmlBox.js';
 import { sendFeedback, canOfferInstall, offerInstall } from '../ui/helpers7.js';
 import { makeSaveCode, readSaveCode, applySaveCode, describe } from '../saveCode.js';
+import { PRIVACY_TEXT, CREDITS_TEXT } from '../data/about.js';
 
 // 설정: 다른 씬 위에 띄운다. scene.launch('Settings', { frame, from })
-// 소리 · 진동(지원 기기만) · 미로 조작 · 대사 속도 · 만든 사람들 · 처음부터 다시 하기
-// (저장 코드·홈 화면 안내·개인정보·의견 보내기는 6·7단계에서 이 화면에 더한다)
+// 소리 · 진동(지원 기기만) · 미로 조작 · 대사 속도 · 저장 코드 · 의견 보내기 · 홈 화면 · 만든 사람들 · 개인정보 · 처음부터 다시 하기
 const PANEL = { x: 30, y: 110, w: 660, h: 1070 };
 const ROW_H = 104;
 
@@ -59,10 +59,13 @@ export class SettingsScene extends Phaser.Scene {
     this.makeLinkRow(root, y, '저장 코드 복사', () => this.copyCode(), '#2b2d5a', 0);
     this.makeLinkRow(root, y, '저장 코드 넣기', () => this.pasteCode(), '#2b2d5a', 1);
     y += 98;
-    this.makeLinkRow(root, y, '의견 보내기', () => sendFeedback(), '#2f7bff', 0);
-    this.makeLinkRow(root, y, '만든 사람들', () => this.showCredits(), '#2b2d5a', 1);
+    const install = canOfferInstall();
+    this.makeLinkRow(root, y, '의견 보내기', () => sendFeedback(), '#2f7bff', install ? 0 : null);
+    if (install) this.makeLinkRow(root, y, '홈 화면에 추가', () => offerInstall(), '#2b2d5a', 1);
     y += 98;
-    if (canOfferInstall()) { this.makeLinkRow(root, y, '홈 화면에 추가하기', () => offerInstall()); y += 98; }
+    this.makeLinkRow(root, y, '만든 사람들', () => this.showCredits(), '#2b2d5a', 0);
+    this.makeLinkRow(root, y, '개인정보 안내', () => this.showPrivacy(), '#2b2d5a', 1);
+    y += 98;
     if (hasProgress()) this.makeLinkRow(root, y, '처음부터 다시 하기', () => this.confirmReset(), '#a4523a');
 
     root.add(this.add.text(UI.width / 2, PANEL.y + PANEL.h - 40, `블루나비의 세계여행 · ${VERSION}`, {
@@ -212,8 +215,20 @@ export class SettingsScene extends Phaser.Scene {
     });
   }
 
+  // 글이 길어 HTML 상자로 띄운다 (작은 폰에서는 상자 안에서 넘겨 읽기)
   showCredits() {
-    this.popup('만든 사람들', '기획·이야기·캐릭터\n블루나비의 세계여행 기획자\n\n그림·개발  Claude Code\n글꼴  주아 · 고운돋움 (OFL)', [['닫기', 0x2f7bff]]);
+    openBox({ title: '만든 사람들', text: CREDITS_TEXT, field: 'none', buttons: [{ label: '닫기', onClick: (b) => b.close() }] });
+  }
+
+  showPrivacy() {
+    const web = /^https?:$/.test(location.protocol) && !window.BB_EMBED;
+    openBox({
+      title: '개인정보 안내', text: PRIVACY_TEXT, field: 'none',
+      buttons: [
+        web && { label: '자세히 보기', sub: true, onClick: () => { try { window.open('privacy.html', '_blank', 'noopener'); } catch { /* 팝업 막힘 */ } } },
+        { label: '닫기', onClick: (b) => b.close() },
+      ].filter(Boolean),
+    });
   }
 
   confirmReset() {

@@ -4,7 +4,7 @@ const CSS = `
 .bbx-dim{position:fixed;inset:0;z-index:20;background:rgba(43,45,90,.55);display:flex;align-items:center;justify-content:center;padding:16px}
 .bbx{background:#fffaf0;border:6px solid #b98a5e;border-radius:28px;max-width:520px;width:100%;padding:22px;box-sizing:border-box;color:#2b2d5a;font:18px/1.5 'Gowun Dodum',system-ui,sans-serif}
 .bbx h2{font:28px 'Jua',system-ui,sans-serif;margin:0 0 8px}
-.bbx p{margin:0 0 12px}
+.bbx p{margin:0 0 12px;white-space:pre-line;max-height:58vh;overflow:auto;word-break:keep-all;overflow-wrap:anywhere}
 .bbx textarea{width:100%;box-sizing:border-box;min-height:96px;font:16px ui-monospace,monospace;border:2px solid #d2a679;border-radius:14px;padding:10px;color:#2b2d5a;background:#fff;user-select:text;-webkit-user-select:text}
 .bbx textarea:focus{outline:3px solid #2f7bff;outline-offset:2px}
 .bbx .row{display:flex;gap:10px;margin-top:14px}

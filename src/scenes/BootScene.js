@@ -1,10 +1,9 @@
 import Phaser from 'phaser';
-import { ASSETS, ASSET_VERSION } from '../data/assets.js';
-import { createAnims } from './PreloadScene.js';
+import { createAnims, queueAssets } from './PreloadScene.js';
 import { UI } from '../data/ui.js';
 import { createPlaceholders } from '../art/placeholders.js';
 
-// 처음(boot)과 1장 그림만 받고 바로 타이틀로. 받는 동안 애벌레가 진행 막대를 따라 기어간다.
+// 처음(boot) 그림만 받고 바로 타이틀로(1장 보스부터는 PreloadScene이 뒤에서 받는다, 4G 3초 목표). 받는 동안 애벌레가 진행 막대를 따라 기어간다.
 // 없는 그림·실패한 그림은 임시 그림으로 대신한다.
 export class BootScene extends Phaser.Scene {
   constructor() { super('Boot'); }
@@ -38,11 +37,7 @@ export class BootScene extends Phaser.Scene {
       console.warn(`그림을 불러오지 못해 임시 그림을 씁니다: ${file.key}`);
     });
 
-    for (const a of ASSETS.filter((a) => a.group === 'boot' || a.group === 'ch1')) {
-      const url = `${a.file}?v=${ASSET_VERSION}`;
-      if (a.frameWidth) this.load.spritesheet(a.key, url, { frameWidth: a.frameWidth, frameHeight: a.frameHeight });
-      else this.load.image(a.key, url);
-    }
+    queueAssets(this.load, this.textures, (a) => a.group === 'boot');
   }
 
   create() {

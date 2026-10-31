@@ -64,7 +64,7 @@
 - 당겨서 새로고침·두 번 탭 확대·길게 눌러 메뉴·스와이프 시 페이지 밀림을 막는다. 노치·홈 바·주소창에 가리지 않게(safe area).
 - 자주 자동 저장(`localStorage` `blueButterfly.save`, try/catch) + **저장 코드(`BB1-…`)** 로 다른 브라우저에 진행 옮기기.
 - 성능: 60fps 목표, 파티클 30개 이하, 2장 어둠은 실시간 마스크 대신 미리 만든 텍스처 이동.
-- **단일 HTML 파일 버전**(`blue_butterfly_game.html`, 외부 파일 없음)과 게임장 `eunyoug_3st_index.html`(게임을 base64로 넣어 iframe `srcdoc`로 띄움, 404 방지)도 함께 만든다.
+- **단일 HTML 파일 버전**(`blue_butterfly_game.html`, 외부 파일 없음)과 게임장 `eunyoug_3st_index.html`(게임을 base64로 넣어 iframe `srcdoc`로 띄움, 404 방지)도 함께 만든다. `npm run build:single` → `release/`(용량이 커서 git에 안 올림, 사용자에게 파일로 전달). 게임을 고치면 다시 만든다.
 
 **코드 원칙**
 - Phaser 그리기는 WebGL과 캔버스 둘 다에서 같게 보여야 한다: `fillGradientStyle`·반전 마스크처럼 캔버스에서 안 되는 기능은 쓰지 않는다(띠·선으로 대신). 자동 화면 확인은 `?canvas` 주소 + 캔버스 `toDataURL`로 찍는다(headless WebGL 스크린샷은 옛 화면이 찍힘).
@@ -78,7 +78,9 @@
 - Phaser 3.80 트윈의 `onYoyo`는 움직이는 속성마다 불린다(x·y면 두 번). 한 번만 일어나야 하는 일(점수·피해)은 `time.delayedCall`로 맞춘다.
 - 씬은 다시 쓰인다(Phaser는 같은 씬 객체를 재사용). 씬에 붙인 상태 표시(`finished`, `closing`, `revealed` 등)는 `init`/`create`에서 꼭 초기화한다 — 안 하면 두 번째부터 멈춘다(실제로 대사창·설정·진화에서 났던 버그).
 - 장 흐름은 `src/flow.js`(`afterChapter`, `startChapter`, `nextChapterId`)로만 넘긴다. 저장: `state.chapter` = 지금까지 열린 가장 먼 장, `state.playing` = 지금 하는 장, `state.step` = `chN_maze` / `chN_boss` / `map`.
-- 나중 장 그림은 `PreloadScene`이 뒤에서 받는다. 새 씬이 나중 장 그림을 쓰면 create 맨 앞에서 `waitForAssets(this, [키…], data)`를 부른다.
+- 나중 장 그림은 `PreloadScene`이 뒤에서 받는다(Boot는 `group: 'boot'`만 받음 — 4G 3초 목표). 새 씬이 boot 밖의 그림을 쓰면 create 맨 앞에서 `waitForAssets(this, [키…], data)`를 부른다.
+- 임시 그림(`src/art/placeholders.js`)이 있는 키는 Boot에서 임시 그림이 먼저 만들어지므로, 그 그림 파일은 **boot 그룹**에 넣어야 바뀐다(나중 그룹이면 이미 있는 키라 건너뜀).
+- 그림 주소는 `PreloadScene`의 `assetUrl`로만 만든다(한 파일 버전은 `window.BB_FILES`의 data URI를 쓴다).
 - 자동 완주 시험은 headless에서 게임 시계가 느리게 가므로 오래 걸린다(7장 전체 수십 분). 백그라운드로 돌린다.
 - 글자 입력·복사가 필요한 곳은 HTML 상자(`src/ui/htmlBox.js`)로. 상자 위 손가락이 게임으로 새지 않게 막아 두었다(Phaser는 window에서 손 뗌을 듣는다).
 - 텍스처에 프레임을 `add`하면 그 텍스처의 기본 프레임이 바뀐다. 그림 전체를 보여 줄 때는 프레임 `'__BASE'`를 꼭 지정한다(퍼즐에서 난 버그).
@@ -154,6 +156,7 @@
 | 2026-10-31 | 정식 주소에 **지금 공개해** | https://blue-naby-game.web.app 에 v0.7.0 공개. 이후 정식 주소 배포도 매번 확인받기 |
 | 2026-10-31 | **8단계 진행** | 닉네임·기록 카드·도전장·도전장함·PC QR — v0.8.0 |
 | 2026-10-31 | 정식 주소에 v0.8.0 **지금 올려** | 정식 주소 배포 완료 |
+| 2026-10-31 | **9단계 진행** | 공개용 그림(임시 그림 0), 개인정보 안내·만든 사람들, 1.0.0(테스트 표시 없앰), 한 파일 버전·게임장, 체크리스트·공지 글 — 정식 주소 배포는 사용자 확인 후 |
 | 2026-10-30 | 작업 브랜치: `claude/firebase-server-integration-84bkga`에서 개발·커밋·푸시 (다른 브랜치로 푸시 금지, PR은 요청할 때만) | — |
 
 ## 8. 참고 문서 (스킬 `blue-butterfly-game`의 `references/`)

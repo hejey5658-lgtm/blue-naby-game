@@ -221,6 +221,18 @@ export class TitleScene extends Phaser.Scene {
     this.gear.add(gg).setSize(96, 96).setInteractive({ useHandCursor: true })
       .on('pointerup', () => this.openSettings());
 
+    // 게임장(eunyoug_3st_index.html) 안에서 열렸을 때만: 왼쪽 위 [← 게임장]
+    this.hub = null;
+    if (window.BB_EMBED) {
+      this.hub = this.add.container(112, 64);
+      const hg = this.add.graphics();
+      hg.fillStyle(0xffffff, 0.95).fillRoundedRect(-88, -30, 176, 60, 30);
+      hg.lineStyle(3, 0x2b2d5a, 0.2).strokeRoundedRect(-88, -30, 176, 60, 30);
+      this.hub.add([hg, this.add.text(0, 0, '← 게임장', { fontFamily: UI.fontTitle, fontSize: '26px', color: '#2b2d5a' }).setOrigin(0.5)]);
+      this.hub.setSize(180, 96).setInteractive({ useHandCursor: true })
+        .on('pointerup', () => { sfx('tap'); try { parent.postMessage({ type: 'bb-close' }, '*'); } catch { /* 무시 */ } });
+    }
+
     this.toastText = this.add.text(UI.width / 2, 1200, '', {
       fontFamily: UI.font, fontSize: `${UI.fontSize.small + 4}px`, color: '#2b2d5a', align: 'center',
     }).setOrigin(0.5).setAlpha(0);
@@ -264,6 +276,7 @@ export class TitleScene extends Phaser.Scene {
     const { top, bottom } = getSafeInsets(this.game);
     this.version.y = UI.height - 20 - bottom;
     this.gear.y = 64 + top;
+    if (this.hub) this.hub.y = 64 + top;
   }
 
   onStart() {

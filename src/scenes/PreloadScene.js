@@ -11,11 +11,14 @@ export function createAnims(scene) {
   }
 }
 
+// 한 파일 버전(blue_butterfly_game.html)은 그림을 window.BB_FILES 에 data URI로 넣어 둔다 (scripts/build-single.mjs)
+const assetUrl = (file) => window.BB_FILES?.[file] ?? `${file}?v=${ASSET_VERSION}`;
+
 export function queueAssets(load, textures, filter) {
   let n = 0;
   for (const a of ASSETS.filter(filter)) {
     if (textures.exists(a.key)) continue;
-    const url = `${a.file}?v=${ASSET_VERSION}`;
+    const url = assetUrl(a.file);
     if (a.frameWidth) load.spritesheet(a.key, url, { frameWidth: a.frameWidth, frameHeight: a.frameHeight });
     else load.image(a.key, url);
     n++;

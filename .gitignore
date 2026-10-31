@@ -13,3 +13,7 @@ firebase-debug.log*
 
 # 그림 확인용 PNG (npm run build:art 로 다시 만듦)
 art/out/
+
+# 한 파일 버전 (npm run build:single 로 다시 만듦, 용량이 커서 올리지 않음)
+dist-single/
+release/

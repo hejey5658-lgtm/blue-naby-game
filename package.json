@@ -11,7 +11,8 @@
     "check:maze": "node scripts/check-maze.mjs && node scripts/check-wind.mjs",
     "check:assets": "node scripts/check-assets.mjs",
     "build:art": "node scripts/build-art.mjs",
-    "build:icons": "node scripts/build-icons.mjs"
+    "build:icons": "node scripts/build-icons.mjs",
+    "build:single": "vite build --mode single && node scripts/build-single.mjs"
   },
   "devDependencies": {
     "@resvg/resvg-js": "2.6.2",

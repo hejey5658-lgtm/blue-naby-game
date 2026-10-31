@@ -23,7 +23,8 @@ const inApp = detectInApp();
 const standalone = safe(() => matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches, false)
   || navigator.standalone === true;
 const inIframe = safe(() => window.self !== window.top, true);
-const isFile = location.protocol === 'file:';
+// 파일로 열기(file:)와 게임장 안 iframe(srcdoc → about:)은 웹 주소가 아니다: 서비스 워커·홈 화면 설치를 끈다
+const isFile = !/^https?:$/.test(location.protocol);
 
 // 안드로이드 크롬·삼성 인터넷이 "설치할 수 있어요"라고 알려 주면 받아 둔다(설치 안내는 1장을 깬 뒤에 보여 줌).
 let installPrompt = null;

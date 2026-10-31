@@ -1,12 +1,22 @@
 # 블루나비의 세계여행 — 진행 기록
 
 ## 현재 상태
-- 버전: **v0.8.0 (테스트 버전)**
-- 완료: 1단계 프로젝트 세팅, 2단계 타이틀 + 대화 씬 + 설정, 3단계 미로 씬(1장 한국 집), 4단계 대결 씬(먼지몽), 5단계 진화 + 2~7장 + 블루나비 여권, 6단계 엔딩 + 저장 코드 + 블록 퍼즐, 7단계 웹 공개(홈 화면 설치·미리보기 카드·인앱 안내·의견 보내기), **8단계 친구와 함께(닉네임·기록 카드·도전장·PC QR)** (2026-10-31)
+- 버전: **v1.0.0 (정식 버전)**
+- 완료: 1~8단계, **9단계 친구들에게 알리기(공개용 그림·개인정보 안내·만든 사람들·한 파일 버전·체크리스트)** (2026-10-31)
 - 컨셉 v2 승인: 한국·중국·일본·미국·캐나다 7장 (`docs/concept-v2.md`)
-- 그림 트랙: A1 Claude 벡터, **A2 블루나비 캐릭터 시트 v1 승인**, 게임용 스프라이트(미로·대결·얼굴) 완성 (`art/sprites-v1.png`)
-- **정식 공개: https://blue-naby-game.web.app (v0.8.0, 2026-10-31)**
-- 다음: 친구 테스트 의견 반영(`FEEDBACK.md`) → 9단계 친구들에게 알리기(공개용 그림 다듬기·개인정보 안내·만든 사람들·체크리스트)
+- 그림 트랙: A1 Claude 벡터, A2 블루나비 캐릭터 시트 v1 승인, A3 나머지 그림 완료(임시 그림 0개), A4 아이콘·공유 그림 완료
+- 정식 주소: https://blue-naby-game.web.app (지금 v0.8.0 — 1.0.0은 사용자 확인 후 올림)
+- 다음: 사용자가 폰으로 `docs/release-checklist.md`의 📱 항목 확인 → 정식 주소에 1.0.0 → 단톡방 공지(`docs/friend-test.md`) → 친구 의견 반영(`FEEDBACK.md`)
+
+## 9단계에서 만든 것
+- 공개용 그림: 수집품 7·방해물 4·고치를 벡터로(`art/gen/props.mjs`, `npm run build:art`). 작아서 모두 처음(boot)에 받는다 — 임시 그림이 Boot에서 먼저 만들어지면 같은 이름의 파일을 나중에 받지 않기 때문. `check:assets --release` 통과(41개, 임시 그림 0)
+- 첫 화면 빠르게: Boot는 boot 그림만, 1장 보스부터는 PreloadScene이 뒤에서. Fast 4G 흉내 약 2.7초·1.6MB(이전 3.1초·2.1MB)
+- 개인정보: `public/privacy.html`, 게임 안 설정 → [개인정보 안내](글은 `src/data/about.js`) → [자세히 보기]. 연락처는 "링크를 보내 준 만든 사람에게 카카오톡으로"(이메일 등을 적고 싶으면 사용자가 정함)
+- 만든 사람들: 설정 → [만든 사람들], `CREDITS.md`(글꼴 OFL, Phaser·qrcode-generator·Workbox MIT)
+- 버전 1.0.0, 테스트 표시 없앰(`IS_TEST_BUILD = false`)
+- 한 파일 버전 `npm run build:single`: `release/blue_butterfly_game.html`(그림은 `window.BB_FILES` data URI) + 게임장 `release/eunyoug_3st_index.html`(게임 base64 → iframe srcdoc, `BB_EMBED`, 타이틀·엔딩 [← 게임장], 뒤로 가기로 닫기). 파일·게임장 안에서는 서비스 워커·홈 화면 설치 끔(`platform.isFile` = http/https가 아님)
+- 체크리스트 `docs/release-checklist.md`, 단톡방 공지 `docs/friend-test.md`
+- 게임 등급: 비영리라 면제 대상일 수 있음. 널리 알리기 전에 게임물관리위원회(grac.or.kr)에 확인받기 — **결과: (아직 안 물어봄)**
 
 ## 8단계에서 만든 것
 - `src/social/social.js`·`codec.js`: 저장 코드와 같은 방식(종류·버전 + base64url + 확인 문자)

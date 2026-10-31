@@ -1,7 +1,20 @@
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
-export default defineConfig({
+// 한 파일 버전(vite build --mode single → scripts/build-single.mjs): 코드를 한 덩어리로 묶고 서비스 워커는 뺀다.
+const single = {
+  base: './',
+  publicDir: false,
+  resolve: { alias: { 'virtual:pwa-register': '/src/single/pwa-stub.js' } },
+  build: {
+    outDir: 'dist-single',
+    modulePreload: false,
+    rollupOptions: { output: { inlineDynamicImports: true } },
+    chunkSizeWarningLimit: 4000,
+  },
+};
+
+export default defineConfig(({ mode }) => mode === 'single' ? single : {
   server: { host: true },
   build: {
     // Phaser는 크기가 커서 따로 묶어 두면 게임 코드만 바뀔 때 다시 받지 않는다.

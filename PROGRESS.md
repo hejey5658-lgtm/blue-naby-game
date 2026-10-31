@@ -5,8 +5,8 @@
 - 완료: 1~8단계, **9단계 친구들에게 알리기(공개용 그림·개인정보 안내·만든 사람들·한 파일 버전·체크리스트)** (2026-10-31)
 - 컨셉 v2 승인: 한국·중국·일본·미국·캐나다 7장 (`docs/concept-v2.md`)
 - 그림 트랙: A1 Claude 벡터, A2 블루나비 캐릭터 시트 v1 승인, A3 나머지 그림 완료(임시 그림 0개), A4 아이콘·공유 그림 완료
-- 정식 주소: https://blue-naby-game.web.app (지금 v0.8.0 — 1.0.0은 사용자 확인 후 올림)
-- 다음: 사용자가 폰으로 `docs/release-checklist.md`의 📱 항목 확인 → 정식 주소에 1.0.0 → 단톡방 공지(`docs/friend-test.md`) → 친구 의견 반영(`FEEDBACK.md`)
+- **정식 공개: https://blue-naby-game.web.app (v1.0.0, 2026-10-31)**
+- 다음: 사용자가 폰으로 `docs/release-checklist.md`의 📱 항목 확인 → 단톡방 공지(`docs/friend-test.md`) → 친구 의견 반영(`FEEDBACK.md`)
 
 ## 9단계에서 만든 것
 - 공개용 그림: 수집품 7·방해물 4·고치를 벡터로(`art/gen/props.mjs`, `npm run build:art`). 작아서 모두 처음(boot)에 받는다 — 임시 그림이 Boot에서 먼저 만들어지면 같은 이름의 파일을 나중에 받지 않기 때문. `check:assets --release` 통과(41개, 임시 그림 0)
@@ -143,7 +143,7 @@
 
 ## 공개 주소 (Firebase Hosting)
 - 프로젝트 ID: `blue-naby-game`
-- 공개 주소: **https://blue-naby-game.web.app** — v0.8.0 공개 중 (Claude가 직접 배포, 사용자 확인 후)
+- 공개 주소: **https://blue-naby-game.web.app** — v1.0.0 공개 중 (Claude가 직접 배포, 사용자 확인 후)
 - `main` 브랜치에 올리면 GitHub Actions가 자동으로 빌드(`npm run build` → `dist`)해서 배포한다. PR에는 미리보기 주소가 댓글로 달린다.
 
 ## 자동 배포를 켜는 방법 (한 번만)

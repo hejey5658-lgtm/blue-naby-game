@@ -5,7 +5,7 @@
 // 진화는 `evo_${형태}_pre` / `evo_${형태}_post`
 export const CHAPTERS = [
   { id: 'ch1', country: 'korea',  place: '집',          form: 'caterpillar', intro: 'prologue',  bosses: ['dustmong'],          reward: 'sparkle', evolveTo: null,        item: 'leaf',     patrolKind: 'vacuum',     theme: '#e9d8b4', frame: 'woodWindow', starSec: 120, stamp: '우리 집' },
-  { id: 'ch2', country: 'korea',  place: '밤 골목',     form: 'caterpillar', intro: 'ch2_intro', bosses: ['silsili'],           reward: 'scarf',   evolveTo: null,        item: 'moondust', dark: true,                theme: '#23254d', frame: 'litWindow',  starSec: 140, stamp: '밤 골목' },
+  { id: 'ch2', country: 'korea',  place: '밤 골목',     form: 'caterpillar', intro: 'ch2_intro', bosses: ['silsili'],           reward: 'scarf',   evolveTo: null,        item: 'moondust', dark: true,                theme: '#23254d', frame: 'litWindow',  starSec: 170, stamp: '밤 골목' },
   { id: 'ch3', country: 'korea',  place: '아침 시장',   form: 'caterpillar', intro: 'ch3_intro', bosses: ['jjakjjak'],          reward: null,      evolveTo: 'moth',      item: 'seed',     patrolKind: 'cart',       theme: '#f6c48f', frame: 'awning',     starSec: 150, stamp: '아침 시장' },
   { id: 'ch4', country: 'china',  place: '대나무 숲',   form: 'moth',        intro: 'ch4_intro', bosses: ['bbangbbang'],        reward: 'flute',   evolveTo: null,        item: 'bambooLeaf', patrolKind: 'shoot',    theme: '#cfe8b8', frame: 'moonGate',   starSec: 150, stamp: '중국' },
   { id: 'ch5', country: 'japan',  place: '벚꽃 정원',   form: 'moth',        intro: 'ch5_intro', bosses: ['sappuni'],           reward: 'umbrella', evolveTo: 'butterfly', item: 'petal',   splash: 'koi',            theme: '#fbe0e6', frame: 'lattice',    starSec: 160, stamp: '일본' },

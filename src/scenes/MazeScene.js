@@ -288,8 +288,8 @@ export class MazeScene extends Phaser.Scene {
       ctx.beginPath(); ctx.arc(w / 2, h / 2, r, 0, Math.PI * 2); ctx.fill();
       tex.refresh();
     };
-    make('dark_r2', 2.5);
-    make('dark_r5', 5);
+    make('dark_r2', UI.dark.radius);
+    make('dark_r5', UI.dark.sparkleRadius);
     this.dark = this.add.image(0, 0, 'dark_r2').setDepth(7);
   }
 
@@ -298,6 +298,8 @@ export class MazeScene extends Phaser.Scene {
     for (const [x, y] of this.find('L')) {
       if (this.collected.has(`${x},${y}`)) continue;
       const sp = this.add.image(this.cx(x), this.cy(y), key).setDisplaySize(this.cell * 0.7, this.cell * 0.7);
+      // 어두운 장에서는 수집품이 어둠 위로 반짝여 어디로 갈지 보인다
+      if (this.chapter.dark) sp.setDepth(7.5);
       this.tweens.add({ targets: sp, y: sp.y - this.cell * 0.08, duration: 700 + Math.random() * 300, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
       this.items.set(`${x},${y}`, sp);
     }
@@ -307,6 +309,8 @@ export class MazeScene extends Phaser.Scene {
     const [x, y] = this.exitCell;
     this.exitG = this.add.graphics();
     this.exitGlow = this.add.graphics().setAlpha(0);
+    // 어두운 장에서는 출구 문도 어둠 위로 보인다
+    if (this.chapter.dark) { this.exitG.setDepth(7.5); this.exitGlow.setDepth(7.6); }
     this.updateExit(false);
   }
 
@@ -629,7 +633,7 @@ export class MazeScene extends Phaser.Scene {
     }
   }
 
-  // 오른쪽 아래 둥근 아이템 버튼: 밤 골목 = 반짝가루(8초 환하게), 대나무 피리가 있으면 = 길 안내 (미로마다 1번)
+  // 오른쪽 아래 둥근 아이템 버튼: 밤 골목 = 반짝가루(UI.dark 시간만큼 환하게), 대나무 피리가 있으면 = 길 안내 (미로마다 1번)
   makeItemButton(bottom) {
     let item = null;
     if (this.chapter.dark && this.hasItem('sparkle')) item = { key: 'sparkle', label: '반짝가루', color: 0xffd84a };
@@ -663,8 +667,8 @@ export class MazeScene extends Phaser.Scene {
       c.setAlpha(0.35);
       if (item.key === 'sparkle') {
         this.dark?.setTexture('dark_r5');
-        this.say('반짝가루! 8초 동안 환해!', 2000);
-        this.time.delayedCall(8000, () => this.dark?.setTexture('dark_r2'));
+        this.say(`반짝가루! ${UI.dark.sparkleMs / 1000}초 동안 환해!`, 2000);
+        this.time.delayedCall(UI.dark.sparkleMs, () => this.dark?.setTexture('dark_r2'));
       } else {
         this.showHelp();
       }

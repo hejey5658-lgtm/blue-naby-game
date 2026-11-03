@@ -169,6 +169,7 @@
 | 2026-11-03 | 슬라이드를 **PDF로도** 저장 | `docs/presentation/slides.pdf`(16:9 6쪽, 글자는 벡터). `slides.html`을 고치면 다시 뽑는다 |
 | 2026-11-03 | **미로 배경을 더 생동감 있게** | impeccable shape: 답 = 나라별 질감·소품 + 움직임, 판 바깥 여백에도 나라 풍경, 1장 먼저 시안. 기획안 `docs/design-brief.md` 8절 |
 | 2026-11-03 | 기획안 **이대로 1장 시안 만들어** | 1장 한국 집: 꽃무늬 벽지·창 조각·창턱 화분, 서랍장·책장 벽(책등·손잡이·쿠션·책 더미), 마루+러그 바닥, 햇살 띠·먼지 반짝이. 색·소품은 `src/data/mazeLooks.js`(LOOK 이동), 그림은 `src/maze/scenery.js`, 정지 그림은 `maze_board` 텍스처로 굽기, 동작 줄이기 시 정지(`platform.reducedMotion`). 2~7장은 사용자 확인 후 |
+| 2026-11-03 | 미로 배경 **2~7장도 진행** | 기획안대로 6개 나라 완성(kind: alley·market·bamboo·garden·park·maple) — v1.1.0. 2장 창문 불빛·밤하늘은 어둠 위(깊이 7.5). 4·5장은 수집품과 같은 잎·꽃잎을 판 위에 날리지 않음. 캔버스는 tint가 안 돼 단풍잎 색을 텍스처로 구움. 정식 주소는 사용자 확인 후 |
 | 2026-10-30 | 작업 브랜치: `claude/firebase-server-integration-84bkga`에서 개발·커밋·푸시 (다른 브랜치로 푸시 금지, PR은 요청할 때만) | — |
 
 ## 8. 참고 문서 (스킬 `blue-butterfly-game`의 `references/`)

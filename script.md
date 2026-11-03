@@ -107,7 +107,7 @@
 
 ## 준비 체크
 
-- [ ] 발표 슬라이드: `slides.html`을 크롬으로 열고 F로 전체 화면, ← → 또는 스페이스로 넘기기 (6장: 표지 · 피치 · 타임랩스 · 고비 · 라이브 시연 · 마무리)
+- [ ] 발표 슬라이드: `slides.html`을 크롬으로 열고 F로 전체 화면, ← → 또는 스페이스로 넘기기 (6장: 표지 · 피치 · 타임랩스 · 고비 · 라이브 시연 · 마무리). 예비용 PDF: `docs/presentation/slides.pdf`
 
 - [ ] PC 브라우저 창을 넓게: 게임 옆 공간이 좁으면 QR이 안 보인다
 - [ ] 마지막 슬라이드에 큰 QR 한 장: `docs/presentation/qr-slide.png`(16:9 슬라이드 통째로) 또는 `qr.png`·`qr.svg`(QR만). 주소 https://blue-naby-game.web.app

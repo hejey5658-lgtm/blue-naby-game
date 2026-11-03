@@ -167,7 +167,7 @@ export class MapScene extends Phaser.Scene {
         c.setScale(2.2).setAlpha(0);
         this.tweens.add({
           targets: c, scale: 1, alpha: 1, duration: 260, delay: 350, ease: 'Quad.easeIn',
-          onComplete: () => { this.cameras.main.shake(140, 0.006); vibrate('stamp'); sfx('open'); },
+          onComplete: () => { this.cameras.main.shake(140, 0.006); vibrate('stamp'); sfx('stamp'); this.dingStars(state.stars[id] ?? 0); },
         });
       }
     } else {
@@ -241,6 +241,11 @@ export class MapScene extends Phaser.Scene {
       width: 160, height: 110, fontSize: 26, label: '타이틀', color: 0xfdf7ea, shade: 0xc9c0ae, textColor: '#2b2d5a',
       onPress: () => { sfx('tap'); this.scene.start('Title'); },
     });
+  }
+
+  // 도장 쾅 뒤에 별 개수만큼 띵
+  dingStars(n) {
+    for (let i = 0; i < n; i++) this.time.delayedCall(260 + i * 170, () => sfx('ding'));
   }
 
   askReplay(id) {

@@ -203,9 +203,14 @@ export class TitleScene extends Phaser.Scene {
       label: hasProgress() ? '여행 이어하기' : '여행 시작하기',
       onPress: () => this.onStart(),
     });
-    this.puzzleBtn = new Button(this, UI.width / 2, 1110, {
-      width: 320, height: 96, label: '블록 퍼즐', fontSize: 30, color: 0xffb347, shade: 0xd98a2b, textColor: '#2b2d5a',
+    // 블록 퍼즐 · 둘이서 하기 (나란히)
+    this.puzzleBtn = new Button(this, UI.width / 2 - 165, 1110, {
+      width: 310, height: 96, label: '블록 퍼즐', fontSize: 30, color: 0xffb347, shade: 0xd98a2b, textColor: '#2b2d5a',
       onPress: () => { sfx('tap'); unlockAudio(); this.scene.start('PuzzleList'); },
+    });
+    this.duoBtn = new Button(this, UI.width / 2 + 165, 1110, {
+      width: 310, height: 96, label: '둘이서 하기', fontSize: 30, color: 0xff9fb8, shade: 0xe07a96, textColor: '#2b2d5a',
+      onPress: () => { sfx('tap'); unlockAudio(); this.scene.start('Duo', { step: 'setup' }); },
     });
     const pi = this.add.graphics();
     iconPuzzle(pi, -112, 0, 40, 0x2b2d5a);
@@ -313,7 +318,7 @@ export class TitleScene extends Phaser.Scene {
 
   playPrologue() {
     this.input.enabled = false;
-    this.tweens.add({ targets: [this.startBtn, this.puzzleBtn, this.logo, this.version, this.gear], alpha: 0, duration: 200 });
+    this.tweens.add({ targets: [this.startBtn, this.puzzleBtn, this.duoBtn, this.logo, this.version, this.gear], alpha: 0, duration: 200 });
     this.game.events.once('dialogue-done', () => {
       state.step = 'ch1_maze';
       state.chapter = 1;

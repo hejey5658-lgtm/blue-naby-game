@@ -13,6 +13,7 @@ import { EvolutionScene } from './scenes/EvolutionScene.js';
 import { PreloadScene } from './scenes/PreloadScene.js';
 import { EndingScene } from './scenes/EndingScene.js';
 import { PuzzleListScene } from './scenes/PuzzleListScene.js';
+import { DuoScene } from './scenes/DuoScene.js';
 import { PuzzleScene } from './scenes/PuzzleScene.js';
 import { save } from './state.js';
 import { setupPWA } from './pwa.js';
@@ -36,7 +37,7 @@ const game = new Phaser.Game({
   },
   input: { activePointers: 2 },
   render: { antialias: true, powerPreference: 'high-performance' },
-  scene: [BootScene, PreloadScene, TitleScene, MazeScene, BattleScene, MapScene, EvolutionScene, EndingScene, PuzzleListScene, PuzzleScene, DialogueScene, PauseScene, SettingsScene],
+  scene: [BootScene, PreloadScene, TitleScene, MazeScene, BattleScene, MapScene, EvolutionScene, EndingScene, PuzzleListScene, PuzzleScene, DuoScene, DialogueScene, PauseScene, SettingsScene],
 });
 
 // 브라우저 기본 동작 막기: 당겨서 새로고침, 두 번 탭 확대, 길게 눌러 메뉴, 핀치 확대.

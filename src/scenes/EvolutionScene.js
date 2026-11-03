@@ -118,7 +118,7 @@ export class EvolutionScene extends Phaser.Scene {
     this.cocoon?.destroy();
     this.dark?.destroy();
     vibrate('special');
-    sfx('open');
+    sfx('evolve');
     const key = `blue_${this.to}_battle`;
     this.blue.setTexture(key, 6).setAlpha(1).setDisplaySize(380, 380).setPosition(UI.width / 2, 800);
     const sc = this.blue.scale;

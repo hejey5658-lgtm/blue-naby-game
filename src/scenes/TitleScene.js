@@ -203,10 +203,10 @@ export class TitleScene extends Phaser.Scene {
       label: hasProgress() ? '여행 이어하기' : '여행 시작하기',
       onPress: () => this.onStart(),
     });
-    // 블록 퍼즐 · 둘이서 하기 (나란히)
+    // 기념품 퐁퐁 · 둘이서 하기 (나란히)
     this.puzzleBtn = new Button(this, UI.width / 2 - 165, 1110, {
-      width: 310, height: 96, label: '블록 퍼즐', fontSize: 30, color: 0xffb347, shade: 0xd98a2b, textColor: '#2b2d5a',
-      onPress: () => { sfx('tap'); unlockAudio(); this.scene.start('PuzzleList'); },
+      width: 310, height: 96, label: '기념품 퐁퐁', fontSize: 30, color: 0xffb347, shade: 0xd98a2b, textColor: '#2b2d5a',
+      onPress: () => { sfx('tap'); unlockAudio(); this.scene.start('Pop', { step: 'menu' }); },
     });
     this.duoBtn = new Button(this, UI.width / 2 + 165, 1110, {
       width: 310, height: 96, label: '둘이서 하기', fontSize: 30, color: 0xff9fb8, shade: 0xe07a96, textColor: '#2b2d5a',

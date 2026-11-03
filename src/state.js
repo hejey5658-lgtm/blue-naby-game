@@ -26,7 +26,8 @@ function fresh() {
     mazeTimeStar: {},
     nickname: '',
     settings: { ...DEFAULT_SETTINGS },
-    puzzle: { cleared: {}, best: {} },
+    puzzle: { cleared: {}, best: {} }, // 옛 그림 퍼즐 기록 (지금은 화면에서 안 씀, 저장 코드 호환용)
+    pop: { reached: 0, best: {} },      // 기념품 퐁퐁: 혼자 하기로 열린 나라 번호, 나라별 최고 점수
     cleared: false,
     savedAt: null,
   };
@@ -67,7 +68,7 @@ export function save() {
 
 // 처음부터 다시: 설정과 닉네임은 남기고 진행만 지운다.
 export function resetProgress() {
-  const keep = { settings: state.settings, nickname: state.nickname, puzzle: state.puzzle };
+  const keep = { settings: state.settings, nickname: state.nickname, puzzle: state.puzzle, pop: state.pop };
   Object.assign(state, fresh(), keep);
   save();
 }

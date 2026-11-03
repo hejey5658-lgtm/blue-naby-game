@@ -25,6 +25,8 @@ const standalone = safe(() => matchMedia('(display-mode: standalone)').matches |
 const inIframe = safe(() => window.self !== window.top, true);
 // 파일로 열기(file:)와 게임장 안 iframe(srcdoc → about:)은 웹 주소가 아니다: 서비스 워커·홈 화면 설치를 끈다
 const isFile = !/^https?:$/.test(location.protocol);
+// 기기에서 '동작 줄이기'를 켠 사람에게는 배경 움직임을 멈춘다
+const reducedMotion = safe(() => matchMedia('(prefers-reduced-motion: reduce)').matches, false);
 
 // 안드로이드 크롬·삼성 인터넷이 "설치할 수 있어요"라고 알려 주면 받아 둔다(설치 안내는 1장을 깬 뒤에 보여 줌).
 let installPrompt = null;
@@ -43,6 +45,7 @@ export const platform = {
   standalone,
   inIframe,
   isFile,
+  reducedMotion,
   can: {
     vibrate: typeof navigator.vibrate === 'function' && !isIOS,
     // 아이폰은 전체 화면이 안 되고, 인앱 브라우저도 대부분 안 된다.

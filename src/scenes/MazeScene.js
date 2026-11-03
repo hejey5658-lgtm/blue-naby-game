@@ -12,6 +12,8 @@ import { drawPanel } from '../ui/frames.js';
 import { sfx, vibrate } from '../ui/feedback.js';
 import { josa } from '../ui/josa.js';
 import { activeChallenge, challengeResult, fmt as fmtShort } from '../social/social.js';
+import { LOOK } from '../data/mazeLooks.js';
+import { drawBackdrop, drawFloor, drawWallScenery, addAmbient } from '../maze/scenery.js';
 
 // 미로: 쓱 밀면 그 방향으로 벽·갈림길·수집품까지 미끄러져 간다. 톡 누르면 멈춘다.
 // 수집품을 다 모으면 출구가 열린다. 순찰하는 방해물에 닿으면 체크포인트로 데구르르.
@@ -22,17 +24,6 @@ const OPPOSITE = { left: 'right', right: 'left', up: 'down', down: 'up' };
 const PATROL_STEP_MS = 400;
 const HELP_AFTER_SEC = 30;
 
-// 장별 미로 색 (art-guide.md 3절 팔레트). 그림 파일(tile_*)이 생기면 바꾼다.
-// low = 낮은 장애물(b) 색, wind/water = 바람·물 칸 색, deco = 벽 위 무늬
-const LOOK = {
-  ch1: { floor: 0xf3e3c3, floor2: 0xeedab4, wall: 0xb98a5e, wallTop: 0xd2a679, wallFront: 0x8f6440, low: 0xc98a5a, deco: null, hud: [0x8f6440, 0xb98a5e, 0xd2a679] },
-  ch2: { floor: 0x3a3d74, floor2: 0x35386b, wall: 0x2b2e5e, wallTop: 0x3d417a, wallFront: 0x1a1c40, low: 0xc96a4a, deco: 'window', hud: [0x15173a, 0x2b2e5e, 0xffe9a8] },
-  ch3: { floor: 0xf7e8d2, floor2: 0xf1dfc3, wall: 0xa8664a, wallTop: 0xe8584a, wallFront: 0x7a4532, low: 0xe0a050, deco: 'awning', hud: [0x7a4532, 0xa8664a, 0xe8584a] },
-  ch4: { floor: 0xdcecc4, floor2: 0xd1e5b6, wall: 0x4f9f4c, wallTop: 0x7cc56a, wallFront: 0x3a7a38, low: 0x9a7a52, deco: 'bamboo', hud: [0x8a3b2e, 0xb5523b, 0xe9b38a] },
-  ch5: { floor: 0xfbeef1, floor2: 0xf6e3e8, wall: 0x8f6a55, wallTop: 0xf4b6c8, wallFront: 0x6e4f3e, low: 0xb8b8c8, deco: 'blossom', wind: 0xf4b6c8, water: 0x7fc7c9, hud: [0x7a5a3e, 0xa98463, 0xf4b6c8] },
-  ch6: { floor: 0xd9ecc8, floor2: 0xcfe4bc, wall: 0xc9714f, wallTop: 0xe0957a, wallFront: 0x9a523a, low: 0x8a6a4a, deco: 'windows', water: 0x7fb2ff, hud: [0x5d6f86, 0x8ea3bd, 0xe3edf7] },
-  ch7: { floor: 0xe8f4d4, floor2: 0xdcedc6, wall: 0xc0563a, wallTop: 0xe8794f, wallFront: 0x8e3b28, low: 0x8a5a3a, deco: 'tulip', wind: 0xe8794f, water: 0x7fb2ff, hud: [0x4f8dff, 0x2f7bff, 0xffffff] },
-};
 const SLOW_MS = 3000;     // 거미줄·물방울에 느려지는 시간
 const LAMP_PULL_MS = 1000; // 등불이 1초마다 1칸 끌어당김
 const WATER_CYCLE = 4000;  // 물방울: 4초마다
@@ -151,11 +142,15 @@ export class MazeScene extends Phaser.Scene {
 
   drawMaze() {
     const { cell, look } = this;
-    const g = this.add.graphics();
-    // 바닥: 러그처럼 옅은 바둑판
-    for (let y = 0; y < this.rows; y++) {
-      for (let x = 0; x < this.cols; x++) {
-        g.fillStyle((x + y) % 2 ? look.floor2 : look.floor, 1).fillRect(this.ox + x * cell, this.oy + y * cell, cell, cell);
+    // 움직이지 않는 바깥 풍경·바닥·벽은 한 장의 그림으로 구워 둔다 (매 프레임 다시 그리지 않게)
+    const bg = this.make.graphics({ x: 0, y: 0 }, false);
+    drawBackdrop(this, bg);
+    // 바닥: 장마다 질감이 있으면 그것으로, 없으면 러그처럼 옅은 바둑판
+    if (!drawFloor(this, bg)) {
+      for (let y = 0; y < this.rows; y++) {
+        for (let x = 0; x < this.cols; x++) {
+          bg.fillStyle((x + y) % 2 ? look.floor2 : look.floor, 1).fillRect(this.ox + x * cell, this.oy + y * cell, cell, cell);
+        }
       }
     }
     // 벽: 위에서 비스듬히 본 가구 블록 — 윗면 밝게, 아래가 길이면 앞면을 진하게
@@ -166,12 +161,20 @@ export class MazeScene extends Phaser.Scene {
         const px = this.ox + x * cell;
         const py = this.oy + y * cell;
         const front = this.tile(x, y + 1) !== '#';
-        g.fillStyle(look.wallFront, 1).fillRoundedRect(px, py, cell, cell, front ? { tl: 0, tr: 0, bl: r, br: r } : 0);
-        g.fillStyle(look.wall, 1).fillRect(px, py, cell, front ? cell * 0.72 : cell);
-        g.fillStyle(look.wallTop, 1).fillRect(px + 3, py + 3, cell - 6, cell * 0.12);
-        this.drawDeco(g, px, py, x, y, front);
+        if (drawWallScenery(this, bg, x, y, px, py, front)) continue;
+        bg.fillStyle(look.wallFront, 1).fillRoundedRect(px, py, cell, cell, front ? { tl: 0, tr: 0, bl: r, br: r } : 0);
+        bg.fillStyle(look.wall, 1).fillRect(px, py, cell, front ? cell * 0.72 : cell);
+        bg.fillStyle(look.wallTop, 1).fillRect(px + 3, py + 3, cell - 6, cell * 0.12);
+        this.drawDeco(bg, px, py, x, y, front);
       }
     }
+    if (this.textures.exists('maze_board')) this.textures.remove('maze_board');
+    bg.generateTexture('maze_board', UI.width, UI.height);
+    bg.destroy();
+    this.add.image(0, 0, 'maze_board').setOrigin(0);
+    // 햇살·먼지 같은 배경 움직임 (수집품·블루나비보다 아래)
+    addAmbient(this);
+    const g = this.add.graphics();
     this.drawSpecialTiles(g);
     // 체크포인트: 동그란 방석
     for (const [x, y] of this.find('C')) {

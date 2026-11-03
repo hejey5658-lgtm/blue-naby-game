@@ -74,6 +74,7 @@
 - **데이터와 코드 분리**: 대사·미로·보스·형태·UI 수치·그림 목록·버전은 `src/data/`(`dialogue.js`, `mazes.js`, `forms.js`, `bosses.js`, `chapters.js`, `ui.js`, `assets.js`, `version.js`). 기획자가 코드 없이 고칠 수 있게.
 - **브라우저 차이는 `src/platform.js` 한 곳에서만** 판별하고, 모든 기능 호출은 `can.*` 확인 + try/catch.
 - 임시 그림은 Phaser Graphics로 그리고 **텍스처 키 이름을 고정**(`blue_caterpillar`, `boss_dustmong` …). 같은 이름의 그림 파일을 넣으면 바로 바뀌게. 그림 로딩 실패 시 임시 그림으로 대체.
+- 미로 모습(색·소품·움직임)은 `src/data/mazeLooks.js`, 그리는 코드는 `src/maze/scenery.js`. 판 바깥·바닥·벽처럼 움직이지 않는 그림은 `maze_board` 한 장으로 구워 쓴다. 수집품과 비슷한 모양·색(잎·꽃잎, 체크포인트 분홍)은 배경 소품·움직임에 쓰지 않는다.
 - 미로를 고치면 `npm run check:maze`(바람 검사 `check-wind.mjs` 포함), 그림을 고치면 `npm run check:assets` (공개 전 `-- --release`).
 - Phaser 3.80 트윈의 `onYoyo`는 움직이는 속성마다 불린다(x·y면 두 번). 한 번만 일어나야 하는 일(점수·피해)은 `time.delayedCall`로 맞춘다.
 - 씬은 다시 쓰인다(Phaser는 같은 씬 객체를 재사용). 씬에 붙인 상태 표시(`finished`, `closing`, `revealed` 등)는 `init`/`create`에서 꼭 초기화한다 — 안 하면 두 번째부터 멈춘다(실제로 대사창·설정·진화에서 났던 버그).
@@ -166,7 +167,8 @@
 | 2026-11-03 | 발표용 **타임랩스 영상** 만들어 | `docs/presentation/timelapse.mp4`(1920×1080, 30fps, 34초, 소리 없음): 캐릭터 3모습 → 1장 실제 플레이 녹화 → 미로 7개 → 엔딩 실제 녹화 → 주소. 장면 번호는 각본 파트 2와 같음 |
 | 2026-11-03 | `script.md` 각본으로 **발표 슬라이드 `slides.html`**(화살표 키 웹 슬라이드 6장: 표지·피치·타임랩스·고비·라이브 시연·마무리), 게임과 같은 컨셉·3색, 뒤에서도 보이는 큰 글자 | 크림·남색·파랑 3색, 주아·고운돋움, 창틀이 장마다 넓어지다 마지막 장에서 사라짐. 그림·글꼴·QR을 파일 안에 넣어 인터넷 없이 열림(약 1.1MB). 표지 이름 "장은영" |
 | 2026-11-03 | 슬라이드를 **PDF로도** 저장 | `docs/presentation/slides.pdf`(16:9 6쪽, 글자는 벡터). `slides.html`을 고치면 다시 뽑는다 |
-| 2026-11-03 | **미로 배경을 더 생동감 있게** | impeccable shape: 답 = 나라별 질감·소품 + 움직임, 판 바깥 여백에도 나라 풍경, 1장 먼저 시안. 기획안 `docs/design-brief.md` 8절 — **승인 대기**(승인 전 코드 안 씀) |
+| 2026-11-03 | **미로 배경을 더 생동감 있게** | impeccable shape: 답 = 나라별 질감·소품 + 움직임, 판 바깥 여백에도 나라 풍경, 1장 먼저 시안. 기획안 `docs/design-brief.md` 8절 |
+| 2026-11-03 | 기획안 **이대로 1장 시안 만들어** | 1장 한국 집: 꽃무늬 벽지·창 조각·창턱 화분, 서랍장·책장 벽(책등·손잡이·쿠션·책 더미), 마루+러그 바닥, 햇살 띠·먼지 반짝이. 색·소품은 `src/data/mazeLooks.js`(LOOK 이동), 그림은 `src/maze/scenery.js`, 정지 그림은 `maze_board` 텍스처로 굽기, 동작 줄이기 시 정지(`platform.reducedMotion`). 2~7장은 사용자 확인 후 |
 | 2026-10-30 | 작업 브랜치: `claude/firebase-server-integration-84bkga`에서 개발·커밋·푸시 (다른 브랜치로 푸시 금지, PR은 요청할 때만) | — |
 
 ## 8. 참고 문서 (스킬 `blue-butterfly-game`의 `references/`)

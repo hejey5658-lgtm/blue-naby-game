@@ -74,5 +74,35 @@
   "flower": {
     "petal": "#4f8dff",
     "outer": "#2f6fe0"
+  },
+  "popo": {
+    "fur": "#ffffff",
+    "furMid": "#f6efe4",
+    "furShade": "#e2d3bf",
+    "ear": "#e3b588",
+    "earDeep": "#c98f5e",
+    "nose": "#2b2d5a",
+    "collar": "#2f7bff",
+    "tag": "#ffd84a",
+    "spring": {
+      "flower": "#ffd84a",
+      "flower2": "#ffc2d6",
+      "leaf": "#6cc35a"
+    },
+    "summer": {
+      "tube": "#ff6b5b",
+      "tube2": "#ffffff",
+      "shine": "#ffe0dc"
+    },
+    "autumn": {
+      "scarf": "#f2a23a",
+      "scarf2": "#c0563a"
+    },
+    "winter": {
+      "hat": "#e8584a",
+      "band": "#ffffff",
+      "pom": "#ffffff",
+      "hatDeep": "#c0453a"
+    }
   }
 }

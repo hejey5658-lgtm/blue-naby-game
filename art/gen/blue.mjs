@@ -5,13 +5,13 @@
 
 const LINE = 6;
 
-function grad(id, light, mid, dark) {
+export function grad(id, light, mid, dark) {
   return `<radialGradient id="${id}" cx="35%" cy="30%" r="75%">
     <stop offset="0" stop-color="${light}"/><stop offset="0.55" stop-color="${mid}"/><stop offset="1" stop-color="${dark}"/>
   </radialGradient>`;
 }
 
-function commonDefs(P) {
+export function commonDefs(P) {
   return `
   <radialGradient id="pupil" cx="40%" cy="35%" r="70%">
     <stop offset="0" stop-color="#5a5fa8"/><stop offset="1" stop-color="${P.ink}"/>
@@ -21,11 +21,11 @@ function commonDefs(P) {
   </radialGradient>`;
 }
 
-const shadow = (cx, cy, rx, P) => `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${rx * 0.11}" fill="${P.ink}" opacity="0.14"/>`;
-const shine = (cx, cy, rx, ry, rot = -30) => `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="#fff" opacity="0.8" transform="rotate(${rot} ${cx} ${cy})"/>`;
+export const shadow = (cx, cy, rx, P) => `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${rx * 0.11}" fill="${P.ink}" opacity="0.14"/>`;
+export const shine = (cx, cy, rx, ry, rot = -30) => `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="#fff" opacity="0.8" transform="rotate(${rot} ${cx} ${cy})"/>`;
 
 // 표정: joy(기쁨) · surprise(놀람) · sleepy(졸림) · sad(시무룩)
-function eye(x, y, mood, P, side) {
+export function eye(x, y, mood, P, side) {
   const rx = 12.5;
   const ry = 15.5;
   if (mood === 'sleepy') {
@@ -47,7 +47,7 @@ function eye(x, y, mood, P, side) {
     ${lid}`;
 }
 
-function mouth(x, y, mood, P) {
+export function mouth(x, y, mood, P) {
   switch (mood) {
     case 'joy':
       return `<path d="M${x - 9} ${y - 2} Q${x} ${y + 14} ${x + 9} ${y - 2} Z" fill="${P.ink}"/>

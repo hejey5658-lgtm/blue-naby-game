@@ -209,6 +209,7 @@
 | 2026-11-04 | **리듬감 있는 배경음** 1탄·2탄 모두 | 답: 나라·계절마다 다른 곡 / [소리] 설정 하나로. 새로 지은 14곡 `src/data/music.js`, 연주기 `src/ui/music.js`(Web Audio, 파일 없음) |
 | 2026-11-04 | 1탄 **한마디 소개글 + 게임 그림, 작성자: 블루나비** | `docs/presentation/intro-1tan.png` (1080×1350): "작은 파란 애벌레가 한국에서 캐나다까지 날아가며, 심술 난 친구들과 놀아 주고 나비로 자라는 귀여운 미로 모험!" |
 | 2026-11-04 | 정식 주소에 **올려** (1.4~2.1) | v2.1.0 정식 주소 배포 완료 (1탄 5단계·각자 폰 대결·2탄·모바일 최적화·배경음) |
+| 2026-11-04 | 1탄 **PPT·발표 스크립트** | 게임과 같은 모양(주아·고운돋움, 크림·남색·파랑) 슬라이드 10장 https://claude.ai/artifact/Gt1QaCMAsbrA7B9gHQj6es (발표자 노트 = 스크립트, PPTX·PDF로 받기 가능), 스크립트 파일 `docs/presentation/script-1tan.md` |
 | 2026-10-30 | 작업 브랜치: `claude/firebase-server-integration-84bkga`에서 개발·커밋·푸시 (다른 브랜치로 푸시 금지, PR은 요청할 때만) | — |
 
 ## 8. 참고 문서 (스킬 `blue-butterfly-game`의 `references/`)

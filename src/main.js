@@ -62,6 +62,8 @@ function nudgeCanvas() {
   if (free < 24) return;
   const sab = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--sab')) || 0;
   c.style.marginTop = `${Math.round(Math.max(0, Math.min(free * 0.72, free - sab)))}px`;
+  // 캔버스 위치가 바뀌었음을 Phaser에 알려야 손가락 위치가 맞는다 (안 하면 긴 폰에서 버튼이 안 눌림)
+  game.scale.updateBounds();
 }
 game.scale.on('resize', () => requestAnimationFrame(nudgeCanvas));
 game.events.once('ready', () => requestAnimationFrame(nudgeCanvas));

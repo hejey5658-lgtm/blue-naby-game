@@ -2,8 +2,7 @@
 // 대결장 = [놀이, 나라, 같은 판을 만드는 번호(시드), 보낸 사람], 결과 링크 = 대결장 + 내 기록.
 // 결과 링크만 받아도 같은 판을 할 수 있다. 기록은 이 기기의 state.matches(최근 5개, 대결함)에만 남는다.
 // 닉네임·기록은 플레이어가 직접 보낸 링크 안에만 들어가고, 어디에도 자동으로 보내지 않는다.
-import { CHAPTERS, stageLabel } from '../data/chapters.js';
-import { POP } from '../data/popgame.js';
+import { DATA, SERIES } from '../series.js';
 import { state, save } from '../state.js';
 import { platform } from '../platform.js';
 import { pack, unpack } from './codec.js';
@@ -21,7 +20,14 @@ function deviceId() {
 }
 
 export const matchById = (id) => (state.matches ?? []).find((m) => m.id === id) ?? null;
-export const stageName = (m) => (m.game === 'maze' ? stageLabel(CHAPTERS.find((c) => c.id === m.stage) ?? CHAPTERS[0]) : POP.stages[m.stage]?.name ?? '');
+// 탄(1탄 블루나비 / 2탄 포포)마다 단계·퐁퐁 판이 다르다. m.series 없으면 1탄
+const dataOf = (m) => DATA[m.series === 2 ? 2 : 1];
+export const stageName = (m) => {
+  const d = dataOf(m);
+  if (m.game !== 'maze') return d.STAGES[m.stage]?.name ?? '';
+  const i = Math.max(0, d.CHAPTERS.findIndex((c) => c.id === m.stage));
+  return `${m.series === 2 ? '2탄 ' : ''}${i + 1}단계 · ${d.CHAPTERS[i].name}`;
+};
 export const amHost = (m) => m.hostDev === deviceId();
 export const opponentName = (m) => m.theirs?.nick ?? (amHost(m) ? '친구' : m.host);
 // 기록 글자: 미로 = 시간, 퐁퐁 = 점수
@@ -49,7 +55,7 @@ function keep(m) {
 export function createMatch(game, stage) {
   return keep({
     id: Math.random().toString(36).slice(2, 8),
-    game, stage,
+    game, stage, series: SERIES.n,
     seed: Math.floor(Math.random() * 2147483646) + 1,
     host: nickname(), hostDev: deviceId(),
     mine: null, theirs: null, at: Date.now(),
@@ -64,7 +70,7 @@ export function saveMyResult(id, score, rolls) {
 }
 
 const linkFor = (m, withResult) => {
-  const base = [withResult ? 'r' : 'i', m.id, m.game, m.stage, m.seed, m.host, m.hostDev];
+  const base = [withResult ? 'r' : 'i', m.id, m.series === 2 ? `${m.game}2` : m.game, m.stage, m.seed, m.host, m.hostDev];
   const data = withResult ? [...base, nickname(), deviceId(), m.mine.score, m.mine.rolls] : base;
   return `${baseUrl()}/#d=${pack(PREFIX, data)}`;
 };
@@ -72,11 +78,13 @@ const linkFor = (m, withResult) => {
 export function readMatch(raw) {
   const d = unpack(PREFIX, raw);
   if (!Array.isArray(d) || !['i', 'r'].includes(d[0])) return null;
-  const [kind, id, game, stage, seed, host, hostDev, nick, dev, score, rolls] = d;
+  const [kind, id, rawGame, stage, seed, host, hostDev, nick, dev, score, rolls] = d;
+  const series = String(rawGame).endsWith('2') ? 2 : 1;
+  const game = String(rawGame).replace(/2$/, '');
   if (typeof id !== 'string' || !GAME_NAME[game] || !Number.isInteger(seed)) return null;
-  if (game === 'maze' && !CHAPTERS.some((c) => c.id === stage)) return null;
-  if (game === 'pop' && !(Number.isInteger(stage) && POP.stages[stage])) return null;
-  const m = matchById(id) ?? { id, game, stage, seed, host: String(host || '친구').slice(0, 8), hostDev: String(hostDev || ''), mine: null, theirs: null, at: Date.now() };
+  if (game === 'maze' && !DATA[series].CHAPTERS.some((c) => c.id === stage)) return null;
+  if (game === 'pop' && !(Number.isInteger(stage) && DATA[series].STAGES[stage])) return null;
+  const m = matchById(id) ?? { id, game, stage, seed, series, host: String(host || '친구').slice(0, 8), hostDev: String(hostDev || ''), mine: null, theirs: null, at: Date.now() };
   if (kind === 'r' && dev !== deviceId() && Number.isFinite(score)) m.theirs = { nick: String(nick || '친구').slice(0, 8), score: Math.round(score), rolls: Number(rolls) || 0 };
   return keep(m);
 }

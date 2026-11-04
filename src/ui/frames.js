@@ -10,6 +10,11 @@ export const FRAME_STYLE = {
   moonGate:   { border: 10, outer: 0x8a3b2e, mid: 0xb5523b, light: 0xe9b38a, fill: 0xfbf7ee, text: '#2b2d5a', name: 0xb5523b },
   lattice:    { border: 7,  outer: 0x7a5a3e, mid: 0xa98463, light: 0xe8d3bd, fill: 0xfffdf8, text: '#2b2d5a', name: 0xd9708a },
   cityGlass:  { border: 4,  outer: 0x5d6f86, mid: 0x8ea3bd, light: 0xe3edf7, fill: 0xf7fbff, text: '#2b2d5a', name: 0x4f6d8f },
+  // 2탄 계절 테두리: 봄 벚꽃 → 여름 물결 → 가을 은행 → 겨울 눈
+  spring:     { border: 12, outer: 0xc06a86, mid: 0xffc2d6, light: 0xffffff, fill: 0xfffaf8, text: '#2b2d5a', name: 0xd9708a },
+  summer:     { border: 10, outer: 0x2f6fd6, mid: 0x7fc7ff, light: 0xffffff, fill: 0xf7fbff, text: '#2b2d5a', name: 0x2f7bff },
+  autumn:     { border: 8,  outer: 0x9a5a2a, mid: 0xf2a23a, light: 0xffe9a8, fill: 0xfffaf0, text: '#2b2d5a', name: 0xc0763a },
+  winter:     { border: 6,  outer: 0x5d78a6, mid: 0xd6e6f5, light: 0xffffff, fill: 0xfbfdff, text: '#2b2d5a', name: 0x3f5a86 },
   cloud:      { border: 0,  outer: 0xffffff, mid: 0xffffff, light: 0xffffff, fill: 0xffffff, text: '#2b2d5a', name: 0x2f7bff },
 };
 

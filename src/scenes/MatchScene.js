@@ -7,6 +7,7 @@ import { sfx, vibrate, unlockAudio } from '../ui/feedback.js';
 import { getSafeInsets } from '../ui/safeArea.js';
 import { state } from '../state.js';
 import { POP } from '../data/popgame.js';
+import { SERIES, useSeries } from '../series.js';
 import { nickname } from '../social/social.js';
 import { matchById, createMatch, sendInvite, sendResult, stageName, amHost, opponentName, scoreText, verdict, GAME_NAME } from '../social/match.js';
 
@@ -93,13 +94,15 @@ export class MatchScene extends Phaser.Scene {
       });
     }
     new Button(this, UI.width / 2 - 160, 1190, { ...SUB, label: '대결함', onPress: () => this.scene.start('Match', { step: 'box' }) });
-    new Button(this, UI.width / 2 + 160, 1190, { ...SUB, label: '처음 화면으로', onPress: () => this.scene.start('Title') });
+    new Button(this, UI.width / 2 + 160, 1190, { ...SUB, label: '처음 화면으로', onPress: () => this.scene.start(SERIES.meta.titleScene) });
     this.input.keyboard?.on('keydown-ENTER', () => this.mainBtn.trigger());
   }
 
   play() {
     unlockAudio();
     const { m } = this;
+    // 2탄 대결장이면 2탄 데이터로 바꿔서 (진행 기록은 탄마다 따로라 이야기에는 영향 없음)
+    if ((m.series === 2 ? 2 : 1) !== SERIES.n) useSeries(m.series === 2 ? 2 : 1);
     if (m.game === 'maze') {
       this.scene.start('Maze', { chapter: m.stage, fresh: true, intro: false, duo: { remote: m.id, names: [nickname()], turn: 1, results: [] } });
     } else {

@@ -6,6 +6,7 @@
 // 장별 색·개수는 src/data/mazeLooks.js 의 scenery.
 import { UI } from '../data/ui.js';
 import { platform } from '../platform.js';
+import { KINDS2 } from './scenery2.js';
 
 // 칸마다 늘 같은 값이 나오는 작은 난수 (소품 자리가 매번 같게)
 const hash = (x, y, k = 0) => {
@@ -674,7 +675,7 @@ const zones = {
   },
 };
 
-const KINDS = { home, alley, market, bamboo, garden, park, maple, zones };
+const KINDS = { home, alley, market, bamboo, garden, park, maple, zones, ...KINDS2 };
 const kindOf = (scene) => { const sc = scene.look.scenery; return sc && KINDS[sc.kind] ? [KINDS[sc.kind], sc] : [null, null]; };
 
 // ── MazeScene이 부르는 네 가지 ─────────────────────

@@ -1,12 +1,18 @@
 # 블루나비의 세계여행 — 진행 기록
 
 ## 현재 상태
-- 버전: **v1.5.0** (1.4.0 나라마다 1단계·움직이는 웅덩이/거미줄 + 1.5.0 각자 폰 대결, 정식 주소는 사용자 확인 후)
+- 버전: **v2.0.0** (1.4.0 나라마다 1단계 + 1.5.0 각자 폰 대결 + 2.0.0 2탄 「포포의 사계절 서울」, 정식 주소는 사용자 확인 후)
 - 완료: 1~8단계, **9단계 친구들에게 알리기(공개용 그림·개인정보 안내·만든 사람들·한 파일 버전·체크리스트)** (2026-10-31)
 - 컨셉 v2 승인: 한국·중국·일본·미국·캐나다 (`docs/concept-v2.md`) → 2026-11-04부터 **나라마다 1단계, 5단계**
 - 그림 트랙: A1 Claude 벡터, A2 블루나비 캐릭터 시트 v1 승인, A3 나머지 그림 완료(임시 그림 0개), A4 아이콘·공유 그림 완료
 - **정식 공개: https://blue-naby-game.web.app (v1.3.0, 2026-11-03)**
 - 다음: 사용자가 폰으로 `docs/release-checklist.md`의 📱 항목 확인 → 단톡방 공지(`docs/friend-test.md`) → 친구 의견 반영(`FEEDBACK.md`)
+
+## 2.0.0 (2026-11-04) — 2탄 「포포의 사계절 서울」
+- 탄 갈아 끼우기 `src/series.js` (1탄 데이터 자리에 `src/data/s2/` 를 제자리 교체, 진행 기록은 `state.series`/`state.other`로 탄마다 따로)
+- 새 화면: `Title2Scene`(포포네 마당), `AlbumScene`(사계절 앨범), `DressScene`(옷 갈아입기), `Ending2Scene`. 미로·대결·둘이서·퐁퐁·대결장은 1탄 화면 그대로
+- 그림: `art/gen/popo.mjs`(포포 4벌), `bosses2.mjs`(친구 5), `props2.mjs`(수집품 4·방해물 4), 퐁퐁 서울판 `src/pop/icons2.js`, 계절 미로 풍경 `src/maze/scenery2.js`
+- 저장 코드 PP1-, 도전장 P1-, 대결장 game 'maze2'/'pop2'
 
 ## 1.5.0 (2026-11-04)
 - 각자 폰 대결(대결 코드 `#d=D1-…`, 서버 없음): `src/social/match.js`, 화면 `src/scenes/MatchScene.js`(대결 카드·대결함), 미로 = `MazeScene` duo.remote, 퐁퐁 = `PopScene` step 'remote'(시드 고정·`POP.remoteSec` 120초)

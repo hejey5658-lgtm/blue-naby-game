@@ -4,7 +4,7 @@
 
 const LINE = 6;
 
-function grad(id, light, mid, dark) {
+export function grad(id, light, mid, dark) {
   return `<radialGradient id="${id}" cx="35%" cy="30%" r="75%">
     <stop offset="0" stop-color="${light}"/><stop offset="0.55" stop-color="${mid}"/><stop offset="1" stop-color="${dark}"/>
   </radialGradient>`;
@@ -35,7 +35,7 @@ function sleepyEye(x, y, mood, P, side, lidColor) {
     ${brow}`;
 }
 
-function bossMouth(x, y, mood, P) {
+export function bossMouth(x, y, mood, P) {
   switch (mood) {
     case 'happy':
       return `<path d="M${x - 10} ${y - 2} Q${x} ${y + 14} ${x + 10} ${y - 2} Z" fill="${P.ink}"/>
@@ -91,7 +91,7 @@ function dustmong(P, mood) {
 // ── 공통: 친구들 얼굴 (블루나비와 같은 눈: 흰자 + 그라데이션 눈동자 + 반짝점 2개) ──
 const pupilDef = (P) => `<radialGradient id="bpupil" cx="40%" cy="35%" r="70%"><stop offset="0" stop-color="#5a5fa8"/><stop offset="1" stop-color="${P.ink}"/></radialGradient>`;
 
-function roundEye(x, y, mood, P, side, r = 11, happyStroke = P.ink) {
+export function roundEye(x, y, mood, P, side, r = 11, happyStroke = P.ink) {
   if (mood === 'happy') return `<path d="M${x - r} ${y + 4} Q${x} ${y - r} ${x + r} ${y + 4}" fill="none" stroke="${happyStroke}" stroke-width="5" stroke-linecap="round"/>`;
   const brow = mood === 'angry' || mood === 'skill'
     ? `<path d="M${x - (r + 2) * side} ${y - r - 2} L${x + (r + 1) * side} ${y - r - 11}" stroke="${P.ink}" stroke-width="4.5" stroke-linecap="round"/>`
@@ -104,7 +104,7 @@ function roundEye(x, y, mood, P, side, r = 11, happyStroke = P.ink) {
     <circle cx="${x + side + r * 0.3}" cy="${y + r * 0.45}" r="${r * 0.14}" fill="#fff"/>${brow}`;
 }
 
-function face(cx, cy, mood, P, gap = 36, r = 11, mouthDy = 22, happyStroke = P.ink) {
+export function face(cx, cy, mood, P, gap = 36, r = 11, mouthDy = 22, happyStroke = P.ink) {
   const puff = mood === 'angry' || mood === 'skill' ? 14 : 11;
   return `<ellipse cx="${cx - gap * 0.9}" cy="${cy + 16}" rx="${puff}" ry="${puff * 0.65}" fill="url(#bcheek)"/>
     <ellipse cx="${cx + gap * 0.9}" cy="${cy + 16}" rx="${puff}" ry="${puff * 0.65}" fill="url(#bcheek)"/>
@@ -112,11 +112,11 @@ function face(cx, cy, mood, P, gap = 36, r = 11, mouthDy = 22, happyStroke = P.i
     ${bossMouth(cx, cy + mouthDy, mood, P)}`;
 }
 
-const blobC = (cx, cy, r, fill, P, extra = '') => `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${fill}" stroke="${P.ink}" stroke-width="${LINE}" ${extra}/>`;
-const blobE = (cx, cy, rx, ry, fill, P, extra = '') => `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="${fill}" stroke="${P.ink}" stroke-width="${LINE}" ${extra}/>`;
-const shine = (x, y, rx = 13, ry = 8) => `<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" fill="#fff" opacity="0.75" transform="rotate(-30 ${x} ${y})"/>`;
-const groundShadow = (P, rx = 74) => `<ellipse cx="100" cy="190" rx="${rx}" ry="9" fill="${P.ink}" opacity="0.14"/>`;
-const defs = (P, ...g) => cheekDef(P) + pupilDef(P) + g.join('');
+export const blobC = (cx, cy, r, fill, P, extra = '') => `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${fill}" stroke="${P.ink}" stroke-width="${LINE}" ${extra}/>`;
+export const blobE = (cx, cy, rx, ry, fill, P, extra = '') => `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="${fill}" stroke="${P.ink}" stroke-width="${LINE}" ${extra}/>`;
+export const shine = (x, y, rx = 13, ry = 8) => `<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" fill="#fff" opacity="0.75" transform="rotate(-30 ${x} ${y})"/>`;
+export const groundShadow = (P, rx = 74) => `<ellipse cx="100" cy="190" rx="${rx}" ry="9" fill="${P.ink}" opacity="0.14"/>`;
+export const defs = (P, ...g) => cheekDef(P) + pupilDef(P) + g.join('');
 
 // ── 실실이: 동글동글 보라 거미 + 분홍 털모자 ──
 function silsili(P, mood) {

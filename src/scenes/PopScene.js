@@ -13,13 +13,15 @@ import { drawBackdrop, addAmbient } from '../maze/scenery.js';
 import { makePopIcons } from '../pop/icons.js';
 import { PopBoard } from '../pop/PopBoard.js';
 import { matchById, createMatch, sendInvite, saveMyResult, seededRandom } from '../social/match.js';
+import { SERIES } from '../series.js';
 
 // 기념품 퐁퐁 (design-brief 10·12절). scene.start('Pop', { step: 'menu' | 'solo' | 'duo' | 'remote', stage, match })
 // 혼자 하기: 중국 → 일본 → 미국 → 캐나다, 나라마다 목표만큼 퐁 하면 도장 쾅 → 다음 나라(더 빨라짐).
 // 둘이서 대결: 한 화면 두 판(왼쪽 1P · 오른쪽 2P) 동시에, 많이 퐁 하면 상대 판에 구름 블록. 먼저 꼭대기에 닿으면 진다.
 // 각자 폰 대결(remote): 대결장의 시드로 두 폰에 같은 순서, POP.remoteSec 동안 점수 겨루기 → 대결 화면(Match)으로.
 const STAGES = POP.stages;
-const FACES = STAGES.flatMap((s) => s.types.map((t) => t.icon)).filter((k) => k.startsWith('face_'));
+// 지금 탄의 퐁퐁 판에 나오는 친구 얼굴 그림 (탄을 바꾸면 STAGES 내용이 바뀐다)
+const faces = () => STAGES.flatMap((s) => s.types.map((t) => t.icon)).filter((k) => k.startsWith('face_') || (SERIES.n === 2 && k.startsWith('item_')));
 const SWIPE = 40;
 
 export class PopScene extends Phaser.Scene {
@@ -40,7 +42,7 @@ export class PopScene extends Phaser.Scene {
   create() {
     this.top = getSafeInsets(this.game).top;
     if (this.step === 'menu') { this.drawMenu(); return; }
-    if (waitForAssets(this, FACES, this.initData)) return;
+    if (waitForAssets(this, faces(), this.initData)) return;
     makePopIcons(this);
     this.stage = STAGES[this.stageIdx];
     if (this.step === 'duo') this.startDuo(); else if (this.step === 'remote') this.startRemote(); else this.startSolo();
@@ -57,13 +59,13 @@ export class PopScene extends Phaser.Scene {
     this.add.rectangle(0, 0, UI.width, UI.height, 0xf3e3c3).setOrigin(0);
     makePopIcons(this);
     // 둥둥 떠 있는 기념품 몇 개
-    ['item_bambooLeaf', 'item_petal', 'item_acorn', 'item_nectar', 'pop_lantern', 'pop_maple'].forEach((k, i) => {
+    STAGES.flatMap((s) => s.types.slice(2).map((t) => t.icon)).concat(STAGES.map((s) => s.types[0].icon)).slice(0, 6).filter((k) => this.textures.exists(k)).forEach((k, i) => {
       const im = this.add.image(90 + i * 108, 120 + this.top + (i % 2) * 34, k).setDisplaySize(70, 70);
       this.tweens.add({ targets: im, y: im.y - 12, duration: 1400 + i * 160, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
     });
     this.add.text(UI.width / 2, 250 + this.top, '기념품 퐁퐁', { fontFamily: UI.fontTitle, fontSize: '78px', color: '#2b2d5a' }).setOrigin(0.5);
     this.add.text(UI.width / 2, 345 + this.top, '같은 기념품 3개를 이으면 퐁!\n쓱 밀어 옮기고, 톡 눌러 돌려요', { fontFamily: UI.font, fontSize: '30px', color: '#5a5c88', align: 'center', lineSpacing: 10 }).setOrigin(0.5);
-    this.add.text(UI.width / 2, 465 + this.top, '어느 나라부터 할까요?', { fontFamily: UI.fontTitle, fontSize: '32px', color: '#2b2d5a' }).setOrigin(0.5);
+    this.add.text(UI.width / 2, 465 + this.top, SERIES.n === 2 ? '어느 계절부터 할까요?' : '어느 나라부터 할까요?', { fontFamily: UI.fontTitle, fontSize: '32px', color: '#2b2d5a' }).setOrigin(0.5);
     const reached = state.pop?.reached ?? 0;
     this.chips = STAGES.map((s, i) => {
       const x = UI.width / 2 + (i % 2 ? 160 : -160), y = 550 + this.top + Math.floor(i / 2) * 100;
@@ -243,7 +245,7 @@ export class PopScene extends Phaser.Scene {
     state.pop.reached = Math.max(state.pop.reached ?? 0, Math.min(STAGES.length - 1, this.stageIdx + 1));
     save();
     const last = this.stageIdx === STAGES.length - 1;
-    const panel = this.panel(last ? '세계 일주 완성!' : `${this.stage.name} 도장 쾅!`, last ? `중국부터 캐나다까지 다 돌았어요\n이번 나라 점수 ${this.score}` : `점수 ${this.score}\n다음 나라는 조금 더 빨라져요`, { stamp: true, buttons: 2 });
+    const panel = this.panel(last ? SERIES.meta.popDone[0] : `${this.stage.name} 도장 쾅!`, last ? `${SERIES.meta.popDone[1]}\n이번 판 점수 ${this.score}` : `점수 ${this.score}\n다음 나라는 조금 더 빨라져요`, { stamp: true, buttons: 2 });
     this.stamp(panel);
     if (!last) this.overlayBtn(panel, 0, `다음 나라로 · ${STAGES[this.stageIdx + 1].name}`, () => this.scene.start('Pop', { step: 'solo', stage: this.stageIdx + 1 }));
     else this.overlayBtn(panel, 0, '다시 하기', () => this.scene.start('Pop', { step: 'menu' }));

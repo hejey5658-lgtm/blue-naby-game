@@ -8,6 +8,9 @@ import { Resvg } from '@resvg/resvg-js';
 import { bossFrame, BOSS_POSES, BOSS_FACE_MOODS, BOSS_FACE_BOX, BOSS_KEYS, npcFrame, NPC_KEYS, NPC_POSES, NPC_FACE_BOX } from '../art/gen/bosses.mjs';
 import { propSvg, PROP_KEYS } from '../art/gen/props.mjs';
 import { blueSvg, blueFrame, MOODS, FORM_NAMES, MAZE_POSES, BATTLE_POSES, FACE_MOODS, FACE_BOX } from '../art/gen/blue.mjs';
+import { popoFrame } from '../art/gen/popo.mjs';
+import { boss2Frame, BOSS2_KEYS, BOSS2_FACE_BOX } from '../art/gen/bosses2.mjs';
+import { prop2Svg, PROP2_KEYS } from '../art/gen/props2.mjs';
 
 const P = JSON.parse(fs.readFileSync('art/palette.json', 'utf8'));
 fs.mkdirSync('art/source', { recursive: true });
@@ -59,6 +62,26 @@ for (const key of PROP_KEYS) {
   const size = key === 'cocoon' ? 256 : 128;
   const dir = key.startsWith('item_') ? 'item' : 'char';
   write(`public/assets/${dir}/${key}.png`, new Resvg(svg, { fitTo: { mode: 'width', value: size } }).render().asPng());
+}
+// ── 2탄 「포포의 사계절 서울」 (포포 캐릭터 시트 v1 승인 2026-11-04) ──
+// 포포 계절 옷 4벌: 미로 6칸(대기 2 + 달리기 4), 대결 7칸(1탄과 같은 순서), 얼굴 4칸(기쁨·놀람·졸림·시무룩)
+const POPO_OUTFITS = { popoSpring: 'spring', popoSummer: 'summer', popoAutumn: 'autumn', popoWinter: 'winter' };
+const POPO_MAZE = [{}, { sy: 0.96, sx: 1.03 }, { dy: -6, wag: 12 }, { dy: -2, wag: -10, sx: 1.02 }, { dy: -6, wag: 12 }, { wag: -6 }];
+const POPO_BATTLE = [{}, { sy: 0.95, sx: 1.03, wag: 10 }, { mood: 'joy', rot: 8, dy: -6, wag: 14 }, { mood: 'sleepy', sy: 0.9, sx: 1.05 }, { mood: 'surprise', sx: 1.06, sy: 1.06, dy: -10 }, { mood: 'sad', sy: 0.92, sx: 1.04, rot: -6, ear: 10 }, { mood: 'joy', dy: -14, wag: 16 }];
+for (const [form, outfit] of Object.entries(POPO_OUTFITS)) {
+  write(`public/assets/char/blue_${form}.png`, sheet(POPO_MAZE.map((p) => popoFrame(P, outfit, p)), 128, [-4, -14, 212]));
+  write(`public/assets/char/blue_${form}_battle.png`, sheet(POPO_BATTLE.map((p) => popoFrame(P, outfit, p)), 480, [-8, -20, 220]));
+  write(`public/assets/face/face_blue_${form}.png`, sheet(FACE_MOODS.map((mood) => popoFrame(P, outfit, { mood })), 280, [26, 10, 150]));
+}
+for (const key of BOSS2_KEYS) {
+  write(`public/assets/char/boss_${key}.png`, sheet(BOSS_POSES.map((p) => boss2Frame(P, key, p)), 480, [-6, -14, 212]));
+  write(`public/assets/face/face_${key}.png`, sheet(BOSS_FACE_MOODS.map((mood) => boss2Frame(P, key, { mood })), 280, BOSS2_FACE_BOX[key]));
+}
+// 2탄 안내 친구 블루나비 얼굴 (대사창·미로 말풍선): 0 보통 · 1 기쁨
+write('public/assets/face/face_bluenabi.png', sheet(['normal', 'joy'].map((mood) => blueFrame(P, 'butterfly', { mood })), 280, FACE_BOX.butterfly));
+for (const key of PROP2_KEYS) {
+  const dir = key.startsWith('item_') ? 'item' : 'char';
+  write(`public/assets/${dir}/${key}.png`, new Resvg(prop2Svg(P, key), { fitTo: { mode: 'width', value: 128 } }).render().asPng());
 }
 console.log('게임용 시트: public/assets/char/{blue,boss}_*.png, public/assets/face/face_*.png, public/assets/item/*.png');
 

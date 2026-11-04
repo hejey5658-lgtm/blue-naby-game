@@ -1,7 +1,9 @@
 import Phaser from 'phaser';
+import { afterDialogue } from '../ui/afterDialogue.js';
 import { UI } from '../data/ui.js';
 import { waitForAssets } from './PreloadScene.js';
 import { CHAPTERS } from '../data/chapters.js';
+import { SERIES } from '../series.js';
 import { FORMS } from '../data/forms.js';
 import { BOSSES } from '../data/bosses.js';
 import { ITEMS } from '../data/items.js';
@@ -298,14 +300,14 @@ export class BattleScene extends Phaser.Scene {
       sfx('open');
       vibrate('collect');
       this.tweens.add({ targets: this.blue, scale: this.blueScale, duration: 520, ease: 'Back.easeOut' });
-      this.band('블루나비도 쑥쑥 커졌다!');
+      this.band(`${SERIES.meta.hero}도 쑥쑥 커졌다!`);
     });
     this.time.delayedCall(2200, () => {
       this.bossBob.resume();
       this.blue.setFrame(BLUE_FRAME.idle);
       const idle = `blue_${this.chapter.form}_battle_idle`;
       if (this.anims.exists(idle)) this.blue.play(idle);
-      this.game.events.once('dialogue-done', () => {
+      afterDialogue(this, () => {
         this.tweens.add({ targets: this.nextMove, alpha: 1, duration: 200 });
         this.startTurn();
       });
@@ -470,7 +472,7 @@ export class BattleScene extends Phaser.Scene {
     } else if (move === 'wrap') {
       this.blueWrapped = true;
       hit(0.5);
-      this.time.delayedCall(500, () => this.say('블루나비가 실에 감겼어!'));
+      this.time.delayedCall(500, () => this.say(`${josa(SERIES.meta.hero, '이', '가')} ${SERIES.n === 2 ? '눈보라에 꽁꽁!' : '실에 감겼어!'}`));
     } else if (move === 'heal') {
       this.grumpy = Math.min(this.maxGrumpy, this.grumpy + b.healAmount);
       this.floatNumber(this.bossSprite.x, this.bossBase.y - 300, `+${b.healAmount}`, '#9a8bb5');
@@ -538,7 +540,7 @@ export class BattleScene extends Phaser.Scene {
 
     this.time.delayedCall(1800, () => {
       const key = this.bossIndex === 0 ? `${id}_friend` : `${id}_friend${this.bossIndex + 1}`;
-      this.game.events.once('dialogue-done', () => this.result(turns, lastBoss));
+      afterDialogue(this, () => this.result(turns, lastBoss));
       this.scene.launch('Dialogue', { key, frame: this.chapter.frame, form: this.chapter.form });
     });
   }
@@ -559,7 +561,7 @@ export class BattleScene extends Phaser.Scene {
     this.panel(`${josa(this.boss.name, '과', '와')} 친구가 됐어!`, lines, [
       next,
       ['대결 다시', () => this.scene.restart({ chapter: id, bossIndex: this.bossIndex, retry: true })],
-    ], lastBoss ? stars : null);
+    ], lastBoss && SERIES.meta.stars ? stars : null);
   }
 
   panel(title, lines, buttons, stars = null) {

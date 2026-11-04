@@ -2,6 +2,7 @@
 import { CHAPTERS, stageNo } from './data/chapters.js';
 import { state, save } from './state.js';
 import { platform } from './platform.js';
+import { SERIES } from './series.js';
 
 export const chapterById = (id) => CHAPTERS.find((c) => c.id === id);
 export const isCleared = (id) => (state.stars?.[id] ?? 0) > 0;
@@ -26,13 +27,13 @@ export function afterChapter(scene, id) {
   save();
   // 마지막 장을 처음 깨면 엔딩
   if (nextIdx >= CHAPTERS.length && !state.cleared) {
-    scene.scene.start('Ending');
+    scene.scene.start(SERIES.meta.endingScene);
     return;
   }
-  if (ch.evolveTo && !nextStarted) {
-    scene.scene.start('Evolution', { chapter: id });
+  if ((ch.evolveTo || ch.dressTo) && !nextStarted) {
+    scene.scene.start(SERIES.meta.dressScene, { chapter: id });
   } else {
-    scene.scene.start('Map', { justCleared: id });
+    scene.scene.start(SERIES.meta.mapScene, { justCleared: id });
   }
 }
 
@@ -42,5 +43,5 @@ export function startChapter(scene, id, { replay = false } = {}) {
   state.playing = id;
   state.mazeState = null;
   save();
-  scene.scene.start('Maze', { chapter: id, fresh: true, intro: id !== 'ch1' });
+  scene.scene.start('Maze', { chapter: id, fresh: true, intro: id !== CHAPTERS[0].id });
 }

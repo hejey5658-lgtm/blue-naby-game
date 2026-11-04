@@ -53,6 +53,11 @@ const TONES = {
   arrive_ch5: { notes: [[880, 0, 0.16, 'triangle'], [784, 0.15, 0.16, 'triangle'], [1047, 0.3, 0.32, 'triangle']] },
   arrive_ch6: { notes: [[523, 0, 0.1, 'square', 0.06], [659, 0.1, 0.1, 'square', 0.06], [784, 0.2, 0.1, 'square', 0.06], [1047, 0.3, 0.26, 'square', 0.06]] },
   arrive_ch7: { notes: [[392, 0, 0.16, 'sine'], [523, 0.15, 0.16, 'sine'], [659, 0.3, 0.16, 'sine'], [784, 0.45, 0.4, 'sine']] },
+  // 2탄 계절 도착 인사: 봄 맑은 세 음 · 여름 통통 · 가을 낮고 포근 · 겨울 방울 소리
+  arrive_s1: { notes: [[784, 0, 0.14, 'triangle', 0.12], [988, 0.13, 0.14, 'triangle', 0.12], [1175, 0.26, 0.3, 'triangle', 0.12]] },
+  arrive_s2: { notes: [[523, 0, 0.08, 'square', 0.06], [784, 0.09, 0.08, 'square', 0.06], [1047, 0.18, 0.22, 'square', 0.06]] },
+  arrive_s3: { notes: [[440, 0, 0.2, 'sine'], [554, 0.18, 0.2, 'sine'], [659, 0.36, 0.36, 'sine']] },
+  arrive_s4: { notes: [[1319, 0, 0.12, 'sine', 0.1], [1568, 0.12, 0.12, 'sine', 0.1], [1319, 0.24, 0.12, 'sine', 0.1], [1760, 0.36, 0.4, 'sine', 0.1]] },
 };
 
 function note(freq, start, dur, type, level = 0.18, to = null) {

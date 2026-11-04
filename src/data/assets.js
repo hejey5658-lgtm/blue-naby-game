@@ -38,9 +38,15 @@ export const ASSETS = [
   ...blue('caterpillar', 'boot'),
   ...blue('moth', 'ch1'),       // 한국 단계 끝에 나방으로 진화
   ...blue('butterfly', 'ch5'),  // 일본 단계 끝에 나비로 진화
+  // ── 2탄 「포포의 사계절 서울」: 1탄 그림을 다 받은 뒤 뒤에서 받는다 ──
+  ...['popoSpring', 'popoSummer', 'popoAutumn', 'popoWinter'].flatMap((f) => blue(f, 's2')),
+  ...['kkakkak', 'gaegul', 'bamtol', 'mungchi', 'gomsil'].flatMap((k) => boss(k, 's2')),
+  { key: 'face_bluenabi', file: 'assets/face/face_bluenabi.png', width: 560, height: 280, frameWidth: 280, frameHeight: 280, release: true, group: 's2' },
+  ...['forsythia', 'watermelon', 'ginkgo', 'snowflake'].map((k) => ({ ...prop(`item_${k}`), group: 's2' })),
+  ...['bike', 'watergun', 'chestnut', 'sled'].map((k) => ({ ...prop(`enemy_${k}`), group: 's2' })),
 ];
 // 그림을 바꾸면 올려서 브라우저 캐시를 피한다.
-export const ASSET_VERSION = 6;
+export const ASSET_VERSION = 7;
 
 // 애니메이션 (프레임 번호는 art-guide.md 4절 칸 순서: 미로 = 대기 2 + 이동 4, 대결 = 대기 2·놀자·버티기·특기·지침·기쁨)
 const blueAnims = (form) => [
@@ -48,4 +54,4 @@ const blueAnims = (form) => [
   { key: `blue_${form}_move`, texture: `blue_${form}`, frames: [2, 3, 4, 5], fps: 10, repeat: -1 },
   { key: `blue_${form}_battle_idle`, texture: `blue_${form}_battle`, frames: [0, 1], fps: 3, repeat: -1 },
 ];
-export const ANIMS = ['caterpillar', 'moth', 'butterfly'].flatMap(blueAnims);
+export const ANIMS = ['caterpillar', 'moth', 'butterfly', 'popoSpring', 'popoSummer', 'popoAutumn', 'popoWinter'].flatMap(blueAnims);

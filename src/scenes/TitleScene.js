@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { afterDialogue } from '../ui/afterDialogue.js';
 import { UI } from '../data/ui.js';
 import { CHAPTERS } from '../data/chapters.js';
 import { VERSION, IS_TEST_BUILD } from '../data/version.js';
@@ -10,6 +11,7 @@ import { unlockAudio, sfx, vibrate } from '../ui/feedback.js';
 import { iconGear, iconPuzzle } from '../ui/icons.js';
 import { updateBand, inAppBand, challengeBand } from '../ui/bands.js';
 import { setTheme } from '../ui/theme.js';
+import { SERIES, useSeries } from '../series.js';
 
 // 타이틀: 화면 위쪽은 창가(나무 창틀이 화면의 틀), 유리창 너머로 바깥 세상이 보이고
 // 화분 위의 애벌레 블루나비가 창밖을 본다. 시작을 누르면 창문이 열린다.
@@ -39,6 +41,8 @@ export class TitleScene extends Phaser.Scene {
   constructor() { super('Title'); }
 
   create() {
+    // 2탄을 하던 중이면 2탄 타이틀로 (대결 링크로 들어온 경우는 아래에서 대결 화면으로)
+    if (SERIES.n === 2 && !state.pendingMatch) { this.scene.start('Title2'); return; }
     this.windowOpen = false;
     this.opening = false;
     setTheme(CHAPTERS[0].theme, '#f3e3c3');
@@ -233,6 +237,14 @@ export class TitleScene extends Phaser.Scene {
     this.gear.add(gg).setSize(96, 96).setInteractive({ useHandCursor: true })
       .on('pointerup', () => this.openSettings());
 
+    // 2탄으로 (왼쪽 위, 게임장 버튼이 있으면 그 아래)
+    const sw = this.add.container(150, window.BB_EMBED ? 140 : 64);
+    const sg = this.add.graphics();
+    sg.fillStyle(0xffffff, 0.95).fillRoundedRect(-126, -30, 252, 60, 30).lineStyle(3, 0x2b2d5a, 0.2).strokeRoundedRect(-126, -30, 252, 60, 30);
+    sw.add([sg, this.add.text(0, 0, '2탄 포포 ▶', { fontFamily: UI.fontTitle, fontSize: '26px', color: '#2b2d5a' }).setOrigin(0.5)]);
+    sw.setSize(256, 96).setInteractive({ useHandCursor: true }).on('pointerup', () => { sfx('tap'); useSeries(2); this.scene.start('Title2'); });
+    this.seriesChip = sw;
+
     // 게임장(eunyoug_3st_index.html) 안에서 열렸을 때만: 왼쪽 위 [← 게임장]
     this.hub = null;
     if (window.BB_EMBED) {
@@ -289,6 +301,7 @@ export class TitleScene extends Phaser.Scene {
     this.version.y = UI.height - 20 - bottom;
     this.gear.y = 64 + top;
     if (this.hub) this.hub.y = 64 + top;
+    if (this.seriesChip) this.seriesChip.y = (window.BB_EMBED ? 140 : 64) + top;
   }
 
   onStart() {
@@ -325,8 +338,8 @@ export class TitleScene extends Phaser.Scene {
 
   playPrologue() {
     this.input.enabled = false;
-    this.tweens.add({ targets: [this.startBtn, this.puzzleBtn, this.duoBtn, this.logo, this.version, this.gear], alpha: 0, duration: 200 });
-    this.game.events.once('dialogue-done', () => {
+    this.tweens.add({ targets: [this.startBtn, this.puzzleBtn, this.duoBtn, this.logo, this.version, this.gear, this.seriesChip], alpha: 0, duration: 200 });
+    afterDialogue(this, () => {
       state.step = 'ch1_maze';
       state.chapter = 1;
       state.playing = 'ch1';

@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { UI } from '../data/ui.js';
 import { VERSION } from '../data/version.js';
 import { state, save, resetProgress, hasProgress } from '../state.js';
+import { resetSeriesProgress } from '../series.js';
 import { platform } from '../platform.js';
 import { drawPanel } from '../ui/frames.js';
 import { iconClose } from '../ui/icons.js';
@@ -234,7 +235,7 @@ export class SettingsScene extends Phaser.Scene {
   confirmReset() {
     this.popup('처음부터 다시 할까요?', '지금까지의 여행 기록이 지워져요.\n설정과 닉네임은 그대로예요.', [
       ['그만두기', 0x8a8cae],
-      ['처음부터', 0xe8584a, () => { resetProgress(); this.close(true); }],
+      ['처음부터', 0xe8584a, () => { resetProgress(); resetSeriesProgress(); this.close(true); }],
     ]);
   }
 

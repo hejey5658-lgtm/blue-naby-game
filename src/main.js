@@ -15,13 +15,20 @@ import { EndingScene } from './scenes/EndingScene.js';
 import { DuoScene } from './scenes/DuoScene.js';
 import { PopScene } from './scenes/PopScene.js';
 import { MatchScene } from './scenes/MatchScene.js';
-import { save } from './state.js';
+import { Title2Scene } from './scenes/Title2Scene.js';
+import { AlbumScene } from './scenes/AlbumScene.js';
+import { DressScene } from './scenes/DressScene.js';
+import { Ending2Scene } from './scenes/Ending2Scene.js';
+import { state, save } from './state.js';
+import { initSeries, useSeries } from './series.js';
 import { setupPWA } from './pwa.js';
 import { readChallengeFromUrl } from './social/social.js';
 import { readMatchFromUrl } from './social/match.js';
 import { setupPcPanel } from './pcPanel.js';
 import { suspendAudio, unlockAudio } from './ui/feedback.js';
 
+// 마지막에 하던 탄(1탄 블루나비 / 2탄 포포)의 데이터로
+initSeries();
 // 도전 링크(#c=…)로 들어왔으면 도전장함에 넣는다
 readChallengeFromUrl();
 // 각자 폰 대결 링크(#d=…)로 들어왔으면 대결함에 넣는다 (타이틀이 바로 대결 화면을 연다)
@@ -40,7 +47,18 @@ const game = new Phaser.Game({
   },
   input: { activePointers: 2 },
   render: { antialias: true, powerPreference: 'high-performance' },
-  scene: [BootScene, PreloadScene, TitleScene, MazeScene, BattleScene, MapScene, EvolutionScene, EndingScene, PopScene, DuoScene, MatchScene, DialogueScene, PauseScene, SettingsScene],
+  scene: [BootScene, PreloadScene, TitleScene, MazeScene, BattleScene, MapScene, EvolutionScene, EndingScene, PopScene, DuoScene, MatchScene, Title2Scene, AlbumScene, DressScene, Ending2Scene, DialogueScene, PauseScene, SettingsScene],
+});
+
+// 게임이 이미 열린 탭에서 대결·도전 링크를 열면 주소의 # 부분만 바뀌고 새로 읽히지 않는다 → 그때도 읽어서 대결 화면으로
+window.addEventListener('hashchange', () => {
+  readChallengeFromUrl();
+  const m = readMatchFromUrl();
+  if (!m) return;
+  state.pendingMatch = null;
+  save();
+  for (const sc of game.scene.getScenes(true)) if (sc.scene.key !== 'Preload') sc.scene.stop();
+  game.scene.start('Match', { id: m.id });
 });
 
 // 브라우저 기본 동작 막기: 당겨서 새로고침, 두 번 탭 확대, 길게 눌러 메뉴, 핀치 확대.

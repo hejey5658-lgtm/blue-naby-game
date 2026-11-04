@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { afterDialogue } from '../ui/afterDialogue.js';
 import { UI } from '../data/ui.js';
 import { waitForAssets } from './PreloadScene.js';
 import { CHAPTERS, stageNo, stageLabel } from '../data/chapters.js';
@@ -17,6 +18,8 @@ import { LOOK } from '../data/mazeLooks.js';
 import { drawBackdrop, drawFloor, drawWallScenery, addAmbient } from '../maze/scenery.js';
 import { placeDrifters, patrolPath } from '../maze/drift.js';
 import { saveMyResult } from '../social/match.js';
+import { ITEMS } from '../data/items.js';
+import { SERIES } from '../series.js';
 
 // 미로: 쓱 밀면 그 방향으로 벽·갈림길·수집품까지 미끄러져 간다. 톡 누르면 멈춘다.
 // 수집품을 다 모으면 출구가 열린다. 순찰하는 방해물·떨어지는 물방울·움직이는 웅덩이에 닿으면 퐁! → [다시 시작] → 체크포인트.
@@ -111,7 +114,7 @@ export class MazeScene extends Phaser.Scene {
     // 장 도입 대사 (2장부터). 대사가 끝날 때까지 미로와 시간은 멈춰 있다.
     if (this.intro) {
       this.locked = true;
-      this.game.events.once('dialogue-done', () => { this.locked = false; hint(); });
+      afterDialogue(this, () => { this.locked = false; hint(); });
       this.time.delayedCall(350, () => this.scene.launch('Dialogue', { key: this.chapter.intro, frame: this.chapter.frame, form: this.chapter.form }));
     } else hint();
   }
@@ -456,7 +459,7 @@ export class MazeScene extends Phaser.Scene {
   // 바람 칸: 화살표 방향으로 벽에 닿을 때까지 최대 3칸 (실 목도리가 있으면 1칸)
   blowWind(t) {
     const dir = { '>': 'right', '<': 'left', '^': 'up', 'v': 'down' }[t];
-    const max = this.hasItem('scarf') ? 1 : 3;
+    const max = this.hasItem('scarf') || this.hasItem('knitHat') ? 1 : 3;
     const [dx, dy] = DIRS[dir];
     let [x, y] = this.pos;
     let n = 0;
@@ -473,7 +476,7 @@ export class MazeScene extends Phaser.Scene {
         this.arrive();
       },
     });
-    if (this.hasItem('scarf') && !this.scarfTold) { this.scarfTold = true; this.say('실 목도리 덕분에 조금만 밀렸어!', 1800); }
+    if ((this.hasItem('scarf') || this.hasItem('knitHat')) && !this.scarfTold) { this.scarfTold = true; this.say(`${(ITEMS.scarf ?? ITEMS.knitHat).name} 덕분에 조금만 밀렸어!`, 1800); }
   }
 
   collect(key) {
@@ -584,6 +587,9 @@ export class MazeScene extends Phaser.Scene {
         if (near && o.wet && !safe) {
           if (this.hasItem('umbrella')) {
             if (!this.umbrellaTold) { this.umbrellaTold = true; this.say('작은 우산 덕분에 웅덩이도 괜찮아!', 1800); }
+          } else if (this.hasItem('tube')) {
+            // 2탄 물놀이 튜브: 퐁! 대신 둥둥 잠깐 느려짐
+            if (!(this.slowUntil > now)) { this.slowUntil = now + UI.drift.slowMs; this.say('튜브 덕분에 둥둥! 잠깐 느려졌어', 1600); }
           } else { this.pop(); return; }
         }
       } else if (near && !safe && now > o.cool && !(this.slowUntil > now)) {
@@ -725,7 +731,9 @@ export class MazeScene extends Phaser.Scene {
     const rivalSec = rival?.times[this.chapter.id];
     const dn = this.duo?.names[this.duo.turn - 1];
     const duoName = this.remote ? '각자 폰 대결' : this.duo && (dn === `${this.duo.turn}P` ? `${dn} 차례` : `${this.duo.turn}P ${dn} 차례`);
-    this.targetText = this.add.text(UI.width - 40, 82 + top, duoName || (rivalSec ? `${rival.nick} ${fmtShort(rivalSec)}` : `별 기준 ${fmtTime(this.chapter.starSec)}`), {
+    const best = state.records[this.chapter.id]?.mazeSec;
+    const goalText = SERIES.meta.stars ? `별 기준 ${fmtTime(this.chapter.starSec)}` : best != null ? `내 기록 ${fmtTime(best)}` : '';
+    this.targetText = this.add.text(UI.width - 40, 82 + top, duoName || (rivalSec ? `${rival.nick} ${fmtShort(rivalSec)}` : goalText), {
       fontFamily: UI.font, fontSize: '18px', color: '#ffe9a8',
     }).setOrigin(1, 0.5);
   }
@@ -743,7 +751,7 @@ export class MazeScene extends Phaser.Scene {
     const bottom = this.insets.bottom;
     this.dpad = state.settings.control === 'dpad';
     const by = (this.dpad ? 1036 : 1185) - (this.dpad ? 0 : bottom);
-    this.dot = this.add.image(70, by, 'npc_dot', 0).setDisplaySize(84, 84).setDepth(8).setAlpha(0);
+    this.dot = this.add.image(70, by, SERIES.meta.helperTex, SERIES.meta.helperFrame).setDisplaySize(84, 84).setDepth(8).setAlpha(0);
     this.bubble = this.add.container(0, 0).setDepth(8).setAlpha(0);
     this.bubbleG = this.add.graphics();
     this.bubbleText = this.add.text(140, by, '', {
@@ -780,7 +788,7 @@ export class MazeScene extends Phaser.Scene {
   // 대나무 피리 = 가장 가까운 수집품 쪽 길 안내 (피리를 받은 중국 미로는 빼고)
   makeItemButton(bottom) {
     const list = [];
-    if (this.hasItem('sparkle')) list.push({ key: 'sparkle', label: '반짝가루', color: 0xffd84a });
+    if (this.hasItem('sparkle')) list.push({ key: 'sparkle', label: ITEMS.sparkle?.name ?? '반짝가루', color: 0xffd84a });
     if (this.hasItem('flute') && this.chapter.id !== 'ch4') list.push({ key: 'flute', label: '대나무 피리', color: 0x7cc56a });
     const y = (this.dpad ? 1036 : 1185) - (this.dpad ? 0 : bottom);
     list.forEach((item, n) => {
@@ -817,7 +825,7 @@ export class MazeScene extends Phaser.Scene {
   // 반짝가루: 블루나비가 반짝반짝 빛나는 동안 방해물·웅덩이·거미줄·물방울에 닿아도 괜찮다
   shine() {
     this.shineUntil = this.time.now + UI.sparkleMs;
-    this.say(`반짝가루! ${UI.sparkleMs / 1000}초 동안 무엇에 닿아도 괜찮아!`, 2000);
+    this.say(`${ITEMS.sparkle?.name ?? '반짝가루'}! ${UI.sparkleMs / 1000}초 동안 무엇에 닿아도 괜찮아!`, 2000);
     this.shineGlow?.destroy();
     this.shineGlow = this.add.circle(this.blue.x, this.blue.y, this.cell * 0.62, 0xffe9a8, 0.55).setDepth(4.5);
     this.tweens.add({ targets: this.shineGlow, scale: 1.2, alpha: 0.3, duration: 400, yoyo: true, repeat: -1 });
@@ -884,7 +892,7 @@ export class MazeScene extends Phaser.Scene {
     this.sec += dt;
     this.sinceCollect += dt;
     this.timerText.setText(fmtTime(this.sec));
-    this.timerText.setColor(this.sec <= this.chapter.starSec ? '#fffaf0' : '#ffd0c0');
+    this.timerText.setColor(!SERIES.meta.stars || this.sec <= this.chapter.starSec ? '#fffaf0' : '#ffd0c0');
 
     this.updateLamps();
     this.updateWater();
@@ -975,7 +983,7 @@ export class MazeScene extends Phaser.Scene {
     arrow.lineStyle(3, 0x2b2d5a, 1).strokeTriangle(r, 0, -r * 0.6, -r * 0.7, -r * 0.6, r * 0.7);
     arrow.setPosition(this.blue.x + Math.cos(ang) * this.cell * 0.8, this.blue.y + Math.sin(ang) * this.cell * 0.8).setRotation(ang);
     this.tweens.add({ targets: arrow, x: `+=${Math.cos(ang) * 10}`, y: `+=${Math.sin(ang) * 10}`, duration: 300, yoyo: true, repeat: 4, onComplete: () => arrow.destroy() });
-    this.say('에헴, 이쪽으로 가 봐!', 2600);
+    this.say(SERIES.meta.helperHint, 2600);
   }
 
   // ── 일시정지 ────────────────────────────────────
@@ -1041,7 +1049,7 @@ export class MazeScene extends Phaser.Scene {
     c.add([
       g,
       this.add.text(0, -36, `미로 기록 ${fmtTime(sec)}${newRecord ? '  새 기록!' : ''}`, { fontFamily: UI.fontTitle, fontSize: '38px', color: '#2f7bff' }).setOrigin(0.5),
-      this.add.text(0, 24, star ? `별 기준 ${fmtTime(this.chapter.starSec)} 안에 성공!` : `별 기준 ${fmtTime(this.chapter.starSec)} — 다음엔 더 빨리!`, { fontFamily: UI.font, fontSize: '26px', color: '#2b2d5a' }).setOrigin(0.5),
+      this.add.text(0, 24, !SERIES.meta.stars ? `${this.chapter.name} 미로 통과!` : star ? `별 기준 ${fmtTime(this.chapter.starSec)} 안에 성공!` : `별 기준 ${fmtTime(this.chapter.starSec)} — 다음엔 더 빨리!`, { fontFamily: UI.font, fontSize: '26px', color: '#2b2d5a' }).setOrigin(0.5),
       this.add.text(0, 62, `퐁 ${this.rolls}번`, { fontFamily: UI.font, fontSize: '22px', color: '#5a5c88' }).setOrigin(0.5),
     ]);
     // 친구 도전 결과: 이기면 축하, 져도 "아깝다! 다시 도전?" (놀리는 말 없이)

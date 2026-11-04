@@ -1,7 +1,9 @@
 // 바람 미로 검사: 바람에 실제로 밀리는 규칙(벽까지 최대 N칸, 도착한 칸이 또 바람이면 다시 밀림)을 흉내 내어
 // 시작점에서 모든 수집품과 출구에 갈 수 있는지, 어느 칸에서도 갇히지 않는지 확인한다. (systems.md 3절)
 // 사용법: node scripts/check-wind.mjs   (실 목도리 있을 때 1칸 / 없을 때 3칸 둘 다)
-import { MAZES } from '../src/data/mazes.js';
+import { MAZES as M1 } from '../src/data/mazes.js';
+import { MAZES as M2 } from '../src/data/s2/mazes.js';
+const MAZES = { ...M1, ...M2 }; // 1탄 + 2탄 (가을 낙엽 회오리·겨울 미끄러운 얼음도 같은 바람 규칙)
 
 const CAN_HOP = { caterpillar: false, moth: true, butterfly: true };
 const D = { '>': [1, 0], '<': [-1, 0], '^': [0, -1], 'v': [0, 1] };

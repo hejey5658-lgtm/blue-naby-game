@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { afterDialogue } from '../ui/afterDialogue.js';
 import { UI } from '../data/ui.js';
 import { waitForAssets } from './PreloadScene.js';
 import { CHAPTERS } from '../data/chapters.js';
@@ -101,7 +102,7 @@ export class EndingScene extends Phaser.Scene {
     };
     this.game.events.on('dialogue-line', onLine);
     this.events.once('shutdown', () => this.game.events.off('dialogue-line', onLine));
-    this.game.events.once('dialogue-done', () => {
+    afterDialogue(this, () => {
       // 대사를 건너뛰었으면 남은 친구들도 다 나온다
       Object.keys(FRIEND_SPOTS).forEach((k, i) => this.time.delayedCall(i * 90, () => this.showFriend(k)));
       this.showDot();

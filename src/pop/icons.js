@@ -1,5 +1,7 @@
 // 기념품 퐁퐁 기념품 그림 (게임 그림 파일이 없는 것만): 둥글고 말랑한 그림체, 외곽선 #2b2d5a.
 // 100×100 단위로 그려 96px 텍스처로 굽는다. 캔버스·WebGL 둘 다 같게 (그라데이션 없이 겹친 도형).
+import { DRAW2 } from './icons2.js';
+
 const INK = 0x2b2d5a;
 const SIZE = 96;
 
@@ -84,7 +86,7 @@ const DRAW = {
 
 // 씬이 처음 쓸 때 한 번 굽는다 (같은 이름의 그림 파일이 생기면 그걸 쓴다)
 export function makePopIcons(scene) {
-  for (const [key, draw] of Object.entries(DRAW)) {
+  for (const [key, draw] of Object.entries({ ...DRAW, ...DRAW2 })) {
     if (scene.textures.exists(key)) continue;
     const g = scene.make.graphics({ x: 0, y: 0 }, false);
     draw(g, SIZE / 100);

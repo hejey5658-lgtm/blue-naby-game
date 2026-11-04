@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { afterDialogue } from '../ui/afterDialogue.js';
 import { UI } from '../data/ui.js';
 import { waitForAssets } from './PreloadScene.js';
 import { FORMS } from '../data/forms.js';
@@ -41,7 +42,7 @@ export class EvolutionScene extends Phaser.Scene {
     this.blueScale = this.blue.scale;
     if (this.anims.exists(`${fromKey}_idle`)) this.blue.play(`${fromKey}_idle`);
 
-    this.game.events.once('dialogue-done', () => this.transform());
+    afterDialogue(this, () => this.transform());
     this.time.delayedCall(400, () => this.scene.launch('Dialogue', { key: `evo_${this.to}_pre`, frame: this.chapter.frame, form: this.from }));
   }
 
@@ -144,7 +145,7 @@ export class EvolutionScene extends Phaser.Scene {
       new Button(this, UI.width / 2, 1130, {
         width: 400, height: 110, fontSize: 32, label: '계속하기',
         onPress: () => {
-          this.game.events.once('dialogue-done', () => this.scene.start('Map', { justCleared: this.chapter.id }));
+          afterDialogue(this, () => this.scene.start('Map', { justCleared: this.chapter.id }));
           this.scene.launch('Dialogue', { key: `evo_${this.to}_post`, frame: this.chapter.frame, form: this.to });
         },
       }).setDepth(12);

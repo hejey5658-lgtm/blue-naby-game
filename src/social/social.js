@@ -7,12 +7,12 @@ import { FORMS } from '../data/forms.js';
 import { state, save } from '../state.js';
 import { platform } from '../platform.js';
 import { pack, unpack } from './codec.js';
+import { DATA, SERIES, META } from '../series.js';
 import { openBox } from '../ui/htmlBox.js';
 import { shareCanvas } from '../ui/photo.js';
 
-const PREFIX = 'C2-';
 const LEGACY_PREFIX = 'C1-';
-const nameOf = (id) => CHAPTERS.find((c) => c.id === id)?.name ?? id;
+const nameOf = (id) => [...DATA[1].CHAPTERS, ...DATA[2].CHAPTERS].find((c) => c.id === id)?.name ?? id;
 const MAX_INBOX = 5;
 export const ANON = '익명의 블루나비';
 export const fmt = (sec) => `${Math.floor(sec / 60)}:${String(Math.floor(sec % 60)).padStart(2, '0')}`;
@@ -45,9 +45,11 @@ export function askNickname({ force = false } = {}) {
 const minCache = {};
 export function minMazeSec(id) {
   if (minCache[id] != null) return minCache[id];
-  const m = MAZES[id];
+  const m = MAZES[id] ?? DATA[1].MAZES[id] ?? DATA[2].MAZES[id];
+  if (!m) return Infinity;
   const g = m.grid;
-  const hop = FORMS[m.form].canHop;
+  const F = FORMS[m.form] ?? DATA[1].FORMS[m.form] ?? DATA[2].FORMS[m.form];
+  const hop = F.canHop;
   const find = (ch) => g.flatMap((r, y) => [...r].map((c, x) => (c === ch ? [x, y] : null))).filter(Boolean);
   const S = find('S')[0];
   const E = find('E')[0];
@@ -63,7 +65,7 @@ export function minMazeSec(id) {
       q.push([x + dx, y + dy]);
     }
   }
-  minCache[id] = ((dist.get(E.join()) ?? 0) * FORMS[m.form].stepMs) / 1000;
+  minCache[id] = ((dist.get(E.join()) ?? 0) * F.stepMs) / 1000;
   return minCache[id];
 }
 export const believable = (id, sec) => sec > 0 && sec >= minMazeSec(id) * 0.9;
@@ -73,18 +75,19 @@ export function myTimes() {
   return CHAPTERS.map((c) => state.records[c.id]?.mazeSec ?? 0);
 }
 export function makeChallengeLink() {
-  const code = pack(PREFIX, [nickname(), myTimes(), CHAPTERS.map((c) => state.stars[c.id] ?? 0).join('')]);
+  const code = pack(SERIES.meta.challenge, [nickname(), myTimes(), CHAPTERS.map((c) => state.stars[c.id] ?? 0).join('')]);
   return `${baseUrl()}/#c=${code}`;
 }
 
 export function readChallenge(raw) {
-  let d = unpack(PREFIX, raw);
-  let ids = CHAPTERS.map((c) => c.id);
+  let d = unpack(META[1].challenge, raw);
+  let ids = DATA[1].CHAPTERS.map((c) => c.id);
+  if (!d) { d = unpack(META[2].challenge, raw); ids = DATA[2].CHAPTERS.map((c) => c.id); }
   if (!d) { d = unpack(LEGACY_PREFIX, raw); ids = LEGACY_IDS.map((id, i) => (i < 3 ? null : id)); }
   if (!Array.isArray(d) || !Array.isArray(d[1])) return null;
   const nick = String(d[0] || ANON).slice(0, 8);
   const times = {};
-  ids.forEach((id, i) => { const t = Number(d[1][i]) || 0; if (id && MAZES[id] && believable(id, t)) times[id] = t; });
+  ids.forEach((id, i) => { const t = Number(d[1][i]) || 0; if (id && believable(id, t)) times[id] = t; });
   if (!Object.keys(times).length) return null;
   return { nick, times, stars: String(d[2] || ''), code: String(raw).trim(), at: Date.now() };
 }
@@ -130,7 +133,7 @@ export async function sendChallenge() {
     return;
   }
   const url = makeChallengeLink();
-  const text = `블루나비의 세계여행 — ${nickname()}의 도전장! 내 미로 기록을 넘어 봐 🦋`;
+  const text = `${SERIES.meta.title} — ${nickname()}의 도전장! 내 미로 기록을 넘어 봐 🦋`;
   try {
     if (platform.can.share) { await navigator.share({ title: '블루나비 도전장', text, url }); return; }
   } catch (e) { if (e?.name === 'AbortError') return; }
@@ -167,7 +170,7 @@ export async function makeRecordCard(game) {
   x.textAlign = 'center';
   x.fillStyle = '#2f7bff';
   x.font = '54px Jua, sans-serif';
-  x.fillText('블루나비의 세계여행', W / 2, 130);
+  x.fillText(SERIES.meta.title, W / 2, 130);
   x.fillStyle = '#2b2d5a';
   x.font = '72px Jua, sans-serif';
   x.fillText(`${nickname()}의 여행 기록`, W / 2, 230);
@@ -184,18 +187,18 @@ export async function makeRecordCard(game) {
   x.beginPath(); x.roundRect(90, 720, W - 180, 470, 36); x.fill();
   x.fillStyle = '#2b2d5a';
   x.font = '44px Jua, sans-serif';
-  x.fillText(`모은 별 ${total} / ${CHAPTERS.length * 3}`, W / 2, 790);
+  x.fillText(SERIES.meta.stars ? `모은 별 ${total} / ${CHAPTERS.length * 3}` : `사귄 친구 ${state.friends.length}명`, W / 2, 790);
   x.font = '32px "Gowun Dodum", sans-serif';
   CHAPTERS.forEach((ch, i) => {
     const y = 856 + i * 64;
     const st = state.stars[ch.id] ?? 0;
     const sec = state.records[ch.id]?.mazeSec;
     x.textAlign = 'left';
-    x.fillStyle = st ? '#2b2d5a' : '#a8a8bc';
+    x.fillStyle = st || state.records[ch.id] ? '#2b2d5a' : '#a8a8bc';
     x.fillText(stageLabel(ch).replace(' · ', ' '), 140, y);
     x.textAlign = 'center';
     x.fillStyle = '#ffb800';
-    x.fillText('★'.repeat(st) + '☆'.repeat(3 - st), 700, y);
+    if (SERIES.meta.stars) x.fillText('★'.repeat(st) + '☆'.repeat(3 - st), 700, y);
     x.textAlign = 'right';
     x.fillStyle = '#5a5c88';
     x.fillText(sec != null ? fmt(sec) : '-', W - 140, y);

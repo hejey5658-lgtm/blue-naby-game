@@ -522,11 +522,13 @@ export class BattleScene extends Phaser.Scene {
     rec.battleTurns = rec.battleTurns == null ? turns : Math.min(rec.battleTurns, turns);
     state.records[id] = rec;
     if (!state.friends.includes(this.bossKey)) state.friends.push(this.bossKey);
+    // 선물은 보스마다 (한국: 먼지몽 → 반짝가루, 실실이 → 실 목도리)
+    const gift = this.chapter.rewards?.[this.bossIndex];
+    if (gift && !state.items.includes(gift)) state.items.push(gift);
     const lastBoss = this.bossIndex >= this.chapter.bosses.length - 1;
     if (lastBoss) {
       const stars = 1 + (state.mazeTimeStar?.[id] ? 1 : 0) + (this.hp >= this.maxHp / 2 ? 1 : 0);
       state.stars[id] = Math.max(state.stars[id] ?? 0, stars);
-      if (this.chapter.reward && !state.items.includes(this.chapter.reward)) state.items.push(this.chapter.reward);
       state.step = `${id}_done`;
     } else {
       state.step = `${id}_boss`;
@@ -544,7 +546,8 @@ export class BattleScene extends Phaser.Scene {
   result(turns, lastBoss) {
     const id = this.chapter.id;
     const stars = state.stars[id] ?? 1;
-    const reward = lastBoss && this.chapter.reward ? ITEMS[this.chapter.reward] : null;
+    const gift = this.chapter.rewards?.[this.bossIndex];
+    const reward = gift ? ITEMS[gift] : null;
     const lines = [
       `${turns}턴 만에 심술을 풀었어!`,
       reward ? `받은 선물: ${reward.name}` : '',

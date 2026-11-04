@@ -1,5 +1,5 @@
 // 그림 파일 목록. 파일이 없거나 불러오기에 실패한 키는 임시 그림(src/art/placeholders.js)으로 대신한다.
-// group: 언제 받을지 (boot = 처음, chN = N장을 하는 동안 다음에 쓸 그림을 미리). release: true = 공개 전 필수.
+// group: 언제 받을지 (boot = 처음, chN = 그 단계(속 id)를 하는 동안 다음에 쓸 그림을 미리). release: true = 공개 전 필수.
 // 블루나비 그림은 npm run build:art 로 만든다 (art/gen/blue.mjs, 캐릭터 시트 v1 승인 2026-10-30).
 const blue = (form, group) => [
   { key: `blue_${form}`, file: `assets/char/blue_${form}.png`, width: 768, height: 128, frameWidth: 128, frameHeight: 128, release: true, group },
@@ -28,16 +28,16 @@ export const ASSETS = [
   ...npc('dot', 128, 'boot'),
   ...npc('flower', 480, 'ch7'),
   ...boss('dustmong', 'ch1'),
-  ...boss('silsili', 'ch2'),
-  ...boss('jjakjjak', 'ch3'),
+  ...boss('silsili', 'ch1'),   // 한국 단계 두 번째 대결
+  ...boss('jjakjjak', 'ch1'),  // 한국 단계 세 번째 대결
   ...boss('bbangbbang', 'ch4'),
   ...boss('sappuni', 'ch5'),
   ...boss('dotori', 'ch6'),
   ...boss('damdam', 'ch7'),
   ...boss('buzzboss', 'ch7'),
   ...blue('caterpillar', 'boot'),
-  ...blue('moth', 'ch3'),       // 3장 끝에 나방으로 진화
-  ...blue('butterfly', 'ch5'),  // 5장 끝에 나비로 진화
+  ...blue('moth', 'ch1'),       // 한국 단계 끝에 나방으로 진화
+  ...blue('butterfly', 'ch5'),  // 일본 단계 끝에 나비로 진화
 ];
 // 그림을 바꾸면 올려서 브라우저 캐시를 피한다.
 export const ASSET_VERSION = 6;

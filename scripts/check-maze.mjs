@@ -44,4 +44,16 @@ for (const [id, maze] of Object.entries(MAZES)) {
   if (errors.length) { failed = true; console.log(`✗ ${id}: ${errors.join(' / ')}`); }
   else console.log(`✓ ${id}: 수집품 ${items.length}개, 출구까지 길 있음`);
 }
+// 움직이는 웅덩이·거미줄 (chapters.js drift): 정한 개수만큼 자리가 나오는지
+if (!process.argv[2]) {
+  const { CHAPTERS } = await import(pathToFileURL(path.resolve('src/data/chapters.js')).href);
+  const { placeDrifters } = await import(pathToFileURL(path.resolve('src/maze/drift.js')).href);
+  CHAPTERS.forEach((c, i) => {
+    if (!MAZES[c.id]) { failed = true; console.log(`✗ ${c.id}: 미로 없음`); return; }
+    const want = (c.drift?.puddle ?? 0) + (c.drift?.web ?? 0);
+    const got = placeDrifters(MAZES[c.id], c.drift, i + 1);
+    if (got.length < want) { failed = true; console.log(`✗ ${c.id}: 웅덩이·거미줄 자리 ${got.length}/${want}`); }
+    else console.log(`✓ ${c.id}: 웅덩이 ${got.filter((d) => d.type === 'puddle').length} · 거미줄 ${got.filter((d) => d.type === 'web').length}`);
+  });
+}
 process.exit(failed ? 1 : 0);

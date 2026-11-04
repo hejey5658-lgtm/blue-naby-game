@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { UI } from '../data/ui.js';
 import { waitForAssets } from './PreloadScene.js';
-import { CHAPTERS } from '../data/chapters.js';
+import { CHAPTERS, stageNo, stageLabel } from '../data/chapters.js';
 import { MAZES } from '../data/mazes.js';
 import { FORMS } from '../data/forms.js';
 import { COLLECTIBLES } from '../data/items.js';
@@ -15,9 +15,11 @@ import { josa } from '../ui/josa.js';
 import { activeChallenge, challengeResult, fmt as fmtShort } from '../social/social.js';
 import { LOOK } from '../data/mazeLooks.js';
 import { drawBackdrop, drawFloor, drawWallScenery, addAmbient } from '../maze/scenery.js';
+import { placeDrifters, patrolPath } from '../maze/drift.js';
 
 // 미로: 쓱 밀면 그 방향으로 벽·갈림길·수집품까지 미끄러져 간다. 톡 누르면 멈춘다.
-// 수집품을 다 모으면 출구가 열린다. 순찰하는 방해물·떨어지는 물방울에 닿으면 퐁! → [다시 시작] → 체크포인트.
+// 수집품을 다 모으면 출구가 열린다. 순찰하는 방해물·떨어지는 물방울·움직이는 웅덩이에 닿으면 퐁! → [다시 시작] → 체크포인트.
+// 움직이는 거미줄에 닿으면 잠깐 느려진다 (design-brief 11절).
 // (systems.md 3절, 화면 배치 9절: 상태 줄 y 0–110, 미로 y 120–1080, 아래 영역 y 1090–1280)
 const AREA = { x: 8, y: 120, w: 704, h: 960 };
 const DIRS = { left: [-1, 0], right: [1, 0], up: [0, -1], down: [0, 1] };
@@ -25,7 +27,6 @@ const OPPOSITE = { left: 'right', right: 'left', up: 'down', down: 'up' };
 const PATROL_STEP_MS = 400;
 const HELP_AFTER_SEC = 30;
 
-const SLOW_MS = 3000;     // 거미줄에 느려지는 시간
 const LAMP_PULL_MS = 1000; // 등불이 1초마다 1칸 끌어당김
 const WATER_CYCLE = 4000;  // 물방울: 4초마다
 const WATER_ON = 1000;     // 1초 동안 떨어짐 (0.5초 전 그림자로 예고)
@@ -47,7 +48,7 @@ export class MazeScene extends Phaser.Scene {
     this.fresh = !!data.fresh || !!this.duo;
     this.intro = !!data.intro && !this.duo;
     // 씬은 다시 쓰이므로 지난번 미로의 상태를 지운다
-    Object.assign(this, { itemUsed: false, lampTold: false, scarfTold: false, umbrellaTold: false, slowUntil: 0, lastPull: 0, locked: false, rolling: false, heldDir: null, stopRequested: false, dark: null, itemBtn: null, swipeFrom: null, lastAutoSave: -1, popped: false, restartBtn: null });
+    Object.assign(this, { lampTold: false, scarfTold: false, umbrellaTold: false, slowUntil: 0, shineUntil: 0, lastPull: 0, locked: false, rolling: false, heldDir: null, stopRequested: false, itemBtns: [], shineGlow: null, swipeFrom: null, lastAutoSave: -1, popped: false, restartBtn: null });
   }
 
   create() {
@@ -74,7 +75,8 @@ export class MazeScene extends Phaser.Scene {
     this.makeBlue();
     this.makeDuoTag();
     this.makePatrols();
-    // 상태 줄·아래 영역은 어둠(밤 골목)보다 위에
+    this.makeDrifters();
+    // 상태 줄·아래 영역은 미로 위에
     const before = this.children.list.length;
     this.makeHud();
     this.makeBottom();
@@ -120,7 +122,7 @@ export class MazeScene extends Phaser.Scene {
 
   saveProgress() {
     if (this.duo) return;
-    state.chapter = Math.max(state.chapter, Number(this.chapter.id.slice(2)));
+    state.chapter = Math.max(state.chapter, stageNo(this.chapter.id));
     state.playing = this.chapter.id;
     state.step = `${this.chapter.id}_maze`;
     state.form = this.chapter.form;
@@ -274,33 +276,6 @@ export class MazeScene extends Phaser.Scene {
         }
       }
     }
-    // 어둠 (밤 골목): 블루나비 주변만 보이는 큰 검은 그림 (실시간 마스크 대신 미리 만든 그림을 옮긴다)
-    if (this.chapter.dark) this.makeDarkness();
-  }
-
-  makeDarkness() {
-    const make = (key, radiusCells) => {
-      if (this.textures.exists(key)) this.textures.remove(key);
-      const w = 1600;
-      const h = 2600;
-      const tex = this.textures.createCanvas(key, w, h);
-      const ctx = tex.getContext();
-      const r = this.cell * radiusCells;
-      const grd = ctx.createRadialGradient(w / 2, h / 2, r * 0.55, w / 2, h / 2, r);
-      grd.addColorStop(0, 'rgba(10,12,40,0)');
-      grd.addColorStop(1, 'rgba(10,12,40,0.94)');
-      ctx.fillStyle = 'rgba(10,12,40,0.94)';
-      ctx.fillRect(0, 0, w, h);
-      ctx.globalCompositeOperation = 'destination-out';
-      ctx.beginPath(); ctx.arc(w / 2, h / 2, r, 0, Math.PI * 2); ctx.fill();
-      ctx.globalCompositeOperation = 'source-over';
-      ctx.fillStyle = grd;
-      ctx.beginPath(); ctx.arc(w / 2, h / 2, r, 0, Math.PI * 2); ctx.fill();
-      tex.refresh();
-    };
-    make('dark_r2', UI.dark.radius);
-    make('dark_r5', UI.dark.sparkleRadius);
-    this.dark = this.add.image(0, 0, 'dark_r2').setDepth(7);
   }
 
   drawItems() {
@@ -308,8 +283,6 @@ export class MazeScene extends Phaser.Scene {
     for (const [x, y] of this.find('L')) {
       if (this.collected.has(`${x},${y}`)) continue;
       const sp = this.add.image(this.cx(x), this.cy(y), key).setDisplaySize(this.cell * 0.7, this.cell * 0.7);
-      // 어두운 장에서는 수집품이 어둠 위로 반짝여 어디로 갈지 보인다
-      if (this.chapter.dark) sp.setDepth(7.5);
       this.tweens.add({ targets: sp, y: sp.y - this.cell * 0.08, duration: 700 + Math.random() * 300, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
       this.items.set(`${x},${y}`, sp);
     }
@@ -319,8 +292,6 @@ export class MazeScene extends Phaser.Scene {
     const [x, y] = this.exitCell;
     this.exitG = this.add.graphics();
     this.exitGlow = this.add.graphics().setAlpha(0);
-    // 어두운 장에서는 출구 문도 어둠 위로 보인다
-    if (this.chapter.dark) { this.exitG.setDepth(7.5); this.exitGlow.setDepth(7.6); }
     this.updateExit(false);
   }
 
@@ -437,7 +408,7 @@ export class MazeScene extends Phaser.Scene {
     if (this.items.has(key)) { this.collect(key); stopHere = true; }
     if (t === 'C' && this.checkpoint.join() !== key) this.reachCheckpoint();
     if (t === 'E') { this.finish(); return; }
-    if (t === 'w') { this.slowUntil = this.time.now + SLOW_MS; this.say('거미줄에 걸려서 잠깐 느려졌어!', 1600); }
+    if (t === 'w') this.slowDown();
     if ('<>^v'.includes(t)) { this.blowWind(t); return; }
 
     const held = this.heldDir && this.heldDir === this.dir;
@@ -517,16 +488,96 @@ export class MazeScene extends Phaser.Scene {
     }
   }
 
-  // ── 순찰하는 방해물 (1장 윙윙 청소기) ──────────────
+  // ── 순찰하는 방해물 (청소기·수레·죽순·스케이트보드). 순찰마다 kind가 있으면 그 그림 ──
   makePatrols() {
-    const key = this.chapter.patrolKind === 'vacuum' ? 'enemy_vacuum' : `enemy_${this.chapter.patrolKind}`;
-    this.patrols = (this.maze.patrols ?? []).map((path) => {
+    this.patrols = (this.maze.patrols ?? []).map((raw) => {
+      const path = patrolPath(raw);
+      const key = `enemy_${raw.kind ?? this.chapter.patrolKind}`;
       const sp = this.add.image(this.cx(path[0][0]), this.cy(path[0][1]), this.textures.exists(key) ? key : 'enemy_vacuum')
         .setDisplaySize(this.cell * 0.92, this.cell * 0.92).setDepth(4);
       const p = { path, i: 0, d: 1, sp };
       this.time.addEvent({ delay: PATROL_STEP_MS, loop: true, callback: () => this.patrolStep(p) });
       return p;
     });
+  }
+
+  // ── 움직이는 웅덩이·거미줄 (단계마다 chapters.js 의 drift) ──
+  // 길 위 곧은 3칸을 천천히 왔다 갔다. 웅덩이는 커졌다 작아졌다 해서 좁은 길에서도 지나갈 틈이 있다.
+  makeDrifters() {
+    const { cell } = this;
+    const water = this.look.water ?? 0x7fb2ff;
+    const stepMs = this.chapter.drift?.stepMs ?? 1000;
+    const seed = stageNo(this.chapter.id);
+    this.drifters = placeDrifters(this.maze, this.chapter.drift, seed).map((d, i) => {
+      const [x, y] = d.cells[d.start];
+      const c = this.add.container(this.cx(x), this.cy(y)).setDepth(d.type === 'puddle' ? 3 : 4);
+      const g = this.add.graphics();
+      if (d.type === 'puddle') {
+        g.fillStyle(0x2b2d5a, 0.12).fillEllipse(0, cell * 0.08, cell * 0.92, cell * 0.56);
+        g.fillStyle(0x2f7bff, 0.55).fillEllipse(0, 0, cell * 0.9, cell * 0.56);
+        g.fillStyle(water, 0.95).fillEllipse(0, -cell * 0.02, cell * 0.8, cell * 0.46);
+        g.fillStyle(0xffffff, 0.75).fillEllipse(-cell * 0.18, -cell * 0.1, cell * 0.22, cell * 0.08).fillCircle(cell * 0.2, cell * 0.06, cell * 0.04);
+        const ring = this.add.ellipse(0, 0, cell * 0.5, cell * 0.28).setStrokeStyle(2, 0xffffff, 0.8);
+        this.tweens.add({ targets: ring, scale: 1.5, alpha: 0, duration: 1400, repeat: -1, ease: 'Sine.easeOut' });
+        c.add([g, ring]);
+      } else {
+        const r = cell * 0.44;
+        for (const [w, col, a] of [[4, 0x2b2d5a, 0.35], [2, 0xffffff, 0.95]]) {
+          g.lineStyle(w, col, a);
+          for (let k = 0; k < 6; k++) { const ang = (k / 6) * Math.PI * 2 + 0.3; g.lineBetween(0, 0, Math.cos(ang) * r, Math.sin(ang) * r); }
+          for (const f of [0.38, 0.7, 1]) g.strokeCircle(0, 0, r * f);
+        }
+        c.add(g);
+        this.tweens.add({ targets: c, angle: 8, duration: 900 + i * 90, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+      }
+      const o = { ...d, i: d.start, dir: d.start === 2 ? -1 : 1, sp: c, phase: (i * 977) % 3100, cool: 0 };
+      this.time.addEvent({ delay: stepMs, loop: true, startAt: (i * 311) % stepMs, callback: () => this.driftStep(o, stepMs) });
+      return o;
+    });
+  }
+
+  driftStep(o, stepMs) {
+    if (o.i + o.dir < 0 || o.i + o.dir > 2) o.dir *= -1;
+    o.i += o.dir;
+    const [x, y] = o.cells[o.i];
+    this.tweens.add({ targets: o.sp, x: this.cx(x), y: this.cy(y), duration: stepMs * 0.8, ease: 'Sine.easeInOut' });
+  }
+
+  // 웅덩이 크기: 커져 있는 시간(위험) → 작아짐 → 작은 채로(안전) → 다시 커짐
+  updateDrifters() {
+    if (!this.drifters.length) return;
+    const now = this.time.now;
+    const { puddleWetMs: wet, puddleDryMs: dry } = UI.drift;
+    const period = wet + dry;
+    const safe = this.invulnerable || this.shineUntil > now;
+    for (const o of this.drifters) {
+      const near = Phaser.Math.Distance.Between(o.sp.x, o.sp.y, this.blue.x, this.blue.y) < this.cell * 0.55;
+      if (o.type === 'puddle') {
+        const t = (now + o.phase) % period;
+        const ease = 250;
+        let k = 1;
+        if (t > wet) k = t < wet + ease ? 1 - (t - wet) / ease : t > period - ease ? (t - (period - ease)) / ease : 0;
+        o.sp.setScale(0.25 + 0.75 * k);
+        o.sp.setAlpha(0.45 + 0.55 * k);
+        o.wet = k > 0.6;
+        if (near && o.wet && !safe) {
+          if (this.hasItem('umbrella')) {
+            if (!this.umbrellaTold) { this.umbrellaTold = true; this.say('작은 우산 덕분에 웅덩이도 괜찮아!', 1800); }
+          } else { this.pop(); return; }
+        }
+      } else if (near && !safe && now > o.cool && !(this.slowUntil > now)) {
+        o.cool = now + UI.drift.slowMs + UI.drift.coolMs;
+        this.slowDown();
+        this.tweens.add({ targets: o.sp, scale: 1.25, duration: 120, yoyo: true });
+      }
+    }
+  }
+
+  // 거미줄(고정 칸·움직이는 거미줄 공통): 잠깐 느려짐
+  slowDown() {
+    this.slowUntil = this.time.now + UI.drift.slowMs;
+    vibrate('collect');
+    this.say('거미줄에 걸려서 잠깐 느려졌어!', 1600);
   }
 
   patrolStep(p) {
@@ -631,7 +682,7 @@ export class MazeScene extends Phaser.Scene {
     pg.fillStyle(0x2b2d5a, 1).fillRoundedRect(-12, -14, 8, 28, 3).fillRoundedRect(4, -14, 8, 28, 3);
     pb.add(pg).setSize(96, 96).setInteractive({ useHandCursor: true }).on('pointerup', () => this.openPause());
 
-    this.add.text(UI.width / 2, 40 + top, `${this.chapter.id.slice(2)}장 · ${this.chapter.place}`, {
+    this.add.text(UI.width / 2, 40 + top, stageLabel(this.chapter), {
       fontFamily: UI.fontTitle, fontSize: '30px', color: '#fffaf0',
     }).setOrigin(0.5);
 
@@ -704,46 +755,52 @@ export class MazeScene extends Phaser.Scene {
     }
   }
 
-  // 오른쪽 아래 둥근 아이템 버튼: 밤 골목 = 반짝가루(UI.dark 시간만큼 환하게), 대나무 피리가 있으면 = 길 안내 (미로마다 1번)
+  // 오른쪽 아래 둥근 아이템 버튼 (미로마다 1번씩): 반짝가루 = UI.sparkleMs 동안 무엇에 닿아도 괜찮음,
+  // 대나무 피리 = 가장 가까운 수집품 쪽 길 안내 (피리를 받은 중국 미로는 빼고)
   makeItemButton(bottom) {
-    let item = null;
-    if (this.chapter.dark && this.hasItem('sparkle')) item = { key: 'sparkle', label: '반짝가루', color: 0xffd84a };
-    else if (this.hasItem('flute') && this.chapter.id !== 'ch4') item = { key: 'flute', label: '대나무 피리', color: 0x7cc56a };
-    if (!item) return;
-    const x = UI.width - 86;
+    const list = [];
+    if (this.hasItem('sparkle')) list.push({ key: 'sparkle', label: '반짝가루', color: 0xffd84a });
+    if (this.hasItem('flute') && this.chapter.id !== 'ch4') list.push({ key: 'flute', label: '대나무 피리', color: 0x7cc56a });
     const y = (this.dpad ? 1036 : 1185) - (this.dpad ? 0 : bottom);
-    const c = this.add.container(x, y).setDepth(9);
-    const g = this.add.graphics();
-    g.fillStyle(0x2b2d5a, 0.2).fillCircle(0, 6, 60);
-    g.fillStyle(item.color, 1).fillCircle(0, 0, 60);
-    g.fillStyle(0xffffff, 0.35).fillEllipse(-16, -24, 40, 18);
-    if (item.key === 'sparkle') {
-      for (const [dx, dy, r] of [[0, -6, 16], [-22, 14, 9], [20, 16, 8]]) {
-        const pts = [];
-        for (let i = 0; i < 8; i++) { const a = (i * Math.PI) / 4; const rr = i % 2 ? r * 0.4 : r; pts.push({ x: dx + Math.cos(a) * rr, y: dy + Math.sin(a) * rr }); }
-        g.fillStyle(0xffffff, 1).fillPoints(pts, true);
-      }
-    } else {
-      g.fillStyle(0x3a7a38, 1).fillRoundedRect(-36, -8, 72, 16, 8);
-      g.fillStyle(0x2b2d5a, 1).fillCircle(-14, 0, 3).fillCircle(0, 0, 3).fillCircle(14, 0, 3);
-    }
-    const t = this.add.text(0, 78, item.label, { fontFamily: UI.fontTitle, fontSize: '20px', color: '#2b2d5a', backgroundColor: '#ffffffcc', padding: { x: 8, y: 2 } }).setOrigin(0.5);
-    c.add([g, t]).setSize(130, 130).setInteractive({ useHandCursor: true });
-    this.itemBtn = c;
-    c.on('pointerup', () => {
-      if (this.itemUsed || this.locked) return;
-      this.itemUsed = true;
-      sfx('open');
-      vibrate('collect');
-      c.setAlpha(0.35);
+    list.forEach((item, n) => {
+      const c = this.add.container(UI.width - 86 - n * 150, y).setDepth(9);
+      const g = this.add.graphics();
+      g.fillStyle(0x2b2d5a, 0.2).fillCircle(0, 6, 60);
+      g.fillStyle(item.color, 1).fillCircle(0, 0, 60);
+      g.fillStyle(0xffffff, 0.35).fillEllipse(-16, -24, 40, 18);
       if (item.key === 'sparkle') {
-        this.dark?.setTexture('dark_r5');
-        this.say(`반짝가루! ${UI.dark.sparkleMs / 1000}초 동안 환해!`, 2000);
-        this.time.delayedCall(UI.dark.sparkleMs, () => this.dark?.setTexture('dark_r2'));
+        for (const [dx, dy, r] of [[0, -6, 16], [-22, 14, 9], [20, 16, 8]]) {
+          const pts = [];
+          for (let i = 0; i < 8; i++) { const a = (i * Math.PI) / 4; const rr = i % 2 ? r * 0.4 : r; pts.push({ x: dx + Math.cos(a) * rr, y: dy + Math.sin(a) * rr }); }
+          g.fillStyle(0xffffff, 1).fillPoints(pts, true);
+        }
       } else {
-        this.showHelp();
+        g.fillStyle(0x3a7a38, 1).fillRoundedRect(-36, -8, 72, 16, 8);
+        g.fillStyle(0x2b2d5a, 1).fillCircle(-14, 0, 3).fillCircle(0, 0, 3).fillCircle(14, 0, 3);
       }
+      const t = this.add.text(0, 78, item.label, { fontFamily: UI.fontTitle, fontSize: '20px', color: '#2b2d5a', backgroundColor: '#ffffffcc', padding: { x: 8, y: 2 } }).setOrigin(0.5);
+      c.add([g, t]).setSize(130, 130).setInteractive({ useHandCursor: true });
+      this.itemBtns.push(c);
+      c.on('pointerup', () => {
+        if (c.used || this.locked) return;
+        c.used = true;
+        sfx('open');
+        vibrate('collect');
+        c.setAlpha(0.35);
+        if (item.key === 'sparkle') this.shine();
+        else this.showHelp();
+      });
     });
+  }
+
+  // 반짝가루: 블루나비가 반짝반짝 빛나는 동안 방해물·웅덩이·거미줄·물방울에 닿아도 괜찮다
+  shine() {
+    this.shineUntil = this.time.now + UI.sparkleMs;
+    this.say(`반짝가루! ${UI.sparkleMs / 1000}초 동안 무엇에 닿아도 괜찮아!`, 2000);
+    this.shineGlow?.destroy();
+    this.shineGlow = this.add.circle(this.blue.x, this.blue.y, this.cell * 0.62, 0xffe9a8, 0.55).setDepth(4.5);
+    this.tweens.add({ targets: this.shineGlow, scale: 1.2, alpha: 0.3, duration: 400, yoyo: true, repeat: -1 });
+    this.time.delayedCall(UI.sparkleMs, () => { this.shineGlow?.destroy(); this.shineGlow = null; });
   }
 
   say(text, ms = 2400) {
@@ -810,9 +867,11 @@ export class MazeScene extends Phaser.Scene {
 
     this.updateLamps();
     this.updateWater();
-    if (this.dark) this.dark.setPosition(this.blue.x, this.blue.y);
+    this.updateDrifters();
+    if (this.popped) return;
+    this.shineGlow?.setPosition(this.blue.x, this.blue.y);
 
-    if (!this.invulnerable) {
+    if (!this.invulnerable && !(this.shineUntil > this.time.now)) {
       for (const p of this.patrols) {
         if (Phaser.Math.Distance.Between(p.sp.x, p.sp.y, this.blue.x, this.blue.y) < this.cell * 0.6) { this.pop(); break; }
       }
@@ -860,7 +919,7 @@ export class MazeScene extends Phaser.Scene {
       if (on && this.pos[0] === w.x && this.pos[1] === w.y && !(this.slowUntil > now)) {
         if (this.hasItem('umbrella')) {
           if (!this.umbrellaTold) { this.umbrellaTold = true; this.say('작은 우산 덕분에 하나도 안 젖었어!', 1800); }
-        } else if (!this.invulnerable) {
+        } else if (!this.invulnerable && !(this.shineUntil > now)) {
           this.pop();
           return;
         }
@@ -968,7 +1027,7 @@ export class MazeScene extends Phaser.Scene {
       drawPanel(cg, -280, 124, 560, 120, 'cloud');
       const txt = ch.win
         ? `${josa(ch.nick, '을', '를')} 이겼어요! (${fmtShort(ch.theirs)})\n여권 → 자랑하기에서 결과를 보내 봐요`
-        : `아깝다! ${ch.nick} ${fmtShort(ch.theirs)}\n여권에서 이 장을 다시 도전할 수 있어요`;
+        : `아깝다! ${ch.nick} ${fmtShort(ch.theirs)}\n여권에서 이 단계를 다시 도전할 수 있어요`;
       c.add([cg, this.add.text(0, 184, txt, { fontFamily: UI.font, fontSize: '24px', color: ch.win ? '#c0563a' : '#2b2d5a', align: 'center', lineSpacing: 6 }).setOrigin(0.5)]);
       if (ch.win) vibrate('special');
     }

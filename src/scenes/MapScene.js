@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { UI } from '../data/ui.js';
-import { CHAPTERS, PASSPORT } from '../data/chapters.js';
+import { PASSPORT, stageNo, stageLabel } from '../data/chapters.js';
 import { BOSSES } from '../data/bosses.js';
 import { state, save } from '../state.js';
 import { setTheme } from '../ui/theme.js';
@@ -138,7 +138,7 @@ export class MapScene extends Phaser.Scene {
       g.lineStyle(3, ink, 0.9).strokeCircle(0, 0, r - 14);
       c.add(g);
       c.add(this.add.text(0, -r * 0.34, ch.stamp, { fontFamily: UI.fontTitle, fontSize: `${Math.round(r * 0.3)}px`, color: Phaser.Display.Color.IntegerToColor(ink).rgba }).setOrigin(0.5));
-      c.add(this.add.text(0, r * 0.06, `${ch.id.slice(2)}장 · ${ch.place}`, { fontFamily: UI.font, fontSize: `${Math.round(r * 0.15)}px`, color: Phaser.Display.Color.IntegerToColor(ink).rgba, align: 'center', wordWrap: { width: r * 1.6 } }).setOrigin(0.5));
+      c.add(this.add.text(0, r * 0.06, `${stageNo(id)}단계 · ${ch.place}`, { fontFamily: UI.font, fontSize: `${Math.round(r * 0.15)}px`, color: Phaser.Display.Color.IntegerToColor(ink).rgba, align: 'center', wordWrap: { width: r * 1.6 } }).setOrigin(0.5));
       const stars = state.stars[id] ?? 0;
       for (let s = 0; s < 3; s++) {
         const sg = this.add.graphics();
@@ -149,10 +149,9 @@ export class MapScene extends Phaser.Scene {
       // 친구 스티커
       ch.bosses.forEach((b, k) => {
         if (!state.friends.includes(b)) return;
-        // 스티커가 둘이면(캐나다) 도장 오른쪽 위·왼쪽 아래에 나눠 붙인다
-        const sx = k === 0 ? x + r * 0.95 : x - r * 0.95;
-        const sy = k === 0 ? y - r * 0.8 : y + r * 0.75;
-        const st = this.add.container(sx, sy).setAngle(k === 0 ? 8 : -8);
+        // 스티커는 도장 오른쪽 위 → 왼쪽 아래 → 오른쪽 아래 순서로 (한국은 셋, 캐나다는 둘)
+        const [ax, ay, ang] = [[0.95, -0.8, 8], [-0.95, 0.75, -8], [0.95, 0.75, 6]][k] ?? [0, 0, 0];
+        const st = this.add.container(x + r * ax, y + r * ay).setAngle(ang);
         const sg = this.add.graphics();
         sg.fillStyle(0x2b2d5a, 0.15).fillRoundedRect(-52, -48, 108, 132, 24);
         sg.fillStyle(0xffffff, 1).fillRoundedRect(-54, -54, 108, 132, 24);
@@ -180,7 +179,7 @@ export class MapScene extends Phaser.Scene {
       c.add(g);
       c.add(this.add.text(0, -10, isNext ? '다음 여행지' : '?', { fontFamily: UI.fontTitle, fontSize: isNext ? `${Math.round(r * 0.24)}px` : `${Math.round(r * 0.6)}px`, color: isNext ? Phaser.Display.Color.IntegerToColor(ink).rgba : '#b8b8c8' }).setOrigin(0.5));
       if (isNext) {
-        c.add(this.add.text(0, r * 0.3, `${ch.id.slice(2)}장 · ${ch.place}`, { fontFamily: UI.font, fontSize: `${Math.round(r * 0.15)}px`, color: '#2b2d5a', align: 'center', wordWrap: { width: r * 1.6 } }).setOrigin(0.5));
+        c.add(this.add.text(0, r * 0.3, `${stageNo(id)}단계 · ${ch.place}`, { fontFamily: UI.font, fontSize: `${Math.round(r * 0.15)}px`, color: '#2b2d5a', align: 'center', wordWrap: { width: r * 1.6 } }).setOrigin(0.5));
         this.tweens.add({ targets: c, scale: 1.05, duration: 700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
       }
     }
@@ -228,7 +227,7 @@ export class MapScene extends Phaser.Scene {
     if (next) {
       const ch = chapterById(next);
       this.continueBtn = new Button(this, UI.width / 2 + 70, y, {
-        width: 440, height: 110, fontSize: 32, label: `여행 계속하기 · ${ch.id.slice(2)}장`, color: 0xffd84a, shade: 0xd9a92b, textColor: '#2b2d5a',
+        width: 440, height: 110, fontSize: 32, label: `여행 계속하기 · ${ch.name}`, color: 0xffd84a, shade: 0xd9a92b, textColor: '#2b2d5a',
         onPress: () => { sfx('tap'); startChapter(this, next); },
       });
     } else {
@@ -256,8 +255,8 @@ export class MapScene extends Phaser.Scene {
     const g = this.add.graphics();
     drawPanel(g, 70, 420, 580, 420, ch.frame);
     layer.add([dim, g,
-      this.add.text(UI.width / 2, 500, `${ch.id.slice(2)}장 · ${ch.place}`, { fontFamily: UI.fontTitle, fontSize: '40px', color: '#2b2d5a' }).setOrigin(0.5),
-      this.add.text(UI.width / 2, 590, '이 장을 다시 할까요?\n별을 더 받을 수 있어요.', { fontFamily: UI.font, fontSize: '28px', color: '#2b2d5a', align: 'center', lineSpacing: 8 }).setOrigin(0.5),
+      this.add.text(UI.width / 2, 500, stageLabel(ch), { fontFamily: UI.fontTitle, fontSize: '40px', color: '#2b2d5a' }).setOrigin(0.5),
+      this.add.text(UI.width / 2, 590, '이 단계를 다시 할까요?\n별을 더 받을 수 있어요.', { fontFamily: UI.font, fontSize: '28px', color: '#2b2d5a', align: 'center', lineSpacing: 8 }).setOrigin(0.5),
     ]);
     layer.add(new Button(this, UI.width / 2 - 130, 750, { width: 230, height: 96, fontSize: 30, label: '그만두기', color: 0xd8d8e4, shade: 0xa8a8bc, textColor: '#2b2d5a', onPress: () => layer.destroy() }));
     layer.add(new Button(this, UI.width / 2 + 130, 750, { width: 230, height: 96, fontSize: 30, label: '다시 하기', onPress: () => { save(); startChapter(this, id, { replay: true }); } }));

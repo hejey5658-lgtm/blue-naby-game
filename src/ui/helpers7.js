@@ -2,7 +2,7 @@
 import { platform } from '../platform.js';
 import { state } from '../state.js';
 import { VERSION } from '../data/version.js';
-import { CHAPTERS } from '../data/chapters.js';
+import { CHAPTERS, stageLabel } from '../data/chapters.js';
 import { openBox } from './htmlBox.js';
 
 // ── 홈 화면 설치 ──
@@ -81,8 +81,8 @@ function deviceLabel() {
 }
 
 export async function sendFeedback() {
-  const ch = CHAPTERS.find((c) => c.id === (state.playing ?? `ch${state.chapter}`)) ?? CHAPTERS[0];
-  const where = state.cleared ? '엔딩까지 봄' : `${ch.id.slice(2)}장 ${ch.place}`;
+  const ch = CHAPTERS.find((c) => c.id === state.playing) ?? CHAPTERS[state.chapter - 1] ?? CHAPTERS[0];
+  const where = state.cleared ? '엔딩까지 봄' : stageLabel(ch);
   const text = `[블루나비 의견] 버전 ${VERSION} / ${where} / ${deviceLabel()}\n재밌었던 점: \n어려웠던 점: \n이상했던 점: \n`;
   try {
     if (platform.can.share) { await navigator.share({ title: '블루나비 의견', text }); return; }

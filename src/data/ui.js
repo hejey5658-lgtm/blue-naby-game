@@ -7,9 +7,11 @@ export const UI = {
   fontSize: { dialogue: 34, button: 36, hud: 30, title: 72, small: 22 },
   swipeMinPx: 40,
   vibrate: { collect: 15, bump: 40, special: [30, 40, 30], cocoon: 20, stamp: 40 },
-  // 2장 밤 골목 어둠: 블루나비 둘레 밝은 칸 수, 반짝가루를 쓰면 넓어지는 칸 수·시간
-  // (2026-11-01 친구 의견 "2장 미로가 너무 어렵다"로 2.5칸·5칸·8초에서 넓힘. 달빛가루·출구는 어둠 위로 보인다)
-  dark: { radius: 3.5, sparkleRadius: 6, sparkleMs: 12000 },
+  // 반짝가루: 미로마다 1번, 이 시간 동안 반짝반짝 — 방해물·웅덩이·거미줄·물방울에 닿아도 괜찮다 (2026-11-04, 밤 골목 어둠이 없어져서 바꿈)
+  sparkleMs: 8000,
+  // 움직이는 웅덩이: 커져 있는 동안만 닿으면 퐁! 작아진 사이에 지나가면 된다 (좁은 길에서도 지나갈 틈이 있게)
+  // 거미줄: 닿으면 slowMs 동안 느려지고, 그 뒤 coolMs 동안은 다시 걸리지 않는다
+  drift: { puddleWetMs: 1800, puddleDryMs: 1300, slowMs: 3000, coolMs: 1500 },
   // 글꼴: 제목·버튼은 주아, 대사·설명은 고운돋움 (public/fonts, 자주 쓰는 한글 2,350자만 담음)
   fontTitle: '"Jua", "Apple SD Gothic Neo", "Noto Sans KR", system-ui, sans-serif',
   font: '"Gowun Dodum", "Apple SD Gothic Neo", "Noto Sans KR", system-ui, sans-serif',

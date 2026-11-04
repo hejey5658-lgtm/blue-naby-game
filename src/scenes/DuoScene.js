@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { UI } from '../data/ui.js';
-import { CHAPTERS } from '../data/chapters.js';
+import { CHAPTERS, stageLabel } from '../data/chapters.js';
 import { state } from '../state.js';
 import { setTheme } from '../ui/theme.js';
 import { drawPanel } from '../ui/frames.js';
@@ -14,7 +14,7 @@ import { getSafeInsets } from '../ui/safeArea.js';
 // scene.start('Duo', { step: 'setup' | 'turn' | 'result', names, chapter, turn, results })
 const fmt = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 const opened = () => CHAPTERS.slice(0, Math.max(1, Math.min(CHAPTERS.length, state.chapter || 1)));
-const label = (c) => `${c.id.slice(2)}장 · ${c.place}`;
+const label = (c) => stageLabel(c);
 
 export class DuoScene extends Phaser.Scene {
   constructor() { super('Duo'); }

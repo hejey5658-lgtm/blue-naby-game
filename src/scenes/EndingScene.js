@@ -155,7 +155,7 @@ export class EndingScene extends Phaser.Scene {
     card.add(this.add.text(650, 990, `미로 시간 합계 ${fmt(totalSec)}`, { fontFamily: UI.font, fontSize: '22px', color: '#5a5c88' }).setOrigin(1, 0.5));
     CHAPTERS.forEach((c, i) => {
       const x = 92 + i * 89;
-      card.add(this.add.text(x, 1036, `${i + 1}장`, { fontFamily: UI.fontTitle, fontSize: '22px', color: '#2b2d5a' }).setOrigin(0.5));
+      card.add(this.add.text(x, 1036, `${i + 1}단계`, { fontFamily: UI.fontTitle, fontSize: '22px', color: '#2b2d5a' }).setOrigin(0.5));
       const sg = this.add.graphics();
       for (let k = 0; k < 3; k++) iconStar(sg, x + (k - 1) * 22, 1070, 22, k < (state.stars[c.id] ?? 0) ? 0xffd84a : 0xd8c8a8);
       card.add(sg);

@@ -1,23 +1,28 @@
-// 장 순서와 장별 정보 (컨셉 v2: 한국 3장 + 중국·일본·미국·캐나다 = 7장, docs/concept-v2.md)
-// theme = 화면 여백 색, frame = 그 장의 '창틀' 모양 (docs/design-brief.md "창문이 넓어진다")
-// stamp = 여권 페이지(나라)와 도장 이름, starSec = 별을 받는 미로 기준 시간(초)
-// 대사 키 규칙: intro, `${id}_boss`, `${id}_friend` (보스가 둘이면 `${id}_boss2`, `${id}_friend2`),
+// 단계 순서와 단계별 정보 (2026-11-04: 나라마다 1단계 — 한국·중국·일본·미국·캐나다 = 5단계, docs/design-brief.md 11절)
+// 속 id(ch1, ch4~ch7)는 대사·미로·그림·저장 키라서 그대로 둔다. 화면에는 "N단계 · 나라"(stageLabel)로 보인다.
+// 한국(ch1)은 한 판에 집·밤 골목·아침 시장 구역이 있고, 대결은 먼지몽 → 실실이 → 짹짹이 3번.
+// theme = 화면 여백 색, frame = 그 단계의 '창틀' 모양 (docs/design-brief.md "창문이 넓어진다")
+// stamp = 여권 도장 이름, starSec = 별을 받는 미로 기준 시간(초)
+// rewards = 보스와 친구가 되면 받는 아이템 (보스 순서대로, 없으면 null)
+// drift = 길 위를 천천히 왔다 갔다 하는 웅덩이(닿으면 퐁!)·거미줄(닿으면 느려짐) 개수와 한 칸 가는 시간(ms)
+// 대사 키 규칙: intro, `${id}_boss`, `${id}_friend` (보스가 여럿이면 `${id}_boss2`, `${id}_friend2`, `${id}_boss3` …),
 // 진화는 `evo_${형태}_pre` / `evo_${형태}_post`
 export const CHAPTERS = [
-  { id: 'ch1', country: 'korea',  place: '집',          form: 'caterpillar', intro: 'prologue',  bosses: ['dustmong'],          reward: 'sparkle', evolveTo: null,        item: 'leaf',     patrolKind: 'vacuum',     theme: '#e9d8b4', frame: 'woodWindow', starSec: 120, stamp: '우리 집' },
-  { id: 'ch2', country: 'korea',  place: '밤 골목',     form: 'caterpillar', intro: 'ch2_intro', bosses: ['silsili'],           reward: 'scarf',   evolveTo: null,        item: 'moondust', dark: true,                theme: '#23254d', frame: 'litWindow',  starSec: 170, stamp: '밤 골목' },
-  { id: 'ch3', country: 'korea',  place: '아침 시장',   form: 'caterpillar', intro: 'ch3_intro', bosses: ['jjakjjak'],          reward: null,      evolveTo: 'moth',      item: 'seed',     patrolKind: 'cart',       theme: '#f6c48f', frame: 'awning',     starSec: 150, stamp: '아침 시장' },
-  { id: 'ch4', country: 'china',  place: '대나무 숲',   form: 'moth',        intro: 'ch4_intro', bosses: ['bbangbbang'],        reward: 'flute',   evolveTo: null,        item: 'bambooLeaf', patrolKind: 'shoot',    theme: '#cfe8b8', frame: 'moonGate',   starSec: 150, stamp: '중국' },
-  { id: 'ch5', country: 'japan',  place: '벚꽃 정원',   form: 'moth',        intro: 'ch5_intro', bosses: ['sappuni'],           reward: 'umbrella', evolveTo: 'butterfly', item: 'petal',   splash: 'koi',            theme: '#fbe0e6', frame: 'lattice',    starSec: 160, stamp: '일본' },
-  { id: 'ch6', country: 'usa',    place: '센트럴파크',  form: 'butterfly',   intro: 'ch6_intro', bosses: ['dotori'],            reward: null,      evolveTo: null,        item: 'acorn',    patrolKind: 'skateboard', splash: 'fountain', theme: '#d9ecc8', frame: 'cityGlass', starSec: 160, stamp: '미국' },
-  { id: 'ch7', country: 'canada', place: '단풍 숲과 튤립 꽃밭', form: 'butterfly', intro: 'ch7_intro', bosses: ['damdam', 'buzzboss'], reward: null, evolveTo: null,   item: 'nectar',   splash: 'sprinkler',      theme: '#fde3c8', frame: 'cloud',      starSec: 180, stamp: '캐나다' },
+  { id: 'ch1', country: 'korea',  name: '한국',   place: '집 · 밤 골목 · 아침 시장', form: 'caterpillar', intro: 'prologue',  bosses: ['dustmong', 'silsili', 'jjakjjak'], rewards: ['sparkle', 'scarf', null], evolveTo: 'moth',      item: 'seed',       theme: '#e9d8b4', frame: 'woodWindow', starSec: 170, stamp: '한국',   drift: { puddle: 1, web: 3, stepMs: 1200 } },
+  { id: 'ch4', country: 'china',  name: '중국',   place: '대나무 숲',             form: 'moth',        intro: 'ch4_intro', bosses: ['bbangbbang'],        rewards: ['flute'],          evolveTo: null,        item: 'bambooLeaf', patrolKind: 'shoot',      theme: '#cfe8b8', frame: 'moonGate',   starSec: 160, stamp: '중국',   drift: { puddle: 2, web: 2, stepMs: 1100 } },
+  { id: 'ch5', country: 'japan',  name: '일본',   place: '벚꽃 정원',             form: 'moth',        intro: 'ch5_intro', bosses: ['sappuni'],           rewards: ['umbrella'],       evolveTo: 'butterfly', item: 'petal',      splash: 'koi',            theme: '#fbe0e6', frame: 'lattice',    starSec: 170, stamp: '일본',   drift: { puddle: 2, web: 3, stepMs: 1000 } },
+  { id: 'ch6', country: 'usa',    name: '미국',   place: '센트럴파크',            form: 'butterfly',   intro: 'ch6_intro', bosses: ['dotori'],            rewards: [null],             evolveTo: null,        item: 'acorn',      patrolKind: 'skateboard', splash: 'fountain', theme: '#d9ecc8', frame: 'cityGlass', starSec: 170, stamp: '미국',   drift: { puddle: 3, web: 2, stepMs: 900 } },
+  { id: 'ch7', country: 'canada', name: '캐나다', place: '단풍 숲과 튤립 꽃밭',   form: 'butterfly',   intro: 'ch7_intro', bosses: ['damdam', 'buzzboss'], rewards: [null, null],      evolveTo: null,        item: 'nectar',     splash: 'sprinkler',      theme: '#fde3c8', frame: 'cloud',      starSec: 190, stamp: '캐나다', drift: { puddle: 3, web: 3, stepMs: 800 } },
 ];
 
-// 여권 페이지 (여행 지도). 한국 페이지에는 1~3장 도장이 함께 찍힌다.
-export const PASSPORT = [
-  { country: 'korea',  name: '한국',   chapters: ['ch1', 'ch2', 'ch3'] },
-  { country: 'china',  name: '중국',   chapters: ['ch4'] },
-  { country: 'japan',  name: '일본',   chapters: ['ch5'] },
-  { country: 'usa',    name: '미국',   chapters: ['ch6'] },
-  { country: 'canada', name: '캐나다', chapters: ['ch7'] },
-];
+// 예전(7장) 순서. 옛 저장·저장 코드(BB1)·도전장(C1)을 읽을 때만 쓴다. 절대 바꾸지 않는다.
+export const LEGACY_IDS = ['ch1', 'ch2', 'ch3', 'ch4', 'ch5', 'ch6', 'ch7'];
+// 옛 장 번호(1~7) → 새 단계 번호(1~5): 한국 1~3장은 모두 1단계
+export const legacyStage = (n) => (n <= 3 ? 1 : n - 2);
+
+// 단계 번호(1부터)와 화면 이름
+export const stageNo = (id) => CHAPTERS.findIndex((c) => c.id === id) + 1;
+export const stageLabel = (ch) => `${stageNo(ch.id)}단계 · ${ch.name}`;
+
+// 여권 페이지 (여행 지도): 나라마다 도장 하나
+export const PASSPORT = CHAPTERS.map((c) => ({ country: c.country, name: c.name, chapters: [c.id] }));

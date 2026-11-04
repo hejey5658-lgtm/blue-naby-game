@@ -1,6 +1,7 @@
-// 친구와 함께 (systems.md 10절): 닉네임, 기록 카드(그림), 도전 링크(#c=C1-…), 도전장함.
+// 친구와 함께 (systems.md 10절): 닉네임, 기록 카드(그림), 도전 링크(#c=C2-…), 도전장함.
+// C2 = 5단계 순서(2026-11-04~), C1 = 예전 7장 순서 — C1은 중국~캐나다 기록만 읽는다(한국 미로가 바뀌어서).
 // 모든 정보는 플레이어가 직접 공유한 링크·그림 안에만 담기고, 어디에도 자동으로 보내지 않는다.
-import { CHAPTERS } from '../data/chapters.js';
+import { CHAPTERS, LEGACY_IDS, stageLabel } from '../data/chapters.js';
 import { MAZES } from '../data/mazes.js';
 import { FORMS } from '../data/forms.js';
 import { state, save } from '../state.js';
@@ -9,7 +10,9 @@ import { pack, unpack } from './codec.js';
 import { openBox } from '../ui/htmlBox.js';
 import { shareCanvas } from '../ui/photo.js';
 
-const PREFIX = 'C1-';
+const PREFIX = 'C2-';
+const LEGACY_PREFIX = 'C1-';
+const nameOf = (id) => CHAPTERS.find((c) => c.id === id)?.name ?? id;
 const MAX_INBOX = 5;
 export const ANON = '익명의 블루나비';
 export const fmt = (sec) => `${Math.floor(sec / 60)}:${String(Math.floor(sec % 60)).padStart(2, '0')}`;
@@ -75,11 +78,13 @@ export function makeChallengeLink() {
 }
 
 export function readChallenge(raw) {
-  const d = unpack(PREFIX, raw);
+  let d = unpack(PREFIX, raw);
+  let ids = CHAPTERS.map((c) => c.id);
+  if (!d) { d = unpack(LEGACY_PREFIX, raw); ids = LEGACY_IDS.map((id, i) => (i < 3 ? null : id)); }
   if (!Array.isArray(d) || !Array.isArray(d[1])) return null;
   const nick = String(d[0] || ANON).slice(0, 8);
   const times = {};
-  CHAPTERS.forEach((c, i) => { const t = Number(d[1][i]) || 0; if (believable(c.id, t)) times[c.id] = t; });
+  ids.forEach((id, i) => { const t = Number(d[1][i]) || 0; if (id && MAZES[id] && believable(id, t)) times[id] = t; });
   if (!Object.keys(times).length) return null;
   return { nick, times, stars: String(d[2] || ''), code: String(raw).trim(), at: Date.now() };
 }
@@ -107,7 +112,7 @@ export function activeChallenge() {
 // 타이틀 띠에 쓸 한 줄: 아직 못 이긴 장 중 하나
 export function challengeHeadline(c) {
   const id = CHAPTERS.map((x) => x.id).find((k) => c.times[k] && !(state.records[k]?.mazeSec <= c.times[k])) ?? Object.keys(c.times)[0];
-  return `${c.nick}의 도전장! ${id.slice(2)}장 미로 ${fmtLong(c.times[id])}를 넘어 보세요`;
+  return `${c.nick}의 도전장! ${nameOf(id)} 미로 ${fmtLong(c.times[id])}를 넘어 보세요`;
 }
 
 // 미로를 끝냈을 때 도전 결과
@@ -182,12 +187,12 @@ export async function makeRecordCard(game) {
   x.fillText(`모은 별 ${total} / ${CHAPTERS.length * 3}`, W / 2, 790);
   x.font = '32px "Gowun Dodum", sans-serif';
   CHAPTERS.forEach((ch, i) => {
-    const y = 850 + i * 48;
+    const y = 856 + i * 64;
     const st = state.stars[ch.id] ?? 0;
     const sec = state.records[ch.id]?.mazeSec;
     x.textAlign = 'left';
     x.fillStyle = st ? '#2b2d5a' : '#a8a8bc';
-    x.fillText(`${i + 1}장 ${ch.place}`, 140, y);
+    x.fillText(stageLabel(ch).replace(' · ', ' '), 140, y);
     x.textAlign = 'center';
     x.fillStyle = '#ffb800';
     x.fillText('★'.repeat(st) + '☆'.repeat(3 - st), 700, y);
@@ -218,7 +223,7 @@ export function openInbox(onChange) {
     openBox({ title: '도전장함', text: '아직 받은 도전장이 없어요. 친구에게 도전장을 보내 달라고 해 보세요!', field: 'none', buttons: [{ label: '닫기', onClick: (b) => b.close() }] });
     return;
   }
-  const lines = list.map((c, i) => `${i === (state.activeChallenge ?? 0) ? '▶ ' : '   '}${c.nick} · ${Object.entries(c.times).map(([k, t]) => `${k.slice(2)}장 ${fmt(t)}`).join(', ')}`).join('\n');
+  const lines = list.map((c, i) => `${i === (state.activeChallenge ?? 0) ? '▶ ' : '   '}${c.nick} · ${Object.entries(c.times).map(([k, t]) => `${nameOf(k)} ${fmt(t)}`).join(', ')}`).join('\n');
   openBox({
     title: '도전장함',
     text: '▶ 표시가 지금 도전 중인 친구예요. 여권과 미로에 그 친구 기록이 깃발로 떠요.',

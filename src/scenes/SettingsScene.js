@@ -167,7 +167,7 @@ export class SettingsScene extends Phaser.Scene {
     const code = makeSaveCode();
     openBox({
       title: '저장 코드',
-      text: '이 글자를 다른 브라우저의 [저장 코드 넣기]에 붙여 넣으면 여기까지 이어서 할 수 있어요. 미로 안 위치는 장 처음부터예요.',
+      text: '이 글자를 다른 브라우저의 [저장 코드 넣기]에 붙여 넣으면 여기까지 이어서 할 수 있어요. 미로 안 위치는 그 단계 처음부터예요.',
       value: code,
       readonly: true,
       buttons: [
@@ -189,8 +189,8 @@ export class SettingsScene extends Phaser.Scene {
   pasteCode() {
     openBox({
       title: '저장 코드 넣기',
-      text: 'BB1- 로 시작하는 저장 코드를 붙여 넣어 주세요.',
-      placeholder: 'BB1-…',
+      text: 'BB2- (예전 코드는 BB1-) 로 시작하는 저장 코드를 붙여 넣어 주세요.',
+      placeholder: 'BB2-…',
       buttons: [
         { label: '이어서 하기', onClick: (b) => {
           const d = readSaveCode(b.value());

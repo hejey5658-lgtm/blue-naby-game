@@ -51,7 +51,7 @@ function flower(g, x, y, r, petal, heart = 0xffd84a) {
 // 움직임 하나: 동작 줄이기면 건너뛴다
 function tween(scene, cfg) { if (!still()) scene.tweens.add(cfg); }
 
-// ═════ 1장 한국 집 ═════════════════════════════════
+// ═════ 한국 집 (한국 단계 위 구역) ═════════════════════════════════
 const home = {
   // 작은 꽃무늬 벽지, 아래에 창 한 조각과 창턱 위 화분 (블루나비가 태어난 그 화분)
   backdrop(scene, g, sc) {
@@ -176,7 +176,7 @@ function pot(g, x, baseY, s) {
   g.fillStyle(0x6cc35a, 1).fillEllipse(x - 14 * s, baseY - 94 * s, 26 * s, 14 * s).fillEllipse(x + 14 * s, baseY - 98 * s, 26 * s, 14 * s);
 }
 
-// ═════ 2장 밤 골목 ═════════════════════════════════
+// ═════ 한국 밤 골목 (가운데 구역) ═════════════════════════════════
 // 판은 대부분 어둠에 가려지므로, 창문 불빛·밤하늘은 어둠 위(깊이 7.5)에 따로 놓는다.
 const hasWindow = (s, x, y) => !isEdge(s, x, y) && hash(x, y, 40) < 0.32;
 const alley = {
@@ -223,6 +223,13 @@ const alley = {
         n++;
       }
     }
+    // 반딧불이 (어둠 아래 — 블루나비 둘레 빛 안에서만 보인다)
+    for (let i = 0; i < sc.fireflies; i++) {
+      const x = ox + hash(i, 1, 46) * W, y = oy + hash(i, 2, 46) * H;
+      const f = scene.add.circle(x, y, 3.2, 0xd8f58a, 0.9);
+      tween(scene, { targets: f, x: x + (hash(i, 3, 46) - 0.5) * cell * 3, y: y + (hash(i, 4, 46) - 0.5) * cell * 3, alpha: 0.3, duration: 4000 + hash(i, 5, 46) * 3000, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    }
+    if (sc.sky === false) return; // 한국 단계의 골목 구역: 판 바깥 밤하늘 없음
     // 밤하늘 (판 바깥만, 어둠 위): 별·달
     const sky = scene.add.graphics().setDepth(7.5);
     const outer = [[0, 108, UI.width, oy - 108], [0, bottom, UI.width, UI.height - bottom]];
@@ -240,16 +247,10 @@ const alley = {
       const s = scene.add.circle(rx + hash(i, 5, 45) * rw, ry + 8 + hash(i, 6, 45) * Math.max(1, rh - 16), 2.6, 0xffffff, 0.9).setDepth(7.5);
       tween(scene, { targets: s, alpha: 0.2, duration: 1800 + hash(i, 7, 45) * 1500, yoyo: true, repeat: -1, delay: hash(i, 8, 45) * 2000, ease: 'Sine.easeInOut' });
     }
-    // 반딧불이 (어둠 아래 — 블루나비 둘레 빛 안에서만 보인다)
-    for (let i = 0; i < sc.fireflies; i++) {
-      const x = ox + hash(i, 1, 46) * W, y = oy + hash(i, 2, 46) * H;
-      const f = scene.add.circle(x, y, 3.2, 0xd8f58a, 0.9);
-      tween(scene, { targets: f, x: x + (hash(i, 3, 46) - 0.5) * cell * 3, y: y + (hash(i, 4, 46) - 0.5) * cell * 3, alpha: 0.3, duration: 4000 + hash(i, 5, 46) * 3000, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
-    }
   },
 };
 
-// ═════ 3장 아침 시장 ═════════════════════════════════
+// ═════ 한국 아침 시장 (아래 구역) ═════════════════════════════════
 const steamer = (s, x, y) => !isEdge(s, x, y) && hash(x, y, 50) < 0.08;
 const market = {
   // 아래: 줄무늬 차양 지붕이 이어진 시장 골목, 그 위로 줄 깃발이 걸린 줄
@@ -642,7 +643,38 @@ const maple = {
   },
 };
 
-const KINDS = { home, alley, market, bamboo, garden, park, maple };
+// ═════ 한국: 한 판을 구역으로 나눠 위 = 집, 가운데 = 밤 골목, 아래 = 아침 시장 (design-brief 11절) ═════
+// 구역마다 그 줄만 가진 작은 판처럼 보이게(oy·rows·look·tile을 바꾼 대리 객체) 해서 기존 그림을 그대로 쓴다.
+function zoneScene(scene, z) {
+  const [from, to] = z.rows;
+  const proxy = Object.create(scene);
+  return Object.assign(proxy, { oy: scene.oy + from * scene.cell, rows: to - from + 1, look: z.look, tile: (x, y) => scene.tile(x, y + from), zoneFrom: from });
+}
+const zoneAt = (sc, y) => sc.zones.find((z) => y >= z.rows[0] && y <= z.rows[1]) ?? sc.zones[0];
+const zones = {
+  backdrop(scene, g, sc) { const z = sc.zones.find((q) => q.look.scenery.kind === sc.backdrop); KINDS[sc.backdrop].backdrop(zoneScene(scene, z), g, z.look.scenery); },
+  floor(scene, g, sc) {
+    for (const z of sc.zones) {
+      const k = KINDS[z.look.scenery.kind];
+      const zs = zoneScene(scene, z);
+      if (k.floor) k.floor(zs, g, z.look.scenery);
+      else { const b = board(zs); g.fillStyle(z.look.floor, 1).fillRect(b.ox, b.oy, b.W, b.H); }
+    }
+    // 구역 사이 문턱: 가는 띠 하나로 "다른 곳에 왔다"는 느낌만
+    const { ox, W, cell } = board(scene);
+    for (const z of sc.zones.slice(1)) g.fillStyle(0xfffaf0, 0.35).fillRect(ox, scene.oy + z.rows[0] * cell - 2, W, 4);
+  },
+  wall(scene, g, x, y, px, py, front, sc) {
+    const z = zoneAt(sc, y);
+    const zs = zoneScene(scene, z);
+    KINDS[z.look.scenery.kind].wall(zs, g, x, y - z.rows[0], px, py, front, z.look.scenery);
+  },
+  ambient(scene, sc) {
+    for (const z of sc.zones) KINDS[z.look.scenery.kind].ambient?.(zoneScene(scene, z), z.look.scenery);
+  },
+};
+
+const KINDS = { home, alley, market, bamboo, garden, park, maple, zones };
 const kindOf = (scene) => { const sc = scene.look.scenery; return sc && KINDS[sc.kind] ? [KINDS[sc.kind], sc] : [null, null]; };
 
 // ── MazeScene이 부르는 네 가지 ─────────────────────

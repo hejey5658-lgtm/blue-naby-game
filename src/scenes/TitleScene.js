@@ -299,7 +299,7 @@ export class TitleScene extends Phaser.Scene {
     }
     this.time.delayedCall(hasProgress() ? 200 : 820, () => {
       this.opening = false;
-      const playing = state.playing ?? `ch${state.chapter}`;
+      const playing = state.playing ?? CHAPTERS[state.chapter - 1]?.id ?? 'ch1';
       if (state.step.endsWith('_maze')) {
         this.scene.start('Maze', { chapter: playing });
         return;

@@ -10,6 +10,8 @@ export const POP = {
   scorePerPop: 10,      // 기념품 하나 퐁 = 10점 × 연쇄 수
   // 둘이서 대결: 상대에게 보내는 구름 블록 수 = (한 번에 4개 이상 퐁이면 퐁 수의 절반) + (연쇄 - 1) × 3, 최대 12
   cloud: { minPops: 4, perChain: 3, max: 12 },
+  // 각자 폰 대결: 같은 순서로 떨어지는 기념품, 이 시간(초) 동안 점수 겨루기. 구름 블록 없음, 꼭대기에 닿으면 위쪽 절반이 퐁 비워지고 이어서
+  remoteSec: 120,
   stages: [
     {
       id: 'cn', chapter: 'ch4', name: '중국', dropMs: 800, goal: 30,

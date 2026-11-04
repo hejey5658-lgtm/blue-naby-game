@@ -12,10 +12,12 @@ import { waitForAssets } from './PreloadScene.js';
 import { drawBackdrop, addAmbient } from '../maze/scenery.js';
 import { makePopIcons } from '../pop/icons.js';
 import { PopBoard } from '../pop/PopBoard.js';
+import { matchById, createMatch, sendInvite, saveMyResult, seededRandom } from '../social/match.js';
 
-// 기념품 퐁퐁 (design-brief 10절). scene.start('Pop', { step: 'menu' | 'solo' | 'duo', stage })
+// 기념품 퐁퐁 (design-brief 10·12절). scene.start('Pop', { step: 'menu' | 'solo' | 'duo' | 'remote', stage, match })
 // 혼자 하기: 중국 → 일본 → 미국 → 캐나다, 나라마다 목표만큼 퐁 하면 도장 쾅 → 다음 나라(더 빨라짐).
 // 둘이서 대결: 한 화면 두 판(왼쪽 1P · 오른쪽 2P) 동시에, 많이 퐁 하면 상대 판에 구름 블록. 먼저 꼭대기에 닿으면 진다.
+// 각자 폰 대결(remote): 대결장의 시드로 두 폰에 같은 순서, POP.remoteSec 동안 점수 겨루기 → 대결 화면(Match)으로.
 const STAGES = POP.stages;
 const FACES = STAGES.flatMap((s) => s.types.map((t) => t.icon)).filter((k) => k.startsWith('face_'));
 const SWIPE = 40;
@@ -30,6 +32,9 @@ export class PopScene extends Phaser.Scene {
     this.boards = [];
     this.ended = false;
     this.overlay = null;
+    this.match = data.match ? matchById(data.match) : null;
+    if (this.step === 'remote' && !this.match) this.step = 'menu';
+    if (this.match) this.stageIdx = this.match.stage;
   }
 
   create() {
@@ -38,7 +43,7 @@ export class PopScene extends Phaser.Scene {
     if (waitForAssets(this, FACES, this.initData)) return;
     makePopIcons(this);
     this.stage = STAGES[this.stageIdx];
-    if (this.step === 'duo') this.startDuo(); else this.startSolo();
+    if (this.step === 'duo') this.startDuo(); else if (this.step === 'remote') this.startRemote(); else this.startSolo();
     this.setupInput();
     const onHidden = () => this.openPause();
     this.game.events.on('app-hidden', onHidden);
@@ -79,9 +84,19 @@ export class PopScene extends Phaser.Scene {
         this.scene.start('Pop', { step: 'solo', stage: this.stageIdx });
       },
     });
-    this.duoBtn = new Button(this, UI.width / 2, 1040, {
-      label: '둘이서 대결', color: 0xff9fb8, shade: 0xe07a96, textColor: '#2b2d5a',
+    // 둘이서: 한 화면에서 같이 · 각자 폰으로 (대결장 링크 보내기)
+    this.duoBtn = new Button(this, UI.width / 2 - 158, 1040, {
+      width: 300, height: 110, fontSize: 30, label: '한 화면 대결', color: 0xff9fb8, shade: 0xe07a96, textColor: '#2b2d5a',
       onPress: () => { unlockAudio(); this.scene.start('Pop', { step: 'duo', stage: this.stageIdx }); },
+    });
+    this.remoteBtn = new Button(this, UI.width / 2 + 158, 1040, {
+      width: 300, height: 110, fontSize: 30, label: '각자 폰 대결', color: 0x7ec8ff, shade: 0x4f9fe0, textColor: '#2b2d5a',
+      onPress: async () => {
+        unlockAudio();
+        const m = createMatch('pop', this.stageIdx);
+        await sendInvite(m);
+        this.scene.start('Match', { id: m.id });
+      },
     });
     new Button(this, UI.width / 2, 1180, {
       width: 320, height: 84, fontSize: 28, label: '처음 화면으로', color: 0xfffaf0, shade: 0xd8c8a8, textColor: '#2b2d5a', onPress: () => this.scene.start('Title'),
@@ -243,6 +258,69 @@ export class PopScene extends Phaser.Scene {
     const panel = this.panel('조금 쉬었다가 다시 해 보자!', `점수 ${this.score} · 퐁 ${this.popped}개`, { buttons: 2 });
     this.overlayBtn(panel, 0, '이 나라부터 다시', () => this.scene.start('Pop', { step: 'solo', stage: this.stageIdx }));
     this.overlayBtn(panel, 1, '처음 화면으로', () => this.scene.start('Title'), true);
+  }
+
+  // ── 각자 폰 대결: 판 하나, 같은 순서, 2분 점수 ──
+  startRemote() {
+    const cell = 72, ox = (UI.width - POP.cols * cell) / 2, oy = 236 + this.top;
+    this.backdrop(POP.cols, POP.rows, cell, ox, oy);
+    this.hudBar();
+    const top = this.top;
+    this.text(UI.width / 2, 40 + top, `각자 폰 대결 · ${this.stage.name}`, 30).setOrigin(0.5);
+    this.scoreText = this.text(UI.width - 36, 44 + top, '0', 34).setOrigin(1, 0.5);
+    this.goalText = this.text(UI.width / 2, 84 + top, '', 24, '#ffe9a8').setOrigin(0.5);
+    this.score = 0;
+    this.popped = 0;
+    this.leftMs = POP.remoteSec * 1000;
+    this.running = false;
+    const next = this.preview(ox + POP.cols * cell + 62, oy + 90, 40);
+    this.text(ox + POP.cols * cell + 62, oy + 4, '다음', 20, '#2b2d5a').setOrigin(0.5);
+    this.chainText = this.text(UI.width / 2, oy + 300, '', 64, '#2f7bff').setOrigin(0.5).setAlpha(0).setStroke('#fffaf0', 10);
+    const board = new PopBoard(this, {
+      x: ox, y: oy, cell, stage: this.stage, rng: seededRandom(this.match.seed),
+      onNext: (p) => next.show(p),
+      onPop: (n, chain) => {
+        this.score += n * POP.scorePerPop * chain;
+        this.popped += n;
+        vibrate('collect');
+        if (chain >= 2) this.flashChain(this.chainText, chain);
+        this.updateRemote();
+      },
+      onTurnEnd: () => this.leftMs > 0,
+      onTopOut: () => { this.flashChain(this.chainText, 0); this.chainText.setText('퐁! 다시 이어서'); board.clearTop(); },
+    });
+    next.show(board.next);
+    this.boards = [board];
+    this.updateRemote();
+    this.countdown(() => { this.running = true; board.start(); });
+  }
+
+  updateRemote() {
+    this.scoreText.setText(String(this.score));
+    const s = Math.ceil(Math.max(0, this.leftMs) / 1000);
+    this.goalText.setText(`남은 시간 ${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`);
+  }
+
+  // 셋, 둘, 하나, 출발! (두 폰에서 소리 내어 같이 누르면 같이 시작)
+  countdown(done) {
+    const t = this.text(UI.width / 2, 640, '', 140, '#2f7bff').setOrigin(0.5).setDepth(20).setStroke('#fffaf0', 14);
+    ['셋', '둘', '하나', '출발!'].forEach((w, i) => this.time.delayedCall(i * 800, () => {
+      t.setText(w).setScale(0.6).setAlpha(1);
+      this.tweens.add({ targets: t, scale: 1, duration: 220, ease: 'Back.easeOut' });
+      sfx(i < 3 ? 'tap' : 'ding');
+    }));
+    this.time.delayedCall(3200, () => { this.tweens.add({ targets: t, alpha: 0, duration: 250, onComplete: () => t.destroy() }); done(); });
+  }
+
+  remoteOver() {
+    if (this.ended) return;
+    this.ended = true;
+    this.boards.forEach((b) => { b.mode = 'frozen'; });
+    saveMyResult(this.match.id, this.score, this.popped);
+    sfx('win');
+    vibrate('special');
+    const panel = this.panel('시간 끝!', `점수 ${this.score} · 퐁 ${this.popped}개`, { buttons: 1 });
+    this.overlayBtn(panel, 0, '결과 보기', () => this.scene.start('Match', { id: this.match.id }));
   }
 
   // ── 둘이서 대결 ──
@@ -422,12 +500,18 @@ export class PopScene extends Phaser.Scene {
 
   update(time, delta) {
     if (this.step === 'menu' || this.ended) return;
+    if (this.step === 'remote') {
+      if (!this.running) return;
+      this.leftMs -= Math.min(delta, 100);
+      this.updateRemote();
+      if (this.leftMs <= 0) { this.remoteOver(); return; }
+    }
     for (const b of this.boards) b.update(Math.min(delta, 100));
   }
 
   openPause() {
     if (this.ended || !this.scene.isActive() || this.step === 'menu') return;
-    this.scene.launch('Pause', { under: 'Pop', frame: 'woodWindow', restartLabel: '이 나라 처음부터', restartData: { step: this.step, stage: this.stageIdx } });
+    this.scene.launch('Pause', { under: 'Pop', frame: 'woodWindow', restartLabel: '이 나라 처음부터', restartData: { step: this.step, stage: this.stageIdx, match: this.match?.id } });
     this.scene.pause();
   }
 }

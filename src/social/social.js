@@ -18,7 +18,7 @@ export const ANON = '익명의 블루나비';
 export const fmt = (sec) => `${Math.floor(sec / 60)}:${String(Math.floor(sec % 60)).padStart(2, '0')}`;
 const fmtLong = (sec) => (sec >= 60 ? `${Math.floor(sec / 60)}분 ${Math.floor(sec % 60)}초` : `${Math.floor(sec)}초`);
 const PUBLIC_URL = 'https://blue-naby-game.web.app';
-const baseUrl = () => (platform.isFile || /localhost|127\.0\.0\.1/.test(location.hostname) ? PUBLIC_URL : location.origin);
+export const baseUrl = () => (platform.isFile || /localhost|127\.0\.0\.1/.test(location.hostname) ? PUBLIC_URL : location.origin);
 
 // ── 닉네임: 처음 공유할 때 한 번 묻는다 (최대 8글자, 건너뛰면 "익명의 블루나비") ──
 export const nickname = () => (state.nickname || '').slice(0, 8) || ANON;

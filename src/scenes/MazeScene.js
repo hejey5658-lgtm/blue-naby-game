@@ -16,6 +16,7 @@ import { activeChallenge, challengeResult, fmt as fmtShort } from '../social/soc
 import { LOOK } from '../data/mazeLooks.js';
 import { drawBackdrop, drawFloor, drawWallScenery, addAmbient } from '../maze/scenery.js';
 import { placeDrifters, patrolPath } from '../maze/drift.js';
+import { saveMyResult } from '../social/match.js';
 
 // 미로: 쓱 밀면 그 방향으로 벽·갈림길·수집품까지 미끄러져 간다. 톡 누르면 멈춘다.
 // 수집품을 다 모으면 출구가 열린다. 순찰하는 방해물·떨어지는 물방울·움직이는 웅덩이에 닿으면 퐁! → [다시 시작] → 체크포인트.
@@ -42,9 +43,11 @@ export class MazeScene extends Phaser.Scene {
     this.maze = MAZES[this.chapter.id];
     this.form = FORMS[this.chapter.form];
     this.look = LOOK[this.chapter.id] ?? LOOK.ch1;
-    this.hasItem = (k) => state.items.includes(k);
-    // 둘이서 하기 (DuoScene): 저장·대사·별·도전장 없이 미로만, 끝나면 Duo로 돌아간다
+    // 둘이서 하기 (DuoScene): 저장·대사·별·도전장 없이 미로만, 끝나면 Duo로 돌아간다.
+    // duo.remote = 각자 폰 대결 번호: 공평하게 아이템 없이, 카운트다운 뒤 출발, 끝나면 대결 화면(Match)으로
     this.duo = data.duo ?? null;
+    this.remote = this.duo?.remote ?? null;
+    this.hasItem = (k) => !this.remote && state.items.includes(k);
     this.fresh = !!data.fresh || !!this.duo;
     this.intro = !!data.intro && !this.duo;
     // 씬은 다시 쓰이므로 지난번 미로의 상태를 지운다
@@ -95,6 +98,9 @@ export class MazeScene extends Phaser.Scene {
     this.events.once('shutdown', () => this.game.events.off('app-hidden', onHidden));
 
     this.saveProgress();
+    // 움직이는 웅덩이·물방울 박자는 미로가 열린 순간부터 잰다 (각자 폰 대결에서 두 폰이 같게)
+    this.t0 = this.time.now;
+    if (this.remote) this.countdown();
     // 나라에 도착한 인사 소리 (장마다 다름)
     this.time.delayedCall(250, () => sfx(`arrive_${this.chapter.id}`));
     const hint = () => {
@@ -108,6 +114,21 @@ export class MazeScene extends Phaser.Scene {
       this.game.events.once('dialogue-done', () => { this.locked = false; hint(); });
       this.time.delayedCall(350, () => this.scene.launch('Dialogue', { key: this.chapter.intro, frame: this.chapter.frame, form: this.chapter.form }));
     } else hint();
+  }
+
+  // 각자 폰 대결: 셋, 둘, 하나, 출발! 동안은 움직이지 않고 시간도 멈춰 있다
+  countdown() {
+    this.locked = true;
+    const t = this.add.text(UI.width / 2, 600, '', { fontFamily: UI.fontTitle, fontSize: '140px', color: '#2f7bff', stroke: '#fffaf0', strokeThickness: 14 }).setOrigin(0.5).setDepth(20);
+    ['셋', '둘', '하나', '출발!'].forEach((w, i) => this.time.delayedCall(i * 800, () => {
+      t.setText(w).setScale(0.6);
+      this.tweens.add({ targets: t, scale: 1, duration: 220, ease: 'Back.easeOut' });
+      sfx(i < 3 ? 'tap' : 'ding');
+    }));
+    this.time.delayedCall(3200, () => {
+      this.locked = false;
+      this.tweens.add({ targets: t, alpha: 0, duration: 250, onComplete: () => t.destroy() });
+    });
   }
 
   // ── 저장·이어하기 ──────────────────────────────
@@ -327,7 +348,7 @@ export class MazeScene extends Phaser.Scene {
   // ── 블루나비 ───────────────────────────────────
   // 둘이서 하기: 블루나비 머리 위 작은 1P·2P 표시 (update에서 따라다닌다)
   makeDuoTag() {
-    if (!this.duo) { this.duoTag = null; return; }
+    if (!this.duo || this.remote) { this.duoTag = null; return; }
     const n = this.duo.turn;
     this.duoTag = this.add.text(0, 0, `${n}P`, { fontFamily: UI.fontTitle, fontSize: `${Math.round(this.cell * 0.36)}px`, color: '#2b2d5a', backgroundColor: n === 1 ? '#7ec8ff' : '#ff9fb8', padding: { x: 6, y: 1 } }).setOrigin(0.5, 1).setDepth(6);
   }
@@ -553,7 +574,7 @@ export class MazeScene extends Phaser.Scene {
     for (const o of this.drifters) {
       const near = Phaser.Math.Distance.Between(o.sp.x, o.sp.y, this.blue.x, this.blue.y) < this.cell * 0.55;
       if (o.type === 'puddle') {
-        const t = (now + o.phase) % period;
+        const t = (now - this.t0 + o.phase) % period;
         const ease = 250;
         let k = 1;
         if (t > wet) k = t < wet + ease ? 1 - (t - wet) / ease : t > period - ease ? (t - (period - ease)) / ease : 0;
@@ -703,7 +724,7 @@ export class MazeScene extends Phaser.Scene {
     const rival = this.duo ? null : activeChallenge();
     const rivalSec = rival?.times[this.chapter.id];
     const dn = this.duo?.names[this.duo.turn - 1];
-    const duoName = this.duo && (dn === `${this.duo.turn}P` ? `${dn} 차례` : `${this.duo.turn}P ${dn} 차례`);
+    const duoName = this.remote ? '각자 폰 대결' : this.duo && (dn === `${this.duo.turn}P` ? `${dn} 차례` : `${this.duo.turn}P ${dn} 차례`);
     this.targetText = this.add.text(UI.width - 40, 82 + top, duoName || (rivalSec ? `${rival.nick} ${fmtShort(rivalSec)}` : `별 기준 ${fmtTime(this.chapter.starSec)}`), {
       fontFamily: UI.font, fontSize: '18px', color: '#ffe9a8',
     }).setOrigin(1, 0.5);
@@ -910,7 +931,7 @@ export class MazeScene extends Phaser.Scene {
     if (!this.waters.length) return;
     const now = this.time.now;
     for (const w of this.waters) {
-      const t = (now + w.phase) % WATER_CYCLE;
+      const t = (now - this.t0 + w.phase) % WATER_CYCLE;
       const warn = t >= WATER_CYCLE - WATER_ON - 500 && t < WATER_CYCLE - WATER_ON;
       const on = t >= WATER_CYCLE - WATER_ON;
       w.shadow.setVisible(warn || on);
@@ -1002,6 +1023,11 @@ export class MazeScene extends Phaser.Scene {
       this.add.text(0, 32, `퐁 ${this.rolls}번`, { fontFamily: UI.font, fontSize: '26px', color: '#2b2d5a' }).setOrigin(0.5)]);
     c.setScale(0.7).setAlpha(0);
     this.tweens.add({ targets: c, scale: 1, alpha: 1, duration: 260, ease: 'Back.easeOut' });
+    if (this.remote) {
+      saveMyResult(this.remote, sec, this.rolls);
+      this.time.delayedCall(1800, () => this.scene.start('Match', { id: this.remote }));
+      return;
+    }
     const next = turn === 1 ? { step: 'turn', turn: 2 } : { step: 'result' };
     this.time.delayedCall(1800, () => this.scene.start('Duo', { ...next, names, chapter: this.chapter.id, results }));
   }

@@ -58,6 +58,13 @@ export class TitleScene extends Phaser.Scene {
     updateBand(this, 236 + top);
     this.scale.on('resize', this.layoutSafeArea, this);
     this.events.once('shutdown', () => this.scale.off('resize', this.layoutSafeArea, this));
+    // 각자 폰 대결 링크로 들어왔으면 바로 그 대결 카드로 (design-brief 12절)
+    if (state.pendingMatch) {
+      const id = state.pendingMatch;
+      state.pendingMatch = null;
+      save();
+      this.time.delayedCall(30, () => this.scene.start('Match', { id }));
+    }
   }
 
   drawRoom() {

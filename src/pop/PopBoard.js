@@ -40,7 +40,8 @@ export class PopBoard {
 
   randomPair() {
     const n = this.stage.types.length;
-    return [Math.floor(Math.random() * n), Math.floor(Math.random() * n)];
+    const rnd = this.rng ?? Math.random; // 각자 폰 대결은 같은 시드의 수열 → 두 폰에 같은 순서
+    return [Math.floor(rnd() * n), Math.floor(rnd() * n)];
   }
 
   // 기념품 하나: 색 동그라미 + 그림 (구름은 구름 그림만)
@@ -231,6 +232,20 @@ export class PopBoard {
       n--;
     }
     this.scene.time.delayedCall(560, () => { if (this.mode === 'resolving') this.spawn(); });
+  }
+
+  // 각자 폰 대결에서 꼭대기에 닿으면: 위쪽 절반을 퐁 비우고 이어서 (게임오버 없음)
+  clearTop() {
+    this.mode = 'resolving';
+    sfx('pop');
+    for (let r = 0; r < this.rows / 2; r++) {
+      for (let c = 0; c < this.cols; c++) {
+        const s = this.sprites[r][c];
+        this.grid[r][c] = null; this.sprites[r][c] = null;
+        if (s) this.scene.tweens.add({ targets: s, scale: 1.4, alpha: 0, duration: 300, ease: 'Quad.easeOut', onComplete: () => s.destroy() });
+      }
+    }
+    this.scene.time.delayedCall(700, () => { if (this.mode === 'resolving') this.spawn(); });
   }
 
   topOut() {

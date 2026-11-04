@@ -14,14 +14,18 @@ import { PreloadScene } from './scenes/PreloadScene.js';
 import { EndingScene } from './scenes/EndingScene.js';
 import { DuoScene } from './scenes/DuoScene.js';
 import { PopScene } from './scenes/PopScene.js';
+import { MatchScene } from './scenes/MatchScene.js';
 import { save } from './state.js';
 import { setupPWA } from './pwa.js';
 import { readChallengeFromUrl } from './social/social.js';
+import { readMatchFromUrl } from './social/match.js';
 import { setupPcPanel } from './pcPanel.js';
 import { suspendAudio, unlockAudio } from './ui/feedback.js';
 
 // 도전 링크(#c=…)로 들어왔으면 도전장함에 넣는다
 readChallengeFromUrl();
+// 각자 폰 대결 링크(#d=…)로 들어왔으면 대결함에 넣는다 (타이틀이 바로 대결 화면을 연다)
+readMatchFromUrl();
 
 const game = new Phaser.Game({
   // 주소 끝에 ?canvas 를 붙이면 WebGL 대신 캔버스로 그린다(자동 화면 확인·오래된 기기 확인용)
@@ -36,7 +40,7 @@ const game = new Phaser.Game({
   },
   input: { activePointers: 2 },
   render: { antialias: true, powerPreference: 'high-performance' },
-  scene: [BootScene, PreloadScene, TitleScene, MazeScene, BattleScene, MapScene, EvolutionScene, EndingScene, PopScene, DuoScene, DialogueScene, PauseScene, SettingsScene],
+  scene: [BootScene, PreloadScene, TitleScene, MazeScene, BattleScene, MapScene, EvolutionScene, EndingScene, PopScene, DuoScene, MatchScene, DialogueScene, PauseScene, SettingsScene],
 });
 
 // 브라우저 기본 동작 막기: 당겨서 새로고침, 두 번 탭 확대, 길게 눌러 메뉴, 핀치 확대.

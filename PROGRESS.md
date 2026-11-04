@@ -8,6 +8,9 @@
 - **정식 공개: https://blue-naby-game.web.app (v1.3.0, 2026-11-03)**
 - 다음: 사용자가 폰으로 `docs/release-checklist.md`의 📱 항목 확인 → 단톡방 공지(`docs/friend-test.md`) → 친구 의견 반영(`FEEDBACK.md`)
 
+## 미리보기 v2.1.0 (2026-11-04)
+- https://blue-naby-game--preview-3mdmw72m.web.app 에 v2.1.0(나라마다 1단계·각자 폰 대결·2탄·모바일 최적화) 올림 (30일, 2026-12-04까지). 정식 주소는 아직 v1.3.0
+
 ## 2.0.0 (2026-11-04) — 2탄 「포포의 사계절 서울」
 - 탄 갈아 끼우기 `src/series.js` (1탄 데이터 자리에 `src/data/s2/` 를 제자리 교체, 진행 기록은 `state.series`/`state.other`로 탄마다 따로)
 - 새 화면: `Title2Scene`(포포네 마당), `AlbumScene`(사계절 앨범), `DressScene`(옷 갈아입기), `Ending2Scene`. 미로·대결·둘이서·퐁퐁·대결장은 1탄 화면 그대로

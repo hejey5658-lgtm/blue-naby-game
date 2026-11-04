@@ -3,6 +3,7 @@ import { UI } from '../data/ui.js';
 import { VERSION } from '../data/version.js';
 import { state, save, resetProgress, hasProgress } from '../state.js';
 import { resetSeriesProgress } from '../series.js';
+import { refreshMusic } from '../ui/music.js';
 import { platform } from '../platform.js';
 import { drawPanel } from '../ui/frames.js';
 import { iconClose } from '../ui/icons.js';
@@ -113,6 +114,7 @@ export class SettingsScene extends Phaser.Scene {
       hit.on('pointerup', () => {
         if (state.settings[row.key] === value) return;
         state.settings[row.key] = value;
+        if (row.key === 'sound') refreshMusic(); // 소리 하나로 배경음도 함께
         save();
         draw();
         sfx('toggle');

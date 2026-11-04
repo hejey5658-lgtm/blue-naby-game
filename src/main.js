@@ -26,6 +26,8 @@ import { readChallengeFromUrl } from './social/social.js';
 import { readMatchFromUrl } from './social/match.js';
 import { setupPcPanel } from './pcPanel.js';
 import { suspendAudio, unlockAudio } from './ui/feedback.js';
+import { wantMusic, refreshMusic, nowPlaying } from './ui/music.js';
+import { SCENE_SONG } from './data/music.js';
 
 // 마지막에 하던 탄(1탄 블루나비 / 2탄 포포)의 데이터로
 initSeries();
@@ -52,6 +54,21 @@ const game = new Phaser.Game({
 // 하는 탄 그림만 받기 (모바일 최적화): PreloadScene·waitForAssets 가 registry 'series'를 본다
 game.registry.set('series', state.series === 2 ? 2 : 1);
 SERIES.game = game;
+
+// 배경음 (나라·계절마다 다른 곡, [소리] 설정 하나로): 화면이 열릴 때 그 화면 곡으로. 미로는 그 단계(속 id) 곡.
+game.events.once('ready', () => {
+  const keys = new Set([...Object.keys(SCENE_SONG[1]), ...Object.keys(SCENE_SONG[2]), 'Maze']);
+  for (const key of keys) {
+    const sc = game.scene.getScene(key);
+    sc?.events.on('create', () => {
+      if (key === 'Maze') { if (sc.chapter) wantMusic(sc.chapter.id); return; }
+      const song = SCENE_SONG[SERIES.n][key] ?? SCENE_SONG[1][key];
+      if (song) wantMusic(song);
+    });
+  }
+});
+// 폰은 첫 탭 전에는 소리를 못 낸다 → 아무 데나 처음 톡 하면 오디오를 열고 지금 화면 곡을 시작
+window.addEventListener('pointerdown', () => { unlockAudio(); if (!nowPlaying()) setTimeout(refreshMusic, 50); }, { passive: true });
 
 // 길쭉한 폰(20:9 등): 남는 위아래 여백 중 아래쪽을 줄여 게임을 엄지 쪽으로 조금 내린다 (홈 바 안전 영역은 남김, 모바일 최적화 14절)
 function nudgeCanvas() {

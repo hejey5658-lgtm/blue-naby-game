@@ -18,6 +18,9 @@ export function unlockAudio() {
   }
 }
 
+// 배경음(src/ui/music.js)도 같은 오디오를 쓴다
+export const audioContext = () => ctx;
+
 export function suspendAudio() {
   try { ctx?.suspend(); } catch { /* 무시 */ }
 }

@@ -70,7 +70,7 @@ export class SettingsScene extends Phaser.Scene {
     if (hasProgress()) this.makeLinkRow(root, y, '처음부터 다시 하기', () => this.confirmReset(), '#a4523a');
 
     root.add(this.add.text(UI.width / 2, PANEL.y + PANEL.h - 40, `블루나비의 세계여행 · ${VERSION}`, {
-      fontFamily: UI.font, fontSize: '20px', color: '#8a8cae',
+      fontFamily: UI.font, fontSize: '22px', color: '#8a8cae',
     }).setOrigin(0.5));
 
     this.input.keyboard?.on('keydown-ESC', () => this.close());

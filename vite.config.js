@@ -1,5 +1,10 @@
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
+import { ASSETS, ASSET_VERSION } from './src/data/assets.js';
+
+// 모바일 최적화 (design-brief 14절): 앱 저장(서비스 워커)은 코드·글꼴·첫 화면 그림(boot)만 미리 받고,
+// 나머지 그림은 처음 쓰는 순간 받아 'bb-art'에 저장한다 (한 번 받으면 인터넷 없이도).
+const BOOT_ART = ASSETS.filter((a) => a.group === 'boot').map((a) => ({ url: a.file, revision: String(ASSET_VERSION) }));
 
 // 한 파일 버전(vite build --mode single → scripts/build-single.mjs): 코드를 한 덩어리로 묶고 서비스 워커는 뺀다.
 const single = {
@@ -47,7 +52,13 @@ export default defineConfig(({ mode }) => mode === 'single' ? single : {
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,png,jpg,webp,svg,woff2,webmanifest}'],
+        globPatterns: ['**/*.{js,css,html,woff2,webmanifest}', 'icons/*.{png,svg}'],
+        additionalManifestEntries: BOOT_ART,
+        runtimeCaching: [{
+          urlPattern: ({ url }) => /\/assets\/(char|face|item)\//.test(url.pathname),
+          handler: 'CacheFirst',
+          options: { cacheName: 'bb-art', expiration: { maxEntries: 300 } },
+        }],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         // 그림 파일은 ?v= 가 붙으므로 주소 뒤 글자를 무시하고 찾는다
         ignoreURLParametersMatching: [/^v$/],

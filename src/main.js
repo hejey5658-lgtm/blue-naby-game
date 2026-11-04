@@ -20,7 +20,7 @@ import { AlbumScene } from './scenes/AlbumScene.js';
 import { DressScene } from './scenes/DressScene.js';
 import { Ending2Scene } from './scenes/Ending2Scene.js';
 import { state, save } from './state.js';
-import { initSeries, useSeries } from './series.js';
+import { initSeries, SERIES } from './series.js';
 import { setupPWA } from './pwa.js';
 import { readChallengeFromUrl } from './social/social.js';
 import { readMatchFromUrl } from './social/match.js';
@@ -49,6 +49,32 @@ const game = new Phaser.Game({
   render: { antialias: true, powerPreference: 'high-performance' },
   scene: [BootScene, PreloadScene, TitleScene, MazeScene, BattleScene, MapScene, EvolutionScene, EndingScene, PopScene, DuoScene, MatchScene, Title2Scene, AlbumScene, DressScene, Ending2Scene, DialogueScene, PauseScene, SettingsScene],
 });
+// 하는 탄 그림만 받기 (모바일 최적화): PreloadScene·waitForAssets 가 registry 'series'를 본다
+game.registry.set('series', state.series === 2 ? 2 : 1);
+SERIES.game = game;
+
+// 길쭉한 폰(20:9 등): 남는 위아래 여백 중 아래쪽을 줄여 게임을 엄지 쪽으로 조금 내린다 (홈 바 안전 영역은 남김, 모바일 최적화 14절)
+function nudgeCanvas() {
+  const c = game.canvas;
+  if (!c) return;
+  const h = c.getBoundingClientRect().height;
+  const free = window.innerHeight - h;
+  if (free < 24) return;
+  const sab = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--sab')) || 0;
+  c.style.marginTop = `${Math.round(Math.max(0, Math.min(free * 0.72, free - sab)))}px`;
+}
+game.scale.on('resize', () => requestAnimationFrame(nudgeCanvas));
+game.events.once('ready', () => requestAnimationFrame(nudgeCanvas));
+
+// 느린 폰: 초당 그림 수가 5초 넘게 40 아래면 배경 움직임(햇살·꽃잎·눈 등)을 줄인다. 다음 화면부터 적용.
+let slowSince = 0;
+game.events.on('step', (time) => {
+  if (platform.reducedMotion) return;
+  if (game.loop.actualFps < 40) {
+    slowSince ||= time;
+    if (time - slowSince > 5000) { platform.reducedMotion = true; console.info('느린 기기: 배경 움직임을 줄였어요'); }
+  } else slowSince = 0;
+});
 
 // 게임이 이미 열린 탭에서 대결·도전 링크를 열면 주소의 # 부분만 바뀌고 새로 읽히지 않는다 → 그때도 읽어서 대결 화면으로
 window.addEventListener('hashchange', () => {
@@ -57,8 +83,11 @@ window.addEventListener('hashchange', () => {
   if (!m) return;
   state.pendingMatch = null;
   save();
-  for (const sc of game.scene.getScenes(true)) if (sc.scene.key !== 'Preload') sc.scene.stop();
-  game.scene.start('Match', { id: m.id });
+  // 대결 화면을 보던 중이면 그 화면을 다시 그리고(같은 씬을 같은 순간에 멈췄다 켜면 안 켜진다), 아니면 대결 화면으로
+  for (const sc of game.scene.getScenes(true)) if (sc.scene.key !== 'Preload' && sc.scene.key !== 'Match') sc.scene.stop();
+  const match = game.scene.getScene('Match');
+  if (match.scene.isActive()) match.scene.restart({ id: m.id });
+  else game.scene.start('Match', { id: m.id });
 });
 
 // 브라우저 기본 동작 막기: 당겨서 새로고침, 두 번 탭 확대, 길게 눌러 메뉴, 핀치 확대.
@@ -114,4 +143,5 @@ window.addEventListener('pageshow', (e) => {
 
 setupPWA(game);
 setupPcPanel();
-if (import.meta.env.DEV) window.__game = game;
+// 자동 시험용: 개발 중이거나 ?canvas 주소일 때만 (실제 플레이에는 영향 없음)
+if (import.meta.env.DEV || new URLSearchParams(location.search).has('canvas')) window.__game = game;

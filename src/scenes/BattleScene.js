@@ -220,7 +220,7 @@ export class BattleScene extends Phaser.Scene {
       const ic = this.add.graphics();
       d.icon(ic, 0, -36, 54, d.key === 'play' ? 0xffffff : 0x2b2d5a);
       b.face.add(ic);
-      b.sub = this.add.text(0, 62, '', { fontFamily: UI.font, fontSize: '20px', color: d.key === 'play' ? '#ffffff' : '#2b2d5a' }).setOrigin(0.5);
+      b.sub = this.add.text(0, 62, '', { fontFamily: UI.font, fontSize: '22px', color: d.key === 'play' ? '#ffffff' : '#2b2d5a' }).setOrigin(0.5);
       b.face.add(b.sub);
       if (!this.sys.game.device.input.touch || this.sys.game.device.os.desktop) {
         b.face.add(this.add.text(-BTN.w / 2 + 22, -BTN.h / 2 + 26, String(i + 1), { fontFamily: UI.fontTitle, fontSize: '22px', color: '#2b2d5a' }).setAlpha(0.5));

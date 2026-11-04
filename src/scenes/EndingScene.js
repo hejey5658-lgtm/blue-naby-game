@@ -161,7 +161,7 @@ export class EndingScene extends Phaser.Scene {
       for (let k = 0; k < 3; k++) iconStar(sg, x + (k - 1) * 22, 1070, 22, k < (state.stars[c.id] ?? 0) ? 0xffd84a : 0xd8c8a8);
       card.add(sg);
       const sec = state.records[c.id]?.mazeSec;
-      card.add(this.add.text(x, 1100, sec != null ? fmt(sec) : '-', { fontFamily: UI.font, fontSize: '18px', color: '#5a5c88' }).setOrigin(0.5));
+      card.add(this.add.text(x, 1100, sec != null ? fmt(sec) : '-', { fontFamily: UI.font, fontSize: '22px', color: '#5a5c88' }).setOrigin(0.5));
     });
     this.tweens.add({ targets: card, alpha: 1, duration: 500, delay: 400 });
 

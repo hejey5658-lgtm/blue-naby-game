@@ -30,7 +30,7 @@ export const META = {
     titleScene: 'Title2', mapScene: 'Album', endingScene: 'Ending2', dressScene: 'Dress', stars: false,
     popDone: ['사계절 한 바퀴 완성!', '봄부터 겨울까지 다 돌았어요'], saveCode: 'PP1-', challenge: 'P1-' },
 };
-export const SERIES = { n: 1, meta: META[1] };
+export const SERIES = { n: 1, meta: META[1], game: null };
 
 // 탄마다 따로 가지는 진행 기록
 const PROGRESS_KEYS = ['chapter', 'step', 'form', 'items', 'friends', 'stars', 'records', 'mazeState', 'bossIndex', 'playing', 'cleared', 'mazeTimeStar', 'pop'];
@@ -59,6 +59,7 @@ function loadData(n) {
   swapArr(POP.stages, d.STAGES);
   SERIES.n = n;
   SERIES.meta = META[n];
+  SERIES.game?.registry.set('series', n); // PreloadScene 이 하는 탄 그림만 받게
 }
 
 // 탄 바꾸기: 데이터를 갈아 끼우고, 진행 기록을 바꿔 넣는다

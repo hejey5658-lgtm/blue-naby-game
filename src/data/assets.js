@@ -1,25 +1,25 @@
-// 그림 파일 목록. 파일이 없거나 불러오기에 실패한 키는 임시 그림(src/art/placeholders.js)으로 대신한다.
+// 그림 파일 목록. 파일은 WebP(모바일 최적화 14절: PNG보다 약 70% 가벼움, scripts/art-webp.py). 파일이 없거나 불러오기에 실패한 키는 임시 그림(src/art/placeholders.js)으로 대신한다.
 // group: 언제 받을지 (boot = 처음, chN = 그 단계(속 id)를 하는 동안 다음에 쓸 그림을 미리). release: true = 공개 전 필수.
 // 블루나비 그림은 npm run build:art 로 만든다 (art/gen/blue.mjs, 캐릭터 시트 v1 승인 2026-10-30).
 const blue = (form, group) => [
-  { key: `blue_${form}`, file: `assets/char/blue_${form}.png`, width: 768, height: 128, frameWidth: 128, frameHeight: 128, release: true, group },
-  { key: `blue_${form}_battle`, file: `assets/char/blue_${form}_battle.png`, width: 3360, height: 480, frameWidth: 480, frameHeight: 480, release: true, group },
-  { key: `face_blue_${form}`, file: `assets/face/face_blue_${form}.png`, width: 1120, height: 280, frameWidth: 280, frameHeight: 280, release: true, group },
+  { key: `blue_${form}`, file: `assets/char/blue_${form}.webp`, width: 768, height: 128, frameWidth: 128, frameHeight: 128, release: true, group },
+  { key: `blue_${form}_battle`, file: `assets/char/blue_${form}_battle.webp`, width: 3360, height: 480, frameWidth: 480, frameHeight: 480, release: true, group },
+  { key: `face_blue_${form}`, file: `assets/face/face_blue_${form}.webp`, width: 1120, height: 280, frameWidth: 280, frameHeight: 280, release: true, group },
 ];
 
 const boss = (key, group) => [
-  { key: `boss_${key}`, file: `assets/char/boss_${key}.png`, width: 2880, height: 480, frameWidth: 480, frameHeight: 480, release: true, group },
-  { key: `face_${key}`, file: `assets/face/face_${key}.png`, width: 560, height: 280, frameWidth: 280, frameHeight: 280, release: true, group },
+  { key: `boss_${key}`, file: `assets/char/boss_${key}.webp`, width: 2880, height: 480, frameWidth: 480, frameHeight: 480, release: true, group },
+  { key: `face_${key}`, file: `assets/face/face_${key}.webp`, width: 560, height: 280, frameWidth: 280, frameHeight: 280, release: true, group },
 ];
 
 const npc = (key, size, group) => [
-  { key: `npc_${key}`, file: `assets/char/npc_${key}.png`, width: size * 2, height: size, frameWidth: size, frameHeight: size, release: true, group },
-  { key: `face_${key}`, file: `assets/face/face_${key}.png`, width: 560, height: 280, frameWidth: 280, frameHeight: 280, release: true, group },
+  { key: `npc_${key}`, file: `assets/char/npc_${key}.webp`, width: size * 2, height: size, frameWidth: size, frameHeight: size, release: true, group },
+  { key: `face_${key}`, file: `assets/face/face_${key}.webp`, width: 560, height: 280, frameWidth: 280, frameHeight: 280, release: true, group },
 ];
 
 // 수집품·방해물·고치 (art/gen/props.mjs). 작아서(합쳐 0.2MB 안쪽) 처음에 모두 받는다 —
 // 임시 그림이 Boot에서 먼저 만들어지면 나중에 받은 파일이 덮어쓰지 못하기 때문.
-const prop = (key, size = 128) => ({ key, file: `assets/${key.startsWith('item_') ? 'item' : 'char'}/${key}.png`, width: size, height: size, release: true, group: 'boot' });
+const prop = (key, size = 128) => ({ key, file: `assets/${key.startsWith('item_') ? 'item' : 'char'}/${key}.webp`, width: size, height: size, release: true, group: 'boot' });
 const PROPS = ['leaf', 'moondust', 'seed', 'bambooLeaf', 'petal', 'acorn', 'nectar'].map((k) => prop(`item_${k}`))
   .concat(['vacuum', 'cart', 'shoot', 'skateboard'].map((k) => prop(`enemy_${k}`)), prop('cocoon', 256));
 
@@ -41,12 +41,12 @@ export const ASSETS = [
   // ── 2탄 「포포의 사계절 서울」: 1탄 그림을 다 받은 뒤 뒤에서 받는다 ──
   ...['popoSpring', 'popoSummer', 'popoAutumn', 'popoWinter'].flatMap((f) => blue(f, 's2')),
   ...['kkakkak', 'gaegul', 'bamtol', 'mungchi', 'gomsil'].flatMap((k) => boss(k, 's2')),
-  { key: 'face_bluenabi', file: 'assets/face/face_bluenabi.png', width: 560, height: 280, frameWidth: 280, frameHeight: 280, release: true, group: 's2' },
+  { key: 'face_bluenabi', file: 'assets/face/face_bluenabi.webp', width: 560, height: 280, frameWidth: 280, frameHeight: 280, release: true, group: 's2' },
   ...['forsythia', 'watermelon', 'ginkgo', 'snowflake'].map((k) => ({ ...prop(`item_${k}`), group: 's2' })),
   ...['bike', 'watergun', 'chestnut', 'sled'].map((k) => ({ ...prop(`enemy_${k}`), group: 's2' })),
 ];
 // 그림을 바꾸면 올려서 브라우저 캐시를 피한다.
-export const ASSET_VERSION = 7;
+export const ASSET_VERSION = 8;
 
 // 애니메이션 (프레임 번호는 art-guide.md 4절 칸 순서: 미로 = 대기 2 + 이동 4, 대결 = 대기 2·놀자·버티기·특기·지침·기쁨)
 const blueAnims = (form) => [

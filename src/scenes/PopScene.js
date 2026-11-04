@@ -14,6 +14,7 @@ import { makePopIcons } from '../pop/icons.js';
 import { PopBoard } from '../pop/PopBoard.js';
 import { matchById, createMatch, sendInvite, saveMyResult, seededRandom } from '../social/match.js';
 import { SERIES } from '../series.js';
+import { platform } from '../platform.js';
 
 // 기념품 퐁퐁 (design-brief 10·12절). scene.start('Pop', { step: 'menu' | 'solo' | 'duo' | 'remote', stage, match })
 // 혼자 하기: 중국 → 일본 → 미국 → 캐나다, 나라마다 목표만큼 퐁 하면 도장 쾅 → 다음 나라(더 빨라짐).
@@ -72,7 +73,7 @@ export class PopScene extends Phaser.Scene {
       const c = this.add.container(x, y);
       const g = this.add.graphics();
       const t = this.add.text(0, -6, `${i + 1} · ${s.name}`, { fontFamily: UI.fontTitle, fontSize: '32px', color: '#2b2d5a' }).setOrigin(0.5);
-      const sub = this.add.text(0, 26, i <= reached ? `한 칸 ${(s.dropMs / 1000).toFixed(2)}초` : '혼자 하기는 앞 나라를 깨면', { fontFamily: UI.font, fontSize: '17px', color: '#2b2d5a' }).setOrigin(0.5).setAlpha(0.75);
+      const sub = this.add.text(0, 26, i <= reached ? `한 칸 ${(s.dropMs / 1000).toFixed(2)}초` : '혼자 하기는 앞 나라를 깨면', { fontFamily: UI.font, fontSize: '22px', color: '#2b2d5a' }).setOrigin(0.5).setAlpha(0.75);
       c.add([g, t, sub]).setSize(300, 88).setInteractive({ useHandCursor: true }).on('pointerup', () => { sfx('toggle'); this.stageIdx = i; this.paintChips(); });
       return { i, g, t, sub, locked: i > reached };
     });
@@ -377,8 +378,10 @@ export class PopScene extends Phaser.Scene {
       next.show(b.next);
       return b;
     });
-    this.add.text(UI.width / 2, oy + POP.rows * cell + 46, 'PC  1P: A·D 옮기기 · W 돌리기 · S 내리기   2P: ← → · ↑ · ↓', { fontFamily: UI.font, fontSize: '19px', color: '#2b2d5a', backgroundColor: '#fffaf0cc', padding: { x: 10, y: 4 } }).setOrigin(0.5).setDepth(8);
-    this.add.text(UI.width / 2, oy + POP.rows * cell + 86, '폰: 각자 자기 판 쪽을 쓱 밀고 톡 누르기', { fontFamily: UI.font, fontSize: '19px', color: '#2b2d5a', backgroundColor: '#fffaf0cc', padding: { x: 10, y: 4 } }).setOrigin(0.5).setDepth(8);
+    // 조작 안내: 폰이면 터치 한 줄, PC면 키보드 두 줄 (폰에서 작은 글자로 길게 쓰지 않게, 모바일 최적화 14절)
+    const tip = (y, s) => this.add.text(UI.width / 2, oy + POP.rows * cell + y, s, { fontFamily: UI.font, fontSize: '22px', color: '#2b2d5a', backgroundColor: '#fffaf0cc', padding: { x: 10, y: 4 } }).setOrigin(0.5).setDepth(8);
+    if (platform.isTouch) tip(56, '각자 자기 판 쪽을 쓱 밀고 톡 누르기');
+    else { tip(46, '1P: A·D 옮기기 · W 돌리기 · S 내리기'); tip(86, '2P: ← → 옮기기 · ↑ 돌리기 · ↓ 내리기'); }
     this.updateDuo();
     this.boards.forEach((b) => b.start());
   }

@@ -58,7 +58,9 @@ export class MazeScene extends Phaser.Scene {
   }
 
   create() {
-    if (waitForAssets(this, [`blue_${this.chapter.form}`, `face_blue_${this.chapter.form}`], this.initData)) return;
+    // 하는 탄 그림만 받으므로(모바일 최적화) 이 미로가 쓰는 그림이 다 있는지 확인한다
+    const kinds = [this.chapter.patrolKind, ...(this.maze.patrols ?? []).map((p) => p.kind)].filter(Boolean).map((k) => `enemy_${k}`);
+    if (waitForAssets(this, [`blue_${this.chapter.form}`, `face_blue_${this.chapter.form}`, `item_${this.chapter.item}`, SERIES.meta.helperTex, ...kinds], this.initData)) return;
     setTheme(this.chapter.theme, this.chapter.theme);
     const g = this.maze.grid;
     this.rows = g.length;
@@ -734,7 +736,7 @@ export class MazeScene extends Phaser.Scene {
     const best = state.records[this.chapter.id]?.mazeSec;
     const goalText = SERIES.meta.stars ? `별 기준 ${fmtTime(this.chapter.starSec)}` : best != null ? `내 기록 ${fmtTime(best)}` : '';
     this.targetText = this.add.text(UI.width - 40, 82 + top, duoName || (rivalSec ? `${rival.nick} ${fmtShort(rivalSec)}` : goalText), {
-      fontFamily: UI.font, fontSize: '18px', color: '#ffe9a8',
+      fontFamily: UI.font, fontSize: '22px', color: '#ffe9a8',
     }).setOrigin(1, 0.5);
   }
 
@@ -807,7 +809,7 @@ export class MazeScene extends Phaser.Scene {
         g.fillStyle(0x3a7a38, 1).fillRoundedRect(-36, -8, 72, 16, 8);
         g.fillStyle(0x2b2d5a, 1).fillCircle(-14, 0, 3).fillCircle(0, 0, 3).fillCircle(14, 0, 3);
       }
-      const t = this.add.text(0, 78, item.label, { fontFamily: UI.fontTitle, fontSize: '20px', color: '#2b2d5a', backgroundColor: '#ffffffcc', padding: { x: 8, y: 2 } }).setOrigin(0.5);
+      const t = this.add.text(0, 78, item.label, { fontFamily: UI.fontTitle, fontSize: '22px', color: '#2b2d5a', backgroundColor: '#ffffffcc', padding: { x: 8, y: 2 } }).setOrigin(0.5);
       c.add([g, t]).setSize(130, 130).setInteractive({ useHandCursor: true });
       this.itemBtns.push(c);
       c.on('pointerup', () => {

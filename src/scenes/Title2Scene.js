@@ -24,7 +24,7 @@ export class Title2Scene extends Phaser.Scene {
   init(data) { this.initData = data; this.opening = false; }
 
   create() {
-    if (waitForAssets(this, ['blue_popoSpring_battle', 'blue_butterfly'], this.initData)) return;
+    if (waitForAssets(this, ['blue_popoSpring_battle', 'blue_butterfly', 'face_bluenabi', 'face_blue_popoSpring'], this.initData)) return;
     setTheme('#cfeaff', '#a8dd8f');
     const { top, bottom } = getSafeInsets(this.game);
     this.drawYard();

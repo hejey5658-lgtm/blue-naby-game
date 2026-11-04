@@ -18,7 +18,7 @@ function band(scene, y, color, text, actionLabel, onAction, onClose) {
   const hit = scene.add.zone(84, -40, 196, 80).setOrigin(0).setInteractive({ useHandCursor: true }).on('pointerup', () => { sfx('tap'); onAction(); });
   c.add([g, t, bg, bt, hit]);
   if (onClose) {
-    const x = scene.add.text(318, 0, '닫기', { fontFamily: UI.font, fontSize: '18px', color: '#ffffff' }).setOrigin(0.5);
+    const x = scene.add.text(318, 0, '닫기', { fontFamily: UI.font, fontSize: '22px', color: '#ffffff' }).setOrigin(0.5);
     const xh = scene.add.zone(290, -40, 60, 80).setOrigin(0).setInteractive({ useHandCursor: true }).on('pointerup', () => { onClose(); c.destroy(); });
     c.add([x, xh]);
   }

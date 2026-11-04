@@ -44,7 +44,7 @@ export class MapScene extends Phaser.Scene {
     }
     // 표지 제목
     this.add.text(UI.width / 2, 62 + top, '블루나비 여권', { fontFamily: UI.fontTitle, fontSize: '44px', color: '#ffd84a' }).setOrigin(0.5);
-    this.add.text(UI.width / 2, 110 + top, 'BLUE NABI PASSPORT', { fontFamily: UI.font, fontSize: '18px', color: '#c9d6f5' }).setOrigin(0.5);
+    this.add.text(UI.width / 2, 110 + top, 'BLUE NABI PASSPORT', { fontFamily: UI.font, fontSize: '22px', color: '#c9d6f5' }).setOrigin(0.5);
 
     const cleared = this.justCleared ?? null;
     const target = cleared ?? nextChapterId() ?? 'ch7';
@@ -67,7 +67,7 @@ export class MapScene extends Phaser.Scene {
       const c = this.add.container(UI.width - 92, 64 + top).setDepth(5);
       const g = this.add.graphics();
       g.fillStyle(0xffd84a, 1).fillRoundedRect(-80, -26, 160, 52, 26);
-      c.add([g, this.add.text(0, 0, '홈 화면에 추가', { fontFamily: UI.fontTitle, fontSize: '20px', color: '#2b2d5a' }).setOrigin(0.5)]);
+      c.add([g, this.add.text(0, 0, '홈 화면에 추가', { fontFamily: UI.fontTitle, fontSize: '22px', color: '#2b2d5a' }).setOrigin(0.5)]);
       c.setSize(170, 80).setInteractive({ useHandCursor: true }).on('pointerup', () => { sfx('tap'); offerInstall(); });
     }
 
@@ -157,7 +157,7 @@ export class MapScene extends Phaser.Scene {
         sg.fillStyle(0xffffff, 1).fillRoundedRect(-54, -54, 108, 132, 24);
         st.add(sg);
         if (this.textures.exists(`face_${b}`)) st.add(this.add.image(0, -8, `face_${b}`, 1).setDisplaySize(88, 88));
-        st.add(this.add.text(0, 56, BOSSES[b].name, { fontFamily: UI.fontTitle, fontSize: '20px', color: '#2b2d5a' }).setOrigin(0.5));
+        st.add(this.add.text(0, 56, BOSSES[b].name, { fontFamily: UI.fontTitle, fontSize: '22px', color: '#2b2d5a' }).setOrigin(0.5));
         L.add(st);
       });
       // 톡 → 다시 하기

@@ -78,7 +78,7 @@ export class DuoScene extends Phaser.Scene {
     const g = this.add.graphics();
     g.fillStyle(0x7ec8ff, 1).fillRoundedRect(-200, -52, 400, 104, 30);
     const t = this.add.text(0, -10, nickname(), { fontFamily: UI.fontTitle, fontSize: '36px', color: '#2b2d5a' }).setOrigin(0.5);
-    const hint = this.add.text(0, 28, '내 닉네임 · 톡 눌러 바꾸기', { fontFamily: UI.font, fontSize: '18px', color: '#2b2d5a' }).setOrigin(0.5).setAlpha(0.7);
+    const hint = this.add.text(0, 28, '내 닉네임 · 톡 눌러 바꾸기', { fontFamily: UI.font, fontSize: '22px', color: '#2b2d5a' }).setOrigin(0.5).setAlpha(0.7);
     c.add([g, t, hint]).setSize(400, 104).setInteractive({ useHandCursor: true }).on('pointerup', async () => {
       sfx('tap');
       await askNickname({ force: true });
@@ -94,7 +94,7 @@ export class DuoScene extends Phaser.Scene {
       const g = this.add.graphics();
       g.fillStyle(i ? 0xff9fb8 : 0x7ec8ff, 1).fillRoundedRect(-150, -52, 300, 104, 30);
       const t = this.add.text(0, -10, this.names[i], { fontFamily: UI.fontTitle, fontSize: '36px', color: '#2b2d5a' }).setOrigin(0.5);
-      const hint = this.add.text(0, 28, `${i + 1}P · 톡 눌러 이름 바꾸기`, { fontFamily: UI.font, fontSize: '18px', color: '#2b2d5a' }).setOrigin(0.5).setAlpha(0.7);
+      const hint = this.add.text(0, 28, `${i + 1}P · 톡 눌러 이름 바꾸기`, { fontFamily: UI.font, fontSize: '22px', color: '#2b2d5a' }).setOrigin(0.5).setAlpha(0.7);
       c.add([g, t, hint]).setSize(300, 104).setInteractive({ useHandCursor: true }).on('pointerup', () => {
         sfx('tap');
         openBox({

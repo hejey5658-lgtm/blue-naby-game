@@ -14,8 +14,9 @@ import { updateBand } from '../ui/bands.js';
 import { canOfferInstall, offerInstall } from '../ui/helpers7.js';
 import { openShareMenu, activeChallenge, fmt as fmtShort } from '../social/social.js';
 
-// 여행 지도 = 블루나비 여권 (concept-v2 5절). 나라마다 한 쪽, 깬 장에는 입국 도장이 '쾅'.
-// 도장 속 별 칸 = 그 장의 별, 도장 옆 스티커 = 친구가 된 보스. 깬 도장을 톡 → 그 장 다시 하기.
+// 여행 지도 = 블루나비 여권 (concept-v2 5절). 나라마다 한 쪽, 깬 단계에는 입국 도장이 '쾅'.
+// 도장 속 별 칸 = 그 단계의 별. 아래는 실제 여권 신원면처럼 친구마다 증명사진 칸 — 친구가 되면 사진 모서리에 '친구' 도장 쾅 (2026-11-06).
+// 깬 도장을 톡 → 그 단계 다시 하기.
 const INK = {
   korea: 0x2f7bff, china: 0xd2473a, japan: 0xd9708a, usa: 0x4f6d8f, canada: 0xc0563a,
 };
@@ -119,11 +120,92 @@ export class MapScene extends Phaser.Scene {
     L.add(this.add.text(PAGE.x + 40, PAGE.y + 56, p.name, { fontFamily: UI.fontTitle, fontSize: '52px', color: Phaser.Display.Color.IntegerToColor(ink).rgba }).setOrigin(0, 0.5));
     L.add(this.add.text(PAGE.x + PAGE.w - 40, PAGE.y + 60, `${i + 1} / ${PASSPORT.length}쪽`, { fontFamily: UI.font, fontSize: '22px', color: '#8a8cae' }).setOrigin(1, 0.5));
 
-    // 도장 자리
-    const n = p.chapters.length;
-    const slots = n === 1 ? [[PAGE.x + PAGE.w / 2, PAGE.y + 380]]
-      : [[PAGE.x + 190, PAGE.y + 270], [PAGE.x + PAGE.w - 190, PAGE.y + 440], [PAGE.x + 200, PAGE.y + 640]];
-    p.chapters.forEach((id, k) => this.drawStamp(L, id, slots[k][0], slots[k][1], n === 1 ? 150 : 110, ink, id === stampNow));
+    // 위: 입국 도장 + 단계 정보, 아래: 친구 증명사진 칸 (실제 여권 신원면처럼, 친구가 되면 '친구' 도장이 사진 모서리에 쾅)
+    const id = p.chapters[0];
+    const ch = chapterById(id);
+    this.drawStamp(L, id, PAGE.x + 150, PAGE.y + 215, 100, ink, id === stampNow);
+    this.drawInfo(L, id, PAGE.x + 285, PAGE.y + 150, ink);
+    const n = ch.bosses.length;
+    const rowH = n >= 3 ? 172 : n === 2 ? 228 : 300;
+    const y0 = PAGE.y + 352 + (n === 1 ? 60 : n === 2 ? 20 : 0);
+    ch.bosses.forEach((b, k) => this.drawFriend(L, ch, b, k, PAGE.x + 28, y0 + k * rowH, rowH - 16, ink, id === stampNow ? 700 + k * 450 : -1));
+  }
+
+  // 입국 도장 오른쪽: 단계·장소·기록
+  drawInfo(L, id, x, y, ink) {
+    const ch = chapterById(id);
+    const done = isCleared(id);
+    const rec = state.records[id]?.mazeSec;
+    const col = Phaser.Display.Color.IntegerToColor(ink).rgba;
+    const rows = [['단계', `${stageNo(id)}단계`], ['장소', ch.place], ['기록', done && rec != null ? fmtShort(rec) : '—']];
+    rows.forEach(([k, v], i) => {
+      L.add(this.add.text(x, y + i * 46, k, { fontFamily: UI.font, fontSize: '22px', color: '#8a8cae' }).setOrigin(0, 0.5));
+      L.add(this.add.text(x + 70, y + i * 46, v, { fontFamily: UI.fontTitle, fontSize: '26px', color: i === 0 ? col : '#2b2d5a', wordWrap: { width: 290, useAdvancedWrap: true } }).setOrigin(0, 0.5));
+    });
+  }
+
+  // 친구 한 명의 신원 칸: 증명사진(파란 바탕 + 얼굴) · 이름·어떤 친구·만난 곳 · 친구 도장
+  drawFriend(L, ch, b, k, x, y, h, ink, stampDelay) {
+    const boss = BOSSES[b] ?? {};
+    const met = state.friends.includes(b) && isCleared(ch.id);
+    const w = PAGE.w - 56;
+    const c = this.add.container(x, y);
+    const g = this.add.graphics();
+    g.fillStyle(ink, 0.06).fillRoundedRect(0, 0, w, h, 18);
+    g.lineStyle(2, ink, 0.25).strokeRoundedRect(0, 0, w, h, 18);
+    // 증명사진 틀 (3:4)
+    const ph = h - 24, pw = Math.round(ph * 0.78), px = 14, py = 12;
+    g.fillStyle(0x2b2d5a, 0.15).fillRect(px + 3, py + 4, pw, ph);
+    g.fillStyle(0xffffff, 1).fillRect(px, py, pw, ph);
+    g.fillStyle(met ? 0xcfe3f7 : 0xe6e4ee, 1).fillRect(px + 5, py + 5, pw - 10, ph - 10);
+    c.add(g);
+    if (met && this.textures.exists(`face_${b}`)) {
+      // 어깨까지 보이게 아래쪽에 붙인 얼굴 (웃는 얼굴)
+      const face = this.add.image(px + pw / 2, py + ph - 6, `face_${b}`, 1).setOrigin(0.5, 1).setDisplaySize(pw - 12, pw - 12);
+      c.add(face);
+    } else {
+      const sg = this.add.graphics();
+      sg.fillStyle(0xb8b6c8, 1).fillCircle(px + pw / 2, py + ph * 0.42, pw * 0.22).fillEllipse(px + pw / 2, py + ph - 8, pw * 0.74, ph * 0.42);
+      c.add(sg);
+      c.add(this.add.text(px + pw / 2, py + ph * 0.42, '?', { fontFamily: UI.fontTitle, fontSize: '34px', color: '#ffffff' }).setOrigin(0.5));
+    }
+    // 신원 글
+    const places = ch.place.split(/ · |과 /);
+    const lx = px + pw + 50; // 사진 모서리에 걸친 친구 도장을 비켜서
+    const lines = met
+      ? [['이름', boss.name], ['어떤 친구', boss.kind ?? ''], ['만난 곳', places[k] ?? ch.place]]
+      : [['이름', '???'], ['어떤 친구', '아직 몰라요'], ['만난 곳', '숨바꼭질로 찾아요']];
+    const lh = Math.min(42, (h - 20) / 3);
+    lines.forEach(([kk, v], i) => {
+      const ty = 14 + lh * (i + 0.5);
+      c.add(this.add.text(lx, ty, kk, { fontFamily: UI.font, fontSize: '22px', color: '#8a8cae' }).setOrigin(0, 0.5));
+      c.add(this.add.text(lx + 100, ty, v, { fontFamily: i === 0 ? UI.fontTitle : UI.font, fontSize: i === 0 ? '30px' : '24px', color: '#2b2d5a' }).setOrigin(0, 0.5));
+    });
+    // 기계로 읽는 줄 흉내 (여권 아래쪽 <<< 줄)
+    if (met) c.add(this.add.text(lx, h - 16, `FRIEND<<${(b.toUpperCase() + '<<<<<<<<<<<<').slice(0, 14)}`, { fontFamily: 'monospace', fontSize: '16px', color: '#b0aec4' }).setOrigin(0, 0.5));
+    L.add(c);
+    if (!met) return;
+    // 친구 도장: 사진 오른쪽 아래 모서리에 걸쳐 쾅 (잉크처럼 조금 투명하게)
+    const r = Math.max(44, Math.round(pw * 0.36)); // 사진이 크면 도장도 크게
+    const sx = x + px + pw - 8, sy = y + py + ph - r * 0.45;
+    const st = this.add.container(sx, sy).setAngle(-14 + ((k * 11) % 9));
+    const sg = this.add.graphics();
+    sg.lineStyle(5, ink, 1).strokeCircle(0, 0, r);
+    sg.lineStyle(2, ink, 1).strokeCircle(0, 0, r - 8);
+    for (let a = 0; a < 12; a++) { const t = (a / 12) * Math.PI * 2; sg.fillStyle(ink, 1).fillCircle(Math.cos(t) * (r - 4), Math.sin(t) * (r - 4), 1.6); }
+    st.add(sg);
+    const col = Phaser.Display.Color.IntegerToColor(ink).rgba;
+    st.add(this.add.text(0, -r * 0.2, '친구', { fontFamily: UI.fontTitle, fontSize: `${Math.round(r * 0.64)}px`, color: col }).setOrigin(0.5));
+    st.add(this.add.text(0, r * 0.4, ch.stamp, { fontFamily: UI.font, fontSize: `${Math.max(16, Math.round(r * 0.36))}px`, color: col }).setOrigin(0.5));
+    st.setAlpha(0.82);
+    L.add(st);
+    if (stampDelay >= 0) {
+      st.setScale(2.4).setAlpha(0);
+      this.tweens.add({
+        targets: st, scale: 1, alpha: 0.82, duration: 220, delay: stampDelay, ease: 'Quad.easeIn',
+        onComplete: () => { vibrate('stamp'); sfx('stamp'); this.cameras.main.shake(90, 0.004); },
+      });
+    }
   }
 
   drawStamp(L, id, x, y, r, ink, animate) {
@@ -133,33 +215,19 @@ export class MapScene extends Phaser.Scene {
     const c = this.add.container(x, y);
     const g = this.add.graphics();
     if (done) {
-      // 입국 도장: 두 겹 동그라미 + 장소 이름 + 별 칸
+      // 입국 도장: 두 겹 동그라미 + 나라 이름 + 별 칸
       g.lineStyle(7, ink, 0.9).strokeCircle(0, 0, r);
       g.lineStyle(3, ink, 0.9).strokeCircle(0, 0, r - 14);
       c.add(g);
-      c.add(this.add.text(0, -r * 0.34, ch.stamp, { fontFamily: UI.fontTitle, fontSize: `${Math.round(r * 0.3)}px`, color: Phaser.Display.Color.IntegerToColor(ink).rgba }).setOrigin(0.5));
-      c.add(this.add.text(0, r * 0.06, `${stageNo(id)}단계 · ${ch.place}`, { fontFamily: UI.font, fontSize: `${Math.round(r * 0.15)}px`, color: Phaser.Display.Color.IntegerToColor(ink).rgba, align: 'center', wordWrap: { width: r * 1.6 } }).setOrigin(0.5));
+      c.add(this.add.text(0, -r * 0.34, ch.stamp, { fontFamily: UI.fontTitle, fontSize: `${Math.round(r * 0.34)}px`, color: Phaser.Display.Color.IntegerToColor(ink).rgba }).setOrigin(0.5));
+      c.add(this.add.text(0, r * 0.06, '입국', { fontFamily: UI.fontTitle, fontSize: `${Math.round(r * 0.22)}px`, color: Phaser.Display.Color.IntegerToColor(ink).rgba }).setOrigin(0.5));
       const stars = state.stars[id] ?? 0;
       for (let s = 0; s < 3; s++) {
         const sg = this.add.graphics();
-        iconStar(sg, (s - 1) * r * 0.34, r * 0.46, r * 0.3, s < stars ? 0xffd84a : 0xd8c8a8);
+        iconStar(sg, (s - 1) * r * 0.36, r * 0.48, r * 0.32, s < stars ? 0xffd84a : 0xd8c8a8);
         c.add(sg);
       }
       c.setAngle(-8 + (id.charCodeAt(2) % 3) * 6);
-      // 친구 스티커
-      ch.bosses.forEach((b, k) => {
-        if (!state.friends.includes(b)) return;
-        // 스티커는 도장 오른쪽 위 → 왼쪽 아래 → 오른쪽 아래 순서로 (한국은 셋, 캐나다는 둘)
-        const [ax, ay, ang] = [[0.95, -0.8, 8], [-0.95, 0.75, -8], [0.95, 0.75, 6]][k] ?? [0, 0, 0];
-        const st = this.add.container(x + r * ax, y + r * ay).setAngle(ang);
-        const sg = this.add.graphics();
-        sg.fillStyle(0x2b2d5a, 0.15).fillRoundedRect(-52, -48, 108, 132, 24);
-        sg.fillStyle(0xffffff, 1).fillRoundedRect(-54, -54, 108, 132, 24);
-        st.add(sg);
-        if (this.textures.exists(`face_${b}`)) st.add(this.add.image(0, -8, `face_${b}`, 1).setDisplaySize(88, 88));
-        st.add(this.add.text(0, 56, BOSSES[b].name, { fontFamily: UI.fontTitle, fontSize: '22px', color: '#2b2d5a' }).setOrigin(0.5));
-        L.add(st);
-      });
       // 톡 → 다시 하기
       c.setSize(r * 2, r * 2).setInteractive({ useHandCursor: true }).on('pointerup', () => this.askReplay(id));
       if (animate) {
@@ -177,11 +245,8 @@ export class MapScene extends Phaser.Scene {
         g.beginPath(); g.arc(0, 0, r, r1, r2); g.strokePath();
       }
       c.add(g);
-      c.add(this.add.text(0, -10, isNext ? '다음 여행지' : '?', { fontFamily: UI.fontTitle, fontSize: isNext ? `${Math.round(r * 0.24)}px` : `${Math.round(r * 0.6)}px`, color: isNext ? Phaser.Display.Color.IntegerToColor(ink).rgba : '#b8b8c8' }).setOrigin(0.5));
-      if (isNext) {
-        c.add(this.add.text(0, r * 0.3, `${stageNo(id)}단계 · ${ch.place}`, { fontFamily: UI.font, fontSize: `${Math.round(r * 0.15)}px`, color: '#2b2d5a', align: 'center', wordWrap: { width: r * 1.6 } }).setOrigin(0.5));
-        this.tweens.add({ targets: c, scale: 1.05, duration: 700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
-      }
+      c.add(this.add.text(0, 0, isNext ? '다음 여행지' : '?', { fontFamily: UI.fontTitle, fontSize: isNext ? `${Math.round(r * 0.26)}px` : `${Math.round(r * 0.6)}px`, color: isNext ? Phaser.Display.Color.IntegerToColor(ink).rgba : '#b8b8c8' }).setOrigin(0.5));
+      if (isNext) this.tweens.add({ targets: c, scale: 1.05, duration: 700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
     }
     // 도전 중인 친구의 기록 깃발
     const rival = activeChallenge();

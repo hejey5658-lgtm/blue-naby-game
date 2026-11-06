@@ -429,6 +429,8 @@ export class MazeScene extends Phaser.Scene {
 
   // ── 톡 눌러 길 찾아 가기 (15절) ─────────────────────
   // 누른 칸까지 가장 가까운 길(BFS). 벽·닫힌 출구를 누르면 그 옆의 가장 가까운 길 칸으로.
+  // 바람 칸은 밀려서 내려앉는 칸까지 한 번에 가는 길로 친다(바람을 거슬러 가는 길로 헛돌지 않게).
+  // 결과 칸에 land 가 있으면 그 칸(바람)에 들어간 뒤 land 로 밀려난다.
   findPath(tx, ty) {
     const start = this.pos.join();
     const prev = new Map([[start, null]]);
@@ -436,10 +438,12 @@ export class MazeScene extends Phaser.Scene {
     while (q.length) {
       const [x, y] = q.shift();
       for (const [dx, dy] of Object.values(DIRS)) {
-        const k = `${x + dx},${y + dy}`;
-        if (prev.has(k) || !this.passable(x + dx, y + dy)) continue;
-        prev.set(k, `${x},${y}`);
-        q.push([x + dx, y + dy]);
+        if (!this.passable(x + dx, y + dy)) continue;
+        const land = this.windLand(x + dx, y + dy);
+        const k = land.join();
+        if (prev.has(k)) continue;
+        prev.set(k, { from: `${x},${y}`, step: [x + dx, y + dy], land: k !== `${x + dx},${y + dy}` ? land : null });
+        q.push(land);
       }
     }
     let goal = prev.has(`${tx},${ty}`) ? `${tx},${ty}` : null;
@@ -453,8 +457,28 @@ export class MazeScene extends Phaser.Scene {
     }
     if (!goal || goal === start) return [];
     const out = [];
-    for (let k = goal; k !== start; k = prev.get(k)) out.unshift(k.split(',').map(Number));
+    for (let k = goal; k !== start; k = prev.get(k).from) {
+      const e = prev.get(k);
+      const c = [...e.step];
+      if (e.land) c.land = e.land;
+      out.unshift(c);
+    }
     return out;
+  }
+
+  // 바람 칸이면 밀려서 내려앉는 칸 (blowWind 와 같은 규칙: 벽까지 최대 3칸, 실 목도리·털모자면 1칸, 이어진 바람은 또 밀림)
+  windLand(x, y) {
+    const W = { '>': [1, 0], '<': [-1, 0], '^': [0, -1], 'v': [0, 1] };
+    const max = this.hasItem('scarf') || this.hasItem('knitHat') ? 1 : 3;
+    const seen = new Set();
+    while (W[this.tile(x, y)] && !seen.has(`${x},${y}`)) {
+      seen.add(`${x},${y}`);
+      const [dx, dy] = W[this.tile(x, y)];
+      let n = 0;
+      while (n < max && this.passable(x + dx, y + dy)) { x += dx; y += dy; n++; }
+      if (!n) break;
+    }
+    return [x, y];
   }
 
   goTo(tx, ty) {
@@ -463,6 +487,7 @@ export class MazeScene extends Phaser.Scene {
     if (!path.length) { this.clearPath(); if (this.tile(tx, ty) === 'E' && !this.exitOpen) this.exitClosedSay(); return; }
     this.path = path;
     this.pathTarget = [tx, ty];
+    this.pathRetry = 0;
     this.queued = null;
     this.heldDir = null;
     this.drawPath(true);
@@ -477,6 +502,7 @@ export class MazeScene extends Phaser.Scene {
     const dir = Object.keys(DIRS).find((d) => DIRS[d][0] === dx && DIRS[d][1] === dy);
     if (!dir || !this.passable(nx, ny)) {
       const [tx, ty] = this.pathTarget;
+      if (++this.pathRetry > 6) { this.clearPath(); return false; } // 자꾸 밀려나면 그만 (헛돌지 않게)
       this.path = this.findPath(tx, ty);
       if (!this.path.length) { this.clearPath(); return false; }
       this.drawPath(false);
@@ -495,7 +521,8 @@ export class MazeScene extends Phaser.Scene {
     (this.path ?? []).forEach(([x, y], i) => {
       g.fillStyle(0x2b2d5a, 0.25).fillCircle(this.cx(x), this.cy(y) + 2, r);
       g.fillStyle(0xfffaf0, 0.95).fillCircle(this.cx(x), this.cy(y), r);
-      if (i === this.path.length - 1) g.lineStyle(3, 0x2f7bff, 0.9).strokeCircle(this.cx(x), this.cy(y), this.cell * 0.3);
+      const [lx, ly] = this.path[i].land ?? [x, y];
+      if (i === this.path.length - 1) g.lineStyle(3, 0x2f7bff, 0.9).strokeCircle(this.cx(lx), this.cy(ly), this.cell * 0.3);
     });
     if (fresh) { g.setAlpha(0); this.tweens.add({ targets: g, alpha: 1, duration: 120 }); }
   }
@@ -548,15 +575,7 @@ export class MazeScene extends Phaser.Scene {
     if (t === 'w') this.slowDown();
     if ('<>^v'.includes(t)) { this.blowWind(t); return; }
     if (this.meetFriends()) { this.moving = false; this.clearPath(); this.playAnim('idle'); return; }
-    if (this.path) {
-      if (this.path[0]?.[0] === x && this.path[0]?.[1] === y) this.path.shift();
-      this.drawPath(false);
-      if (this.path.length && this.followPath()) return;
-      this.clearPath();
-      this.moving = false;
-      this.playAnim('idle');
-      return;
-    }
+    if (this.path) { this.continuePath(); return; }
 
     const held = this.heldDir && this.heldDir === this.dir;
     const sides = Object.keys(DIRS).filter((d) => d !== this.dir && d !== OPPOSITE[this.dir] && this.canGo(d));
@@ -579,6 +598,18 @@ export class MazeScene extends Phaser.Scene {
     this.playAnim('idle');
   }
 
+  // 톡 이동 중이면 다음 칸으로 (도착했으면 멈춤)
+  continuePath() {
+    const [x, y] = this.pos;
+    const h = this.path[0];
+    if (h && ((h[0] === x && h[1] === y) || (h.land && h.land[0] === x && h.land[1] === y))) this.path.shift();
+    this.drawPath(false);
+    if (this.path.length && this.followPath()) return;
+    this.clearPath();
+    this.moving = false;
+    this.playAnim('idle');
+  }
+
   // 바람 칸: 화살표 방향으로 벽에 닿을 때까지 최대 3칸 (실 목도리가 있으면 1칸)
   blowWind(t) {
     const dir = { '>': 'right', '<': 'left', '^': 'up', 'v': 'down' }[t];
@@ -587,7 +618,7 @@ export class MazeScene extends Phaser.Scene {
     let [x, y] = this.pos;
     let n = 0;
     while (n < max && this.passable(x + dx, y + dy)) { x += dx; y += dy; n++; }
-    if (!n) { this.moving = false; this.playAnim('idle'); return; }
+    if (!n) { if (this.path) this.continuePath(); else { this.moving = false; this.playAnim('idle'); } return; }
     sfx('tap');
     this.queued = null;
     this.tweens.add({

@@ -49,6 +49,9 @@ export class MazeScene extends Phaser.Scene {
     // 둘이서 하기 (DuoScene): 저장·대사·별·도전장 없이 미로만, 끝나면 Duo로 돌아간다.
     // duo.remote = 각자 폰 대결 번호: 공평하게 아이템 없이, 카운트다운 뒤 출발, 끝나면 대결 화면(Match)으로
     this.duo = data.duo ?? null;
+    // 방해물 빠르기 (ui.js hazardSpeed, 1탄 1.5배): 시간 값은 이것으로 나눠 쓴다
+    const hz = UI.hazardSpeed?.[SERIES.n] ?? 1;
+    Object.assign(this, { patrolMs: PATROL_STEP_MS / hz, lampMs: LAMP_PULL_MS / hz, waterCycle: WATER_CYCLE / hz, waterOn: WATER_ON / hz, hz });
     this.remote = this.duo?.remote ?? null;
     this.hasItem = (k) => !this.remote && state.items.includes(k);
     this.fresh = !!data.fresh || !!this.duo;
@@ -470,7 +473,7 @@ export class MazeScene extends Phaser.Scene {
     sfx('tap');
     this.queued = null;
     this.tweens.add({
-      targets: this.blue, x: this.cx(x), y: this.cy(y), angle: 360, duration: 120 * n + 80, ease: 'Quad.easeOut',
+      targets: this.blue, x: this.cx(x), y: this.cy(y), angle: 360, duration: (120 * n + 80) / this.hz, ease: 'Quad.easeOut',
       onComplete: () => {
         this.blue.angle = 0;
         this.pos = [x, y];
@@ -522,7 +525,7 @@ export class MazeScene extends Phaser.Scene {
       const sp = this.add.image(this.cx(path[0][0]), this.cy(path[0][1]), this.textures.exists(key) ? key : 'enemy_vacuum')
         .setDisplaySize(this.cell * 0.92, this.cell * 0.92).setDepth(4);
       const p = { path, i: 0, d: 1, sp };
-      this.time.addEvent({ delay: PATROL_STEP_MS, loop: true, callback: () => this.patrolStep(p) });
+      this.time.addEvent({ delay: this.patrolMs, loop: true, callback: () => this.patrolStep(p) });
       return p;
     });
   }
@@ -532,7 +535,7 @@ export class MazeScene extends Phaser.Scene {
   makeDrifters() {
     const { cell } = this;
     const water = this.look.water ?? 0x7fb2ff;
-    const stepMs = this.chapter.drift?.stepMs ?? 1000;
+    const stepMs = (this.chapter.drift?.stepMs ?? 1000) / this.hz;
     const seed = stageNo(this.chapter.id);
     this.drifters = placeDrifters(this.maze, this.chapter.drift, seed).map((d, i) => {
       const [x, y] = d.cells[d.start];
@@ -573,7 +576,7 @@ export class MazeScene extends Phaser.Scene {
   updateDrifters() {
     if (!this.drifters.length) return;
     const now = this.time.now;
-    const { puddleWetMs: wet, puddleDryMs: dry } = UI.drift;
+    const wet = UI.drift.puddleWetMs / this.hz, dry = UI.drift.puddleDryMs / this.hz;
     const period = wet + dry;
     const safe = this.invulnerable || this.shineUntil > now;
     for (const o of this.drifters) {
@@ -614,8 +617,8 @@ export class MazeScene extends Phaser.Scene {
     if (p.i + p.d < 0 || p.i + p.d >= p.path.length) p.d *= -1;
     p.i += p.d;
     const [x, y] = p.path[p.i];
-    this.tweens.add({ targets: p.sp, x: this.cx(x), y: this.cy(y), duration: PATROL_STEP_MS, ease: 'Linear' });
-    this.tweens.add({ targets: p.sp, angle: p.d * 8, duration: PATROL_STEP_MS / 2, yoyo: true });
+    this.tweens.add({ targets: p.sp, x: this.cx(x), y: this.cy(y), duration: this.patrolMs, ease: 'Linear' });
+    this.tweens.add({ targets: p.sp, angle: p.d * 8, duration: this.patrolMs / 2, yoyo: true });
   }
 
   // 방해물·웅덩이에 닿으면 "퐁!" 비눗방울처럼 터져 반짝이로 흩어지고 [다시 시작] 버튼이 뜬다 (design-brief 9-1).
@@ -920,7 +923,7 @@ export class MazeScene extends Phaser.Scene {
   // 등불: 나방은 반경 2칸 안에서 1초마다 등불 쪽으로 1칸 끌려간다. 반대쪽으로 쓱 밀면 벗어난다.
   updateLamps() {
     if (!this.lamps.length || !this.form.canHop || this.moving || this.rolling) return;
-    if (this.time.now - (this.lastPull ?? 0) < LAMP_PULL_MS) return;
+    if (this.time.now - (this.lastPull ?? 0) < this.lampMs) return;
     const [x, y] = this.pos;
     const lamp = this.lamps.find(([lx, ly]) => Math.abs(lx - x) + Math.abs(ly - y) <= 2 && (lx !== x || ly !== y));
     if (!lamp) return;
@@ -941,9 +944,9 @@ export class MazeScene extends Phaser.Scene {
     if (!this.waters.length) return;
     const now = this.time.now;
     for (const w of this.waters) {
-      const t = (now - this.t0 + w.phase) % WATER_CYCLE;
-      const warn = t >= WATER_CYCLE - WATER_ON - 500 && t < WATER_CYCLE - WATER_ON;
-      const on = t >= WATER_CYCLE - WATER_ON;
+      const t = (now - this.t0 + w.phase / this.hz) % this.waterCycle;
+      const warn = t >= this.waterCycle - this.waterOn - 500 / this.hz && t < this.waterCycle - this.waterOn;
+      const on = t >= this.waterCycle - this.waterOn;
       w.shadow.setVisible(warn || on);
       w.drops.setVisible(on);
       if (on) w.drops.y = this.cy(w.y) - this.cell * 0.2 + ((t % 300) / 300) * this.cell * 0.3;

@@ -48,7 +48,9 @@ const game = new Phaser.Game({
     width: UI.fullWidth,
     height: UI.fullHeight,
   },
-  input: { activePointers: 2 },
+  // 모바일 전용 (2026-11-06): 키보드 조작은 완전히 끈다 — 화면마다 있던 방향키·Enter·Space·Esc 처리는 this.input.keyboard 가 없어 저절로 꺼진다
+  // (저장 코드·이름을 적는 글자 칸은 HTML 상자라 그대로 입력된다)
+  input: { activePointers: 2, keyboard: false },
   render: { antialias: true, powerPreference: 'high-performance' },
   scene: [BootScene, PreloadScene, EntryScene, TitleScene, MazeScene, MapScene, EvolutionScene, EndingScene, PopScene, DuoScene, MatchScene, Title2Scene, AlbumScene, DressScene, Ending2Scene, DialogueScene, PauseScene, SettingsScene],
 });

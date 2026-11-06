@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { afterDialogue } from '../ui/afterDialogue.js';
-import { UI } from '../data/ui.js';
+import { UI, landView } from '../data/ui.js';
 import { CHAPTERS } from '../data/chapters.js';
 import { VERSION, IS_TEST_BUILD } from '../data/version.js';
 import { Button } from '../ui/Button.js';
@@ -56,7 +56,7 @@ export class TitleScene extends Phaser.Scene {
     this.layoutSafeArea();
     // 카카오톡 등 인앱 브라우저 안내 띠(아래), 새 버전 띠(위)
     const { top, bottom } = getSafeInsets(this.game);
-    this.inApp = inAppBand(this, 1222 - bottom);
+    this.inApp = inAppBand(this, UI.landscape ? 830 : 1222 - bottom);
     if (this.inApp) this.version.setVisible(false);
     challengeBand(this, 140 + top, () => this.onStart());
     updateBand(this, 236 + top);
@@ -73,12 +73,13 @@ export class TitleScene extends Phaser.Scene {
 
   drawRoom() {
     const g = this.add.graphics();
-    g.fillStyle(C.wall, 1).fillRect(0, 0, UI.width, UI.height);
+    // 가로·길쭉한 화면에서도 끝까지 보이게 벽·바닥을 넉넉히 칠한다
+    g.fillStyle(C.wall, 1).fillRect(-1200, -900, UI.width + 2400, 1680);
     // 벽지 세로 줄무늬 (아주 옅게)
     g.fillStyle(C.wood, 0.08);
-    for (let x = 24; x < UI.width; x += 72) g.fillRect(x, 0, 24, 780);
-    g.fillStyle(C.floor, 1).fillRect(0, 780, UI.width, UI.height - 780);
-    g.fillStyle(C.wood, 0.25).fillRect(0, 780, UI.width, 10);
+    for (let x = 24 - 1224; x < UI.width + 1200; x += 72) g.fillRect(x, -900, 24, 1680);
+    g.fillStyle(C.floor, 1).fillRect(-1200, 780, UI.width + 2400, 1300);
+    g.fillStyle(C.wood, 0.25).fillRect(-1200, 780, UI.width + 2400, 10);
   }
 
   drawOutside() {
@@ -284,9 +285,10 @@ export class TitleScene extends Phaser.Scene {
   }
 
   toast(msg) {
-    this.toastText.setText(msg).setAlpha(0).setY(1214);
+    const ty = UI.landscape ? 760 : 1200;
+    this.toastText.setText(msg).setAlpha(0).setY(ty + 14);
     this.tweens.killTweensOf(this.toastText);
-    this.tweens.add({ targets: this.toastText, alpha: 1, y: 1200, duration: 220, ease: 'Back.easeOut', hold: 2200, yoyo: true });
+    this.tweens.add({ targets: this.toastText, alpha: 1, y: ty, duration: 220, ease: 'Back.easeOut', hold: 2200, yoyo: true });
   }
 
   openSettings() {
@@ -296,7 +298,24 @@ export class TitleScene extends Phaser.Scene {
     this.scene.launch('Settings', { frame: 'woodWindow' });
   }
 
+  // 가로 (18절): 창가 그림을 조금 줄여 왼쪽에, 버튼은 오른쪽에 위아래로
+  landscapeView() { return landView(0.84, 745, 450); }
+
   layoutSafeArea() {
+    if (UI.landscape) {
+      const v = this.landscapeView();
+      const { top, right, left } = getSafeInsets(this.game);
+      const z = v.zoom;
+      this.startBtn.setPosition(1135, 360);
+      this.puzzleBtn.setPosition(1135, 520);
+      this.duoBtn.setPosition(1135, 650);
+      this.gear.setPosition(v.right - 60 - right / z, v.top + 56 + top / z);
+      this.version.setPosition(v.right - 24 - right / z, v.bottom - 16);
+      this.seriesChip.setPosition(v.left + 126 + left / z, v.top + 56 + top / z + (window.BB_EMBED ? 76 : 0));
+      if (this.hub) this.hub.setPosition(v.left + 112 + left / z, v.top + 56 + top / z);
+      this.toastText.setPosition(1135, 760);
+      return;
+    }
     const { top, bottom } = getSafeInsets(this.game);
     this.version.y = UI.height - 20 - bottom;
     this.gear.y = 64 + top;

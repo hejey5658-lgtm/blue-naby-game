@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { afterDialogue } from '../ui/afterDialogue.js';
-import { UI } from '../data/ui.js';
+import { UI, landView } from '../data/ui.js';
 import { FORMS } from '../data/forms.js';
 import { ITEMS } from '../data/items.js';
 import { setTheme } from '../ui/theme.js';
@@ -28,7 +28,7 @@ export class DressScene extends Phaser.Scene {
   create() {
     if (waitForAssets(this, [`blue_${this.from}_battle`, `blue_${this.to}_battle`], this.initData)) return;
     setTheme(this.chapter.theme, this.chapter.theme);
-    this.bg = this.add.rectangle(0, -UI.offY, UI.width, UI.fullHeight, Phaser.Display.Color.HexStringToColor(this.chapter.theme).color).setOrigin(0);
+    this.bg = this.add.rectangle(-2000, -2000, 4720, 5280, Phaser.Display.Color.HexStringToColor(this.chapter.theme).color).setOrigin(0);
     this.popo = this.add.image(UI.width / 2, 640, `blue_${this.from}_battle`, 0).setDisplaySize(380, 380);
     afterDialogue(this, () => this.dress());
     this.time.delayedCall(300, () => this.scene.launch('Dialogue', { key: `dress_${this.to}_pre`, frame: this.chapter.frame, form: this.from }));
@@ -47,7 +47,7 @@ export class DressScene extends Phaser.Scene {
     sfx('evolve');
     this.time.delayedCall(1100, () => {
       ring.forEach((d) => d.destroy());
-      const flash = this.add.rectangle(0, -UI.offY, UI.width, UI.fullHeight, 0xffffff, 1).setOrigin(0).setDepth(5);
+      const flash = this.add.rectangle(-2000, -2000, 4720, 5280, 0xffffff, 1).setOrigin(0).setDepth(5);
       this.tweens.add({ targets: flash, alpha: 0, duration: 500, onComplete: () => flash.destroy() });
       this.bg.setFillStyle(NEXT_SKY[this.to] ?? 0xffffff);
       this.popo.setTexture(`blue_${this.to}_battle`, 6);
@@ -67,4 +67,9 @@ export class DressScene extends Phaser.Scene {
     const b = new Button(this, UI.width / 2, 1130, { label: '앨범 보기', onPress: () => { sfx('tap'); this.scene.start('Album', { justCleared: this.chapter.id }); } });
     this.input.keyboard?.once('keydown-ENTER', () => b.trigger());
   }
+
+  // 가로 (18절): 연출 화면이라 전체가 보이게 줄여서 보고, 연출 중에는 다시 그리지 않는다(다음 화면부터 새 배치)
+  landscapeView() { return landView(0.58, 360, 640); }
+
+  canRelayout() { return false; }
 }

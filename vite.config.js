@@ -42,7 +42,7 @@ export default defineConfig(({ mode }) => mode === 'single' ? single : {
         scope: '/',
         display: 'fullscreen',
         display_override: ['fullscreen', 'standalone'],
-        orientation: 'portrait',
+        orientation: 'any',
         background_color: '#e9d8b4',
         theme_color: '#e9d8b4',
         icons: [

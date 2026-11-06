@@ -8,9 +8,13 @@ export function getSafeInsets(game, full = false) {
   const top = parseFloat(css.getPropertyValue('--sat')) || 0;
   const bottom = parseFloat(css.getPropertyValue('--sab')) || 0;
   const rect = game.canvas.getBoundingClientRect();
-  const scale = UI.width / rect.width;
+  const scale = UI.fullWidth / rect.width;
   const overlapTop = Math.max(0, top - rect.top);
   const overlapBottom = Math.max(0, bottom - (window.innerHeight - rect.bottom));
   const off = full ? 0 : UI.offY;
-  return { top: Math.max(0, overlapTop * scale - off), bottom: Math.max(0, overlapBottom * scale - (full ? 0 : UI.fullHeight - UI.height - UI.offY)) };
+  // 가로: 노치·홈 바가 왼쪽·오른쪽·아래에 온다. 가로 배치 화면은 보이는 곳(view)의 가장자리 기준이라 그대로 돌려준다.
+  const left = (parseFloat(css.getPropertyValue('--sal')) || 0) * scale;
+  const right = (parseFloat(css.getPropertyValue('--sar')) || 0) * scale;
+  if (UI.landscape) return { top: overlapTop * scale, bottom: overlapBottom * scale, left, right };
+  return { top: Math.max(0, overlapTop * scale - off), bottom: Math.max(0, overlapBottom * scale - (full ? 0 : UI.fullHeight - UI.height - UI.offY)), left: 0, right: 0 };
 }

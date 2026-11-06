@@ -82,16 +82,32 @@ export class MazeScene extends Phaser.Scene {
     this.insets = getSafeInsets(this.game, true);
     this.dpad = state.settings.control === 'dpad';
     const H = UI.fullHeight;
-    this.hudBottom = 148 + this.insets.top;
-    this.bottomY = H - 95 - this.insets.bottom;     // 아이템·말풍선 줄 (방향 버튼이면 그 위)
-    this.midY = Math.round((this.hudBottom + this.bottomY) / 2) - 20;
-    const areaY = this.hudBottom + 10;
-    const areaB = this.dpad ? H - 200 - this.insets.bottom : this.bottomY - 105;
-    this.cell = Math.floor(Math.min(AREA_W / this.cols, (areaB - areaY) / this.rows));
-    this.ox = AREA_X + (AREA_W - this.cols * this.cell) / 2;
-    this.oy = areaY + (areaB - areaY - this.rows * this.cell) / 2;
+    if (UI.landscape) {
+      // 가로 (18절): 왼쪽 띠 = 상태(단계·시간·수집품·에너지·친구), 가운데 = 미로(높이에 맞춰), 오른쪽 띠 = 말풍선·아이템(·방향 버튼)
+      const ins = this.insets;
+      const side = Math.max(236, Math.min(300, Math.round((UI.fullWidth - 1000) / 2)));
+      this.sideL = { x: ins.left + 10, w: side };
+      this.sideR = { x: UI.fullWidth - ins.right - 10 - side, w: side };
+      const ax = this.sideL.x + side + 12, ar = this.sideR.x - 12;
+      const ay = 8 + ins.top, ab = H - 8 - ins.bottom;
+      this.cell = Math.floor(Math.min((ar - ax) / this.cols, (ab - ay) / this.rows));
+      this.ox = ax + (ar - ax - this.cols * this.cell) / 2;
+      this.oy = ay + (ab - ay - this.rows * this.cell) / 2;
+      this.hudBottom = 0;
+      this.bottomY = H - 70 - ins.bottom;
+      this.midY = Math.round(H / 2);
+    } else {
+      this.hudBottom = 148 + this.insets.top;
+      this.bottomY = H - 95 - this.insets.bottom;     // 아이템·말풍선 줄 (방향 버튼이면 그 위)
+      this.midY = Math.round((this.hudBottom + this.bottomY) / 2) - 20;
+      const areaY = this.hudBottom + 10;
+      const areaB = this.dpad ? H - 200 - this.insets.bottom : this.bottomY - 105;
+      this.cell = Math.floor(Math.min(AREA_W / this.cols, (areaB - areaY) / this.rows));
+      this.ox = AREA_X + (AREA_W - this.cols * this.cell) / 2;
+      this.oy = areaY + (areaB - areaY - this.rows * this.cell) / 2;
+    }
     // 바탕 (화면 아래 영역까지 그 장의 색으로)
-    this.add.rectangle(0, 0, UI.width, H, Phaser.Display.Color.HexStringToColor(this.chapter.theme).color).setOrigin(0);
+    this.add.rectangle(0, 0, UI.fullWidth, H, Phaser.Display.Color.HexStringToColor(this.chapter.theme).color).setOrigin(0);
 
     this.items = new Map(); // "x,y" → 스프라이트
     this.start = this.find('S')[0];
@@ -147,7 +163,7 @@ export class MazeScene extends Phaser.Scene {
   // 각자 폰 대결: 셋, 둘, 하나, 출발! 동안은 움직이지 않고 시간도 멈춰 있다
   countdown() {
     this.locked = true;
-    const t = this.add.text(UI.width / 2, this.midY, '', { fontFamily: UI.fontTitle, fontSize: '140px', color: '#2f7bff', stroke: '#fffaf0', strokeThickness: 14 }).setOrigin(0.5).setDepth(20);
+    const t = this.add.text(UI.fullWidth / 2, this.midY, '', { fontFamily: UI.fontTitle, fontSize: '140px', color: '#2f7bff', stroke: '#fffaf0', strokeThickness: 14 }).setOrigin(0.5).setDepth(20);
     ['셋', '둘', '하나', '출발!'].forEach((w, i) => this.time.delayedCall(i * 800, () => {
       t.setText(w).setScale(0.6);
       this.tweens.add({ targets: t, scale: 1, duration: 220, ease: 'Back.easeOut' });
@@ -160,8 +176,23 @@ export class MazeScene extends Phaser.Scene {
   }
 
   // ── 저장·이어하기 ──────────────────────────────
+  // 폰을 돌리면(18절) 지금 상태 그대로 새 배치로 다시 그린다 (main.js 가 snapshot 으로 restart)
+  canRelayout() { return !this.finished && !this.rolling && !this.locked; }
+
+  snapshot() {
+    return {
+      ...this.initData, fresh: false, intro: false,
+      resume: {
+        pos: this.pos, checkpoint: this.checkpoint, collected: [...this.collected].map((k) => k.split(',').map(Number)),
+        sec: this.sec, rolls: this.rolls, energy: this.energy, found: this.friends.map((f) => f.found), met: [...this.met],
+        used: this.itemBtns.filter((c) => c.used).map((c) => c.itemKey), t0: this.time.now - this.t0,
+      },
+    };
+  }
+
   restore() {
-    const ms = !this.fresh && state.step === `${this.chapter.id}_maze` ? state.mazeState : null;
+    const resume = this.initData.resume;
+    const ms = resume ?? (!this.fresh && state.step === `${this.chapter.id}_maze` ? state.mazeState : null);
     this.pos = ms?.pos ? [...ms.pos] : [...this.start];
     this.checkpoint = ms?.checkpoint ? [...ms.checkpoint] : [...this.start];
     this.collected = new Set((ms?.collected ?? []).map((c) => c.join()));
@@ -170,6 +201,7 @@ export class MazeScene extends Phaser.Scene {
     this.energy = ms?.energy ?? UI.energy.max;
     this.savedFound = ms?.found ?? [];
     this.met = new Set(this.duo ? this.chapter.bosses : (ms?.met ?? []));
+    this.usedItems = resume?.used ?? [];
   }
 
   saveProgress() {
@@ -233,7 +265,7 @@ export class MazeScene extends Phaser.Scene {
       }
     }
     if (this.textures.exists('maze_board')) this.textures.remove('maze_board');
-    bg.generateTexture('maze_board', UI.width, UI.fullHeight);
+    bg.generateTexture('maze_board', UI.fullWidth, UI.fullHeight);
     bg.destroy();
     this.add.image(0, 0, 'maze_board').setOrigin(0);
     // 햇살·먼지 같은 배경 움직임 (수집품·블루나비보다 아래)
@@ -832,7 +864,7 @@ export class MazeScene extends Phaser.Scene {
 
   showRestart() {
     if (this.restartBtn) return;
-    this.restartBtn = new Button(this, UI.width / 2, this.midY, {
+    this.restartBtn = new Button(this, UI.fullWidth / 2, this.midY, {
       width: 340, height: 112, label: '다시 시작', fontSize: 40,
       onPress: () => this.respawn(),
     }).setDepth(20);
@@ -1016,6 +1048,7 @@ export class MazeScene extends Phaser.Scene {
 
   // ── 상태 줄 ────────────────────────────────────
   makeHud() {
+    if (UI.landscape) { this.makeHudSide(); return; }
     const top = this.insets.top;
     const g = this.add.graphics();
     // 그 장의 창틀 색으로 된 선반 (3줄: 단계·시간 / 수집품 / 에너지·숨은 친구)
@@ -1079,6 +1112,60 @@ export class MazeScene extends Phaser.Scene {
     }).setOrigin(1, 0.5);
   }
 
+  // 가로 배치의 왼쪽 띠: 일시정지 · 단계 · 시간 · 목표 · 수집품 · 에너지 · 숨은 친구
+  makeHudSide() {
+    const { x, w } = this.sideL;
+    const top = 8 + this.insets.top;
+    const H = UI.fullHeight - 16 - this.insets.top - this.insets.bottom;
+    const cx = x + w / 2;
+    const g = this.add.graphics();
+    const [h0, h1, h2] = this.look.hud;
+    g.fillStyle(h0, 1).fillRoundedRect(x, top, w, H, 26);
+    g.fillStyle(h1, 1).fillRoundedRect(x + 4, top + 2, w - 8, H - 10, 24);
+    g.fillStyle(h2, 1).fillRoundedRect(x + 18, top + 8, w - 36, 6, 3);
+    const pb = this.add.container(x + 52, top + 54);
+    const pg = this.add.graphics();
+    pg.fillStyle(0xfffaf0, 1).fillCircle(0, 0, 32);
+    pg.fillStyle(0x2b2d5a, 1).fillRoundedRect(-12, -14, 8, 28, 3).fillRoundedRect(4, -14, 8, 28, 3);
+    pb.add(pg).setSize(96, 96).setInteractive({ useHandCursor: true }).on('pointerup', () => this.openPause());
+    this.timerText = this.add.text(x + w - 22, top + 54, '0:00', { fontFamily: UI.fontTitle, fontSize: '38px', color: '#fffaf0' }).setOrigin(1, 0.5);
+    this.add.text(cx, top + 118, stageLabel(this.chapter), { fontFamily: UI.fontTitle, fontSize: '28px', color: '#fffaf0' }).setOrigin(0.5);
+    const rival = this.duo ? null : activeChallenge();
+    const rivalSec = rival?.times[this.chapter.id];
+    const dn = this.duo?.names[this.duo.turn - 1];
+    const duoName = this.remote ? '각자 폰 대결' : this.duo && (dn === `${this.duo.turn}P` ? `${dn} 차례` : `${this.duo.turn}P ${dn} 차례`);
+    const best = state.records[this.chapter.id]?.mazeSec;
+    const goalText = SERIES.meta.stars ? `별 기준 ${fmtTime(this.chapter.starSec)}` : best != null ? `내 기록 ${fmtTime(best)}` : '';
+    this.targetText = this.add.text(cx, top + 156, duoName || (rivalSec ? `${rival.nick} ${fmtShort(rivalSec)}` : goalText), { fontFamily: UI.font, fontSize: '22px', color: '#ffe9a8' }).setOrigin(0.5);
+    // 수집품 칸 (한 줄에 4개)
+    this.hudItems = [];
+    const n = this.total, per = 4, gap = Math.min(52, (w - 40) / per);
+    for (let i = 0; i < n; i++) {
+      const row = Math.floor(i / per), inRow = Math.min(per, n - row * per);
+      const ix = cx - ((inRow - 1) * gap) / 2 + (i % per) * gap;
+      this.hudItems.push(this.add.image(ix, top + 206 + row * 50, `item_${this.chapter.item}`).setDisplaySize(36, 36));
+    }
+    this.updateHudItems(false);
+    let y = top + 206 + Math.ceil(n / per) * 50 + 22;
+    // 에너지
+    const bolt = this.add.graphics();
+    const bx = x + 26, ey = y;
+    bolt.fillStyle(0x2b2d5a, 1).fillPoints([{ x: bx + 14, y: ey - 17 }, { x: bx, y: ey + 3 }, { x: bx + 10, y: ey + 3 }, { x: bx + 4, y: ey + 18 }, { x: bx + 22, y: ey - 4 }, { x: bx + 12, y: ey - 4 }, { x: bx + 20, y: ey - 17 }], true);
+    bolt.fillStyle(0xffd84a, 1).fillPoints([{ x: bx + 14, y: ey - 14 }, { x: bx + 3, y: ey + 1 }, { x: bx + 12, y: ey + 1 }, { x: bx + 7, y: ey + 13 }, { x: bx + 19, y: ey - 2 }, { x: bx + 10, y: ey - 2 }, { x: bx + 17, y: ey - 14 }], true);
+    this.energyBox = { x: bx + 30, y: ey - 12, w: w - 136, h: 24 };
+    this.energyBar = this.add.graphics();
+    this.energyText = this.add.text(x + w - 16, ey, '', { fontFamily: UI.fontTitle, fontSize: '26px', color: '#fffaf0' }).setOrigin(1, 0.5);
+    this.updateEnergyBar(false);
+    y += 56;
+    // 숨은 친구: 얼굴 + 하트 3칸 (한 줄에 한 명)
+    this.hudFriends = this.friends.map((f, i) => {
+      const fx = cx - 74;
+      const face = this.add.image(fx + 24, y + i * 58, `face_${f.key}`, 0).setDisplaySize(48, 48);
+      return { f, x: fx, face, hg: this.add.graphics() };
+    });
+    this.hudFriends.forEach((hf) => this.drawHudHearts(hf));
+  }
+
   drawHudHearts(h) {
     const g = h.hg.clear();
     const y = h.face.y;
@@ -1104,12 +1191,17 @@ export class MazeScene extends Phaser.Scene {
   makeBottom() {
     const bottom = this.insets.bottom;
     const by = this.dpad ? this.bottomY - 149 : this.bottomY;
-    this.dot = this.add.image(70, by, SERIES.meta.helperTex, SERIES.meta.helperFrame).setDisplaySize(84, 84).setDepth(8).setAlpha(0);
+    const land = UI.landscape;
+    // 가로: 오른쪽 띠 위쪽에 도우미 얼굴 + 여러 줄 말풍선
+    this.bubbleBox = land ? { x: this.sideR.x, y: 8 + this.insets.top + 96, w: this.sideR.w } : null;
+    this.dot = this.add.image(land ? this.sideR.x + 50 : 70, land ? 8 + this.insets.top + 46 : by, SERIES.meta.helperTex, SERIES.meta.helperFrame).setDisplaySize(84, 84).setDepth(8).setAlpha(0);
     this.bubble = this.add.container(0, 0).setDepth(8).setAlpha(0);
     this.bubbleG = this.add.graphics();
-    this.bubbleText = this.add.text(140, by, '', {
-      fontFamily: UI.font, fontSize: '27px', color: '#2b2d5a', wordWrap: { width: 520, useAdvancedWrap: true },
-    }).setOrigin(0, 0.5);
+    this.bubbleText = land
+      ? this.add.text(this.bubbleBox.x + 18, this.bubbleBox.y + 14, '', { fontFamily: UI.font, fontSize: '25px', color: '#2b2d5a', wordWrap: { width: this.bubbleBox.w - 36, useAdvancedWrap: true }, lineSpacing: 4 }).setOrigin(0, 0)
+      : this.add.text(140, by, '', {
+        fontFamily: UI.font, fontSize: '27px', color: '#2b2d5a', wordWrap: { width: 520, useAdvancedWrap: true },
+      }).setOrigin(0, 0.5);
     this.bubble.add([this.bubbleG, this.bubbleText]);
     this.bubbleY = by;
 
@@ -1118,9 +1210,13 @@ export class MazeScene extends Phaser.Scene {
     if (this.dpad) {
       const y = this.bottomY + 5;
       const arrows = [['left', '왼쪽'], ['up', '위'], ['down', '아래'], ['right', '오른쪽']];
+      // 가로: 오른쪽 띠 아래에 십자 모양
+      const rc = land ? { x: this.sideR.x + this.sideR.w / 2, y: UI.fullHeight - 8 - this.insets.bottom - 160 } : null;
+      const cross = { left: [-76, 0], right: [76, 0], up: [0, -78], down: [0, 78] };
       arrows.forEach(([dir], i) => {
-        const x = 108 + i * 168;
-        const c = this.add.container(x, y);
+        const x = land ? rc.x + cross[dir][0] : 108 + i * 168;
+        const c = this.add.container(x, land ? rc.y + cross[dir][1] : y);
+        if (land) c.setScale(0.72);
         const g = this.add.graphics();
         g.fillStyle(0x8f6440, 1).fillRoundedRect(-70, -44, 140, 98, 28);
         g.fillStyle(0xfffaf0, 1).fillRoundedRect(-70, -50, 140, 96, 28);
@@ -1146,8 +1242,14 @@ export class MazeScene extends Phaser.Scene {
       .filter((k) => this.hasItem(k) && ITEMS[k] && !(k === 'flute' && this.chapter.id === 'ch4'));
     const y = (this.dpad ? this.bottomY - 149 : this.bottomY - 5);
     void bottom;
+    // 가로: 오른쪽 띠에 2개씩 (방향 버튼이 있으면 그 위)
+    const land = UI.landscape;
+    const lb = land ? UI.fullHeight - 8 - this.insets.bottom - (this.dpad ? 360 : 76) : 0;
     list.forEach((key, n) => {
-      const c = this.add.container(UI.width - 62 - n * 114, y).setDepth(9);
+      const pos = land
+        ? [this.sideR.x + this.sideR.w / 2 + (n % 2 ? 58 : -58), lb - Math.floor(n / 2) * 130]
+        : [UI.width - 62 - n * 114, y];
+      const c = this.add.container(pos[0], pos[1]).setDepth(9);
       const g = this.add.graphics();
       g.fillStyle(0x2b2d5a, 0.2).fillCircle(0, 5, 48);
       g.fillStyle(COLORS[key], 1).fillCircle(0, 0, 48);
@@ -1158,6 +1260,7 @@ export class MazeScene extends Phaser.Scene {
       c.itemKey = key;
       this.itemBtns.push(c);
       c.on('pointerup', () => this.useItem(c));
+      if (this.usedItems?.includes(key)) { c.used = true; c.setAlpha(0.35); }
     });
   }
 
@@ -1230,11 +1333,19 @@ export class MazeScene extends Phaser.Scene {
   say(text, ms = 2400, face = null) {
     const g = this.bubbleG.clear();
     this.bubbleText.setText(text);
-    const w = Math.min(560, this.bubbleText.width + 48);
-    const y = this.bubbleY;
-    g.fillStyle(0x2b2d5a, 0.12).fillRoundedRect(118, y - 36 + 5, w, 72, 30);
-    g.fillStyle(0xffffff, 1).fillRoundedRect(118, y - 36, w, 72, 30);
-    g.fillTriangle(118, y - 6, 118, y + 14, 100, y + 6);
+    if (this.bubbleBox) {
+      const b = this.bubbleBox;
+      const h = this.bubbleText.height + 28;
+      g.fillStyle(0x2b2d5a, 0.12).fillRoundedRect(b.x, b.y + 5, b.w, h, 24);
+      g.fillStyle(0xffffff, 1).fillRoundedRect(b.x, b.y, b.w, h, 24);
+      g.fillTriangle(b.x + 36, b.y, b.x + 64, b.y, b.x + 48, b.y - 18);
+    } else {
+      const w = Math.min(560, this.bubbleText.width + 48);
+      const y = this.bubbleY;
+      g.fillStyle(0x2b2d5a, 0.12).fillRoundedRect(118, y - 36 + 5, w, 72, 30);
+      g.fillStyle(0xffffff, 1).fillRoundedRect(118, y - 36, w, 72, 30);
+      g.fillTriangle(118, y - 6, 118, y + 14, 100, y + 6);
+    }
     const tex = face && this.textures.exists(face.tex) ? face : { tex: SERIES.meta.helperTex, frame: SERIES.meta.helperFrame };
     this.dot.setTexture(tex.tex, tex.frame).setDisplaySize(84, 84);
     this.tweens.killTweensOf([this.bubble, this.dot]);
@@ -1449,7 +1560,7 @@ export class MazeScene extends Phaser.Scene {
     const id = this.chapter.id;
     this.tweens.killTweensOf([f.c, f.sp]);
     f.c.setDepth(6);
-    this.tweens.add({ targets: f.c, x: this.blue.x + (this.blue.x > UI.width / 2 ? -1 : 1) * this.cell * 0.9, y: this.blue.y, duration: 380, ease: 'Quad.easeOut' });
+    this.tweens.add({ targets: f.c, x: this.blue.x + (this.blue.x > UI.fullWidth / 2 ? -1 : 1) * this.cell * 0.9, y: this.blue.y, duration: 380, ease: 'Quad.easeOut' });
     const key = f.i === 0 ? `${id}_friend` : `${id}_friend${f.i + 1}`;
     const next = () => {
       const gifts = this.result.gifts.filter(([fi]) => fi === f.i).map(([, gk]) => ITEMS[gk]?.name).filter(Boolean);
@@ -1467,7 +1578,7 @@ export class MazeScene extends Phaser.Scene {
   }
 
   band(title, sub) {
-    const c = this.add.container(UI.width / 2, this.midY - 80).setDepth(20);
+    const c = this.add.container(UI.fullWidth / 2, this.midY - 80).setDepth(20);
     const g = this.add.graphics();
     drawPanel(g, -300, -80, 600, sub ? 170 : 130, this.chapter.frame);
     c.add([g, this.add.text(0, sub ? -24 : -16, title, { fontFamily: UI.fontTitle, fontSize: '40px', color: '#2f7bff' }).setOrigin(0.5)]);
@@ -1483,7 +1594,7 @@ export class MazeScene extends Phaser.Scene {
     results[turn - 1] = { sec, rolls: this.rolls };
     sfx('open');
     vibrate('special');
-    const c = this.add.container(UI.width / 2, this.midY).setDepth(20);
+    const c = this.add.container(UI.fullWidth / 2, this.midY).setDepth(20);
     const g = this.add.graphics();
     drawPanel(g, -280, -90, 560, 180, this.chapter.frame);
     c.add([g,
@@ -1516,8 +1627,9 @@ export class MazeScene extends Phaser.Scene {
     const chal = challengeResult(id, sec);
     if (chal) lines.push(chal.win ? `${josa(chal.nick, '을', '를')} 이겼어요! (${fmtShort(chal.theirs)})` : `아깝다! ${chal.nick} ${fmtShort(chal.theirs)} — 다시 도전?`);
     if (chal?.win) vibrate('special');
-    const layer = this.add.container(0, 0).setDepth(30);
-    const dim = this.add.rectangle(0, 0, UI.width, UI.fullHeight, 0x2b2d5a, 0.45).setOrigin(0).setInteractive();
+    const dx = UI.fullWidth / 2 - UI.width / 2; // 가로면 판을 가운데로
+    const layer = this.add.container(dx, 0).setDepth(30);
+    const dim = this.add.rectangle(-dx, 0, UI.fullWidth, UI.fullHeight, 0x2b2d5a, 0.45).setOrigin(0).setInteractive();
     const g = this.add.graphics();
     const showStars = SERIES.meta.stars;
     const h = 330 + lines.length * 50 + (showStars ? 90 : 0);

@@ -29,21 +29,25 @@ export class SettingsScene extends Phaser.Scene {
 
   create() {
     // 뒤를 살짝 어둡게, 판 밖을 누르면 닫힘
-    this.add.rectangle(0, -UI.offY, UI.width, UI.fullHeight, 0x2b2d5a, 0.45).setOrigin(0)
+    this.add.rectangle(-2000, -2000, 4720, 5280, 0x2b2d5a, 0.45).setOrigin(0)
       .setInteractive().on('pointerup', () => this.close());
 
     const root = this.add.container(0, 0);
     this.root = root;
+    // 가로 (18절): 낮고 넓은 판, 왼쪽 칸 = 고르기, 오른쪽 칸 = 저장 코드·안내
+    const land = UI.landscape;
+    const B = land ? { x: -310, y: 296, w: 1340, h: 696 } : PANEL;
+    this.P = land ? { x: B.x, y: B.y, w: 670, h: B.h } : PANEL;
     const g = this.add.graphics();
-    drawPanel(g, PANEL.x, PANEL.y, PANEL.w, PANEL.h, this.frame);
+    drawPanel(g, B.x, B.y, B.w, B.h, this.frame);
     // 판 자체는 눌러도 닫히지 않게
-    const block = this.add.zone(PANEL.x, PANEL.y, PANEL.w, PANEL.h).setOrigin(0).setInteractive();
+    const block = this.add.zone(B.x, B.y, B.w, B.h).setOrigin(0).setInteractive();
     root.add([g, block]);
 
-    root.add(this.add.text(UI.width / 2, PANEL.y + 78, '설정', { fontFamily: UI.fontTitle, fontSize: '48px', color: '#2b2d5a' }).setOrigin(0.5));
-    this.makeClose(root);
+    root.add(this.add.text(UI.width / 2, B.y + (land ? 64 : 78), '설정', { fontFamily: UI.fontTitle, fontSize: '48px', color: '#2b2d5a' }).setOrigin(0.5));
+    this.makeClose(root, B, land ? 64 : 78);
 
-    let y = PANEL.y + 170;
+    let y = B.y + (land ? 150 : 170);
     const rows = [
       { label: '소리', key: 'sound', options: [[true, '켜기'], [false, '끄기']] },
       platform.can.vibrate && { label: '진동', key: 'vibrate', options: [[true, '켜기'], [false, '끄기']] },
@@ -52,10 +56,11 @@ export class SettingsScene extends Phaser.Scene {
     ].filter(Boolean);
     for (const row of rows) { this.makeToggleRow(root, y, row); y += ROW_H; }
 
-    root.add(this.add.text(UI.width / 2, y - 6, '소리가 안 나면 폰의 무음 모드를 확인해 주세요', {
+    root.add(this.add.text(this.P.x + this.P.w / 2, y - 6, '소리가 안 나면 폰의 무음 모드를 확인해 주세요', {
       fontFamily: UI.font, fontSize: '22px', color: '#5a5c88',
     }).setOrigin(0.5));
     y += 54;
+    if (land) { this.P = { x: B.x + 670, y: B.y, w: 670, h: B.h }; y = B.y + 150; }
 
     // 두 개씩 나란히 (판 안에 다 들어가게)
     // 입구(지구본)에서 열면 어느 탄인지 정해지지 않았으므로 복사·처음부터는 각 탄 타이틀에서만
@@ -72,7 +77,7 @@ export class SettingsScene extends Phaser.Scene {
     y += 98;
     if (hasProgress() && !entry) this.makeLinkRow(root, y, '처음부터 다시 하기', () => this.confirmReset(), '#a4523a');
 
-    root.add(this.add.text(UI.width / 2, PANEL.y + PANEL.h - 40, `블루나비의 세계여행 · ${VERSION}`, {
+    root.add(this.add.text(land ? this.P.x + this.P.w / 2 : UI.width / 2, B.y + B.h - 40, `블루나비의 세계여행 · ${VERSION}`, {
       fontFamily: UI.font, fontSize: '22px', color: '#8a8cae',
     }).setOrigin(0.5));
 
@@ -82,9 +87,9 @@ export class SettingsScene extends Phaser.Scene {
     this.tweens.add({ targets: root, y: 0, alpha: 1, duration: 240, ease: 'Back.easeOut' });
   }
 
-  makeClose(root) {
-    const x = PANEL.x + PANEL.w - 64;
-    const y = PANEL.y + 78;
+  makeClose(root, B = PANEL, dy = 78) {
+    const x = B.x + B.w - 64;
+    const y = B.y + dy;
     const g = this.add.graphics();
     g.fillStyle(0x2b2d5a, 0.08).fillCircle(x, y, 38);
     iconClose(g, x, y, 40);
@@ -94,10 +99,10 @@ export class SettingsScene extends Phaser.Scene {
 
   // 두 가지 중 하나를 고르는 알약 모양 버튼
   makeToggleRow(root, y, row) {
-    root.add(this.add.text(PANEL.x + 56, y, row.label, { fontFamily: UI.fontTitle, fontSize: '32px', color: '#2b2d5a' }).setOrigin(0, 0.5));
+    root.add(this.add.text(this.P.x + 56, y, row.label, { fontFamily: UI.fontTitle, fontSize: '32px', color: '#2b2d5a' }).setOrigin(0, 0.5));
     const w = 320;
     const h = 84;
-    const x0 = PANEL.x + PANEL.w - 48 - w;
+    const x0 = this.P.x + this.P.w - 48 - w;
     const g = this.add.graphics();
     const labels = row.options.map(([, text], i) => this.add.text(x0 + w / 4 + (i * w) / 2, y, text, {
       fontFamily: UI.fontTitle, fontSize: '28px', color: '#2b2d5a',
@@ -128,9 +133,10 @@ export class SettingsScene extends Phaser.Scene {
 
   // half: 생략하면 한 줄 전체, 0이면 왼쪽 절반, 1이면 오른쪽 절반
   makeLinkRow(root, y, label, onPress, color = '#2b2d5a', half = null) {
-    const full = PANEL.w - 80;
+    const P = this.P ?? PANEL;
+    const full = P.w - 80;
     const w = half == null ? full : (full - 16) / 2;
-    const x = PANEL.x + 40 + (half === 1 ? w + 16 : 0);
+    const x = P.x + 40 + (half === 1 ? w + 16 : 0);
     const g = this.add.graphics();
     g.fillStyle(0x2b2d5a, 0.06).fillRoundedRect(x, y - 44, w, 88, 26);
     const t = this.add.text(x + w / 2, y, label, { fontFamily: UI.fontTitle, fontSize: half == null ? '30px' : '27px', color }).setOrigin(0.5);
@@ -142,7 +148,7 @@ export class SettingsScene extends Phaser.Scene {
   // 판 위에 겹쳐 띄우는 작은 안내판
   popup(title, body, buttons) {
     const layer = this.add.container(0, 0);
-    const dim = this.add.rectangle(0, -UI.offY, UI.width, UI.fullHeight, 0x2b2d5a, 0.35).setOrigin(0).setInteractive();
+    const dim = this.add.rectangle(-2000, -2000, 4720, 5280, 0x2b2d5a, 0.35).setOrigin(0).setInteractive();
     const g = this.add.graphics();
     const h = 520;
     const y = (UI.height - h) / 2;

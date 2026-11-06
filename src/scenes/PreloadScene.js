@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { UI } from '../data/ui.js';
 import { ASSETS, ASSET_VERSION, ANIMS } from '../data/assets.js';
 
 // 화면 없이 뒤에서 나머지 장 그림을 미리 받는다 (tech-spec 8절 나눠 받기).
@@ -55,8 +56,10 @@ export class PreloadScene extends Phaser.Scene {
 export function waitForAssets(scene, keys, data) {
   const missing = keys.filter((k) => k && !scene.textures.exists(k));
   if (!missing.length) return false;
-  scene.add.rectangle(0, 0, 720, 1280, 0xe9d8b4).setOrigin(0);
-  scene.add.text(360, 640, '다음 여행지 그림을 가져오는 중…', { fontFamily: '"Gowun Dodum", sans-serif', fontSize: '30px', color: '#2b2d5a' }).setOrigin(0.5);
+  // 가로·길쭉한 화면에서도 끝까지 덮고, 글은 보이는 곳 가운데에 (미로·입구는 캔버스 좌표, 나머지는 기준 좌표)
+  const full = ['Maze', 'Entry'].includes(scene.scene.key);
+  scene.add.rectangle(-2000, -2000, 6000, 6000, 0xe9d8b4).setOrigin(0);
+  scene.add.text(full ? UI.fullWidth / 2 : 360, full ? UI.fullHeight / 2 : 640, '다음 여행지 그림을 가져오는 중…', { fontFamily: '"Gowun Dodum", sans-serif', fontSize: '30px', color: '#2b2d5a' }).setOrigin(0.5);
   if (!scene.game.registry.get('assetsReady')) {
     scene.game.events.once('assets-ready', () => scene.scene.restart(data));
     return true;

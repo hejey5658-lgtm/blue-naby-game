@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { UI } from '../data/ui.js';
+import { UI, landView } from '../data/ui.js';
 import { PASSPORT, stageNo, stageLabel } from '../data/chapters.js';
 import { BOSSES } from '../data/bosses.js';
 import { state, save } from '../state.js';
@@ -35,29 +35,30 @@ export class MapScene extends Phaser.Scene {
     this.insets = getSafeInsets(this.game);
     const top = this.insets.top;
     // 여권 표지 색 바탕 + 은은한 무늬
-    this.add.rectangle(0, -UI.offY, UI.width, UI.fullHeight, 0x1f3a7a).setOrigin(0);
+    this.add.rectangle(-2000, -2000, 4720, 5280, 0x1f3a7a).setOrigin(0);
     const bg = this.add.graphics();
     bg.lineStyle(2, 0x2c4c94, 1);
-    for (let y = -40; y < UI.height + 40; y += 46) {
+    for (let y = -400; y < UI.height + 400; y += 46) {
       bg.beginPath();
-      for (let x = 0; x <= UI.width; x += 20) bg.lineTo(x, y + Math.sin(x / 60) * 10);
+      for (let x = -800; x <= UI.width + 800; x += 20) bg.lineTo(x, y + Math.sin(x / 60) * 10);
       bg.strokePath();
     }
-    // 표지 제목
-    this.add.text(UI.width / 2, 62 + top, '블루나비 여권', { fontFamily: UI.fontTitle, fontSize: '44px', color: '#ffd84a' }).setOrigin(0.5);
-    this.add.text(UI.width / 2, 110 + top, 'BLUE NABI PASSPORT', { fontFamily: UI.font, fontSize: '22px', color: '#c9d6f5' }).setOrigin(0.5);
+    // 표지 제목 (가로: 펼친 두 쪽 위 한 줄)
+    const land = UI.landscape;
+    this.add.text(UI.width / 2, land ? 200 : 62 + top, '블루나비 여권', { fontFamily: UI.fontTitle, fontSize: '44px', color: '#ffd84a' }).setOrigin(0.5);
+    if (!land) this.add.text(UI.width / 2, 110 + top, 'BLUE NABI PASSPORT', { fontFamily: UI.font, fontSize: '22px', color: '#c9d6f5' }).setOrigin(0.5);
 
     const cleared = this.justCleared ?? null;
     const target = cleared ?? nextChapterId() ?? 'ch7';
-    this.page = Math.max(0, PASSPORT.findIndex((p) => p.chapters.includes(target)));
+    this.page = this.initData.page ?? Math.max(0, PASSPORT.findIndex((p) => p.chapters.includes(target)));
     this.pageLayer = this.add.container(0, 0);
     this.drawPage(this.page, cleared);
     this.makeNav();
     this.makeBottom();
-    updateBand(this, 1060);
+    updateBand(this, land ? 860 : 1060);
     // 친구와 함께: 기록 카드·도전장·도전장함 (왼쪽 위)
     if (Object.keys(state.stars).length || (state.challenges ?? []).length) {
-      const sc = this.add.container(92, 64 + top).setDepth(5);
+      const sc = this.add.container(land ? -190 : 92, land ? 200 : 64 + top).setDepth(5);
       const sg = this.add.graphics();
       sg.fillStyle(0xffffff, 1).fillRoundedRect(-80, -26, 160, 52, 26);
       sc.add([sg, this.add.text(0, 0, '자랑하기', { fontFamily: UI.fontTitle, fontSize: '22px', color: '#2f7bff' }).setOrigin(0.5)]);
@@ -65,7 +66,7 @@ export class MapScene extends Phaser.Scene {
     }
     // 1장을 깬 뒤 홈 화면 설치 안내 (처음 들어오자마자 띄우지 않기)
     if (isCleared('ch1') && canOfferInstall()) {
-      const c = this.add.container(UI.width - 92, 64 + top).setDepth(5);
+      const c = this.add.container(land ? 910 : UI.width - 92, land ? 200 : 64 + top).setDepth(5);
       const g = this.add.graphics();
       g.fillStyle(0xffd84a, 1).fillRoundedRect(-80, -26, 160, 52, 26);
       c.add([g, this.add.text(0, 0, '홈 화면에 추가', { fontFamily: UI.fontTitle, fontSize: '22px', color: '#2b2d5a' }).setOrigin(0.5)]);
@@ -106,29 +107,47 @@ export class MapScene extends Phaser.Scene {
     L.removeAll(true);
     const p = PASSPORT[i];
     const ink = INK[p.country];
-    // 여권 속지
+    // 여권 속지: 세로 = 한 쪽, 가로(18절) = 펼친 두 쪽 (왼쪽 = 입국 도장·정보, 오른쪽 = 친구 증명사진)
+    const land = UI.landscape;
+    const A = land ? { x: -275, y: 262, w: 635, h: 600 } : PAGE;
+    const B = land ? { x: 360, y: 262, w: 635, h: 600 } : PAGE;
     const g = this.add.graphics();
-    g.fillStyle(0x0f2456, 0.4).fillRoundedRect(PAGE.x + 6, PAGE.y + 12, PAGE.w, PAGE.h, 28);
-    g.fillStyle(0xfdf7ea, 1).fillRoundedRect(PAGE.x, PAGE.y, PAGE.w, PAGE.h, 28);
-    g.lineStyle(2, ink, 0.12);
-    for (let y = PAGE.y + 40; y < PAGE.y + PAGE.h - 20; y += 30) {
-      g.beginPath();
-      for (let x = PAGE.x + 20; x <= PAGE.x + PAGE.w - 20; x += 16) g.lineTo(x, y + Math.sin((x + y) / 40) * 6);
-      g.strokePath();
-    }
+    const sheet = (P, round) => {
+      g.fillStyle(0x0f2456, 0.4).fillRoundedRect(P.x + 6, P.y + 12, P.w, P.h, round);
+      g.fillStyle(0xfdf7ea, 1).fillRoundedRect(P.x, P.y, P.w, P.h, round);
+      g.lineStyle(2, ink, 0.12);
+      for (let y = P.y + 40; y < P.y + P.h - 20; y += 30) {
+        g.beginPath();
+        for (let x = P.x + 20; x <= P.x + P.w - 20; x += 16) g.lineTo(x, y + Math.sin((x + y) / 40) * 6);
+        g.strokePath();
+      }
+    };
+    if (land) {
+      sheet(A, { tl: 28, bl: 28, tr: 4, br: 4 });
+      sheet(B, { tl: 4, bl: 4, tr: 28, br: 28 });
+      // 가운데 접힌 곳 (여권 등)
+      g.fillStyle(0x2b2d5a, 0.12).fillRect(354, A.y, 12, A.h);
+      g.fillStyle(0xffffff, 0.5).fillRect(366, A.y, 3, A.h);
+    } else sheet(PAGE, 28);
     L.add(g);
-    L.add(this.add.text(PAGE.x + 40, PAGE.y + 56, p.name, { fontFamily: UI.fontTitle, fontSize: '52px', color: Phaser.Display.Color.IntegerToColor(ink).rgba }).setOrigin(0, 0.5));
-    L.add(this.add.text(PAGE.x + PAGE.w - 40, PAGE.y + 60, `${i + 1} / ${PASSPORT.length}쪽`, { fontFamily: UI.font, fontSize: '22px', color: '#8a8cae' }).setOrigin(1, 0.5));
+    L.add(this.add.text(A.x + 40, A.y + 56, p.name, { fontFamily: UI.fontTitle, fontSize: '52px', color: Phaser.Display.Color.IntegerToColor(ink).rgba }).setOrigin(0, 0.5));
+    L.add(this.add.text(B.x + B.w - 40, B.y + 60, `${i + 1} / ${PASSPORT.length}쪽`, { fontFamily: UI.font, fontSize: '22px', color: '#8a8cae' }).setOrigin(1, 0.5));
 
-    // 위: 입국 도장 + 단계 정보, 아래: 친구 증명사진 칸 (실제 여권 신원면처럼, 친구가 되면 '친구' 도장이 사진 모서리에 쾅)
+    // 위(왼쪽 쪽): 입국 도장 + 단계 정보, 아래(오른쪽 쪽): 친구 증명사진 칸 (실제 여권 신원면처럼, 친구가 되면 '친구' 도장이 사진 모서리에 쾅)
     const id = p.chapters[0];
     const ch = chapterById(id);
-    this.drawStamp(L, id, PAGE.x + 150, PAGE.y + 215, 100, ink, id === stampNow);
-    this.drawInfo(L, id, PAGE.x + 285, PAGE.y + 150, ink);
+    if (land) {
+      this.drawStamp(L, id, A.x + A.w / 2, A.y + 270, 130, ink, id === stampNow);
+      this.drawInfo(L, id, A.x + 110, A.y + 450, ink);
+    } else {
+      this.drawStamp(L, id, PAGE.x + 150, PAGE.y + 215, 100, ink, id === stampNow);
+      this.drawInfo(L, id, PAGE.x + 285, PAGE.y + 150, ink);
+    }
     const n = ch.bosses.length;
-    const rowH = n >= 3 ? 172 : n === 2 ? 228 : 300;
-    const y0 = PAGE.y + 352 + (n === 1 ? 60 : n === 2 ? 20 : 0);
-    ch.bosses.forEach((b, k) => this.drawFriend(L, ch, b, k, PAGE.x + 28, y0 + k * rowH, rowH - 16, ink, id === stampNow ? 700 + k * 450 : -1));
+    const rowH = land ? (n >= 3 ? 178 : n === 2 ? 240 : 320) : (n >= 3 ? 172 : n === 2 ? 228 : 300);
+    const y0 = land ? B.y + 70 + (n === 1 ? 60 : n === 2 ? 20 : 0) : PAGE.y + 352 + (n === 1 ? 60 : n === 2 ? 20 : 0);
+    this.friendW = B.w - 56;
+    ch.bosses.forEach((b, k) => this.drawFriend(L, ch, b, k, B.x + 28, y0 + k * rowH, rowH - 16, ink, id === stampNow ? 700 + k * 450 : -1));
   }
 
   // 입국 도장 오른쪽: 단계·장소·기록
@@ -148,7 +167,7 @@ export class MapScene extends Phaser.Scene {
   drawFriend(L, ch, b, k, x, y, h, ink, stampDelay) {
     const boss = BOSSES[b] ?? {};
     const met = state.friends.includes(b) && isCleared(ch.id);
-    const w = PAGE.w - 56;
+    const w = this.friendW ?? PAGE.w - 56;
     const c = this.add.container(x, y);
     const g = this.add.graphics();
     g.fillStyle(ink, 0.06).fillRoundedRect(0, 0, w, h, 18);
@@ -264,7 +283,8 @@ export class MapScene extends Phaser.Scene {
   }
 
   makeNav() {
-    const y = PAGE.y + PAGE.h + 40;
+    const land = UI.landscape;
+    const y = land ? 240 : PAGE.y + PAGE.h + 40;
     this.dots = PASSPORT.map((_, i) => this.add.circle(UI.width / 2 + (i - 2) * 30, y, 8, 0xffffff, 0.35));
     const arrow = (x, d) => {
       const c = this.add.container(x, y);
@@ -274,8 +294,9 @@ export class MapScene extends Phaser.Scene {
       c.add(g).setSize(96, 96).setInteractive({ useHandCursor: true }).on('pointerup', () => this.turn(d));
       return c;
     };
-    this.prevBtn = arrow(90, -1);
-    this.nextBtn = arrow(UI.width - 90, 1);
+    // 가로: 펼친 두 쪽의 양옆 가운데
+    this.prevBtn = land ? arrow(-320, -1).setY(562) : arrow(90, -1);
+    this.nextBtn = land ? arrow(1040, 1).setY(562) : arrow(UI.width - 90, 1);
     this.updateNav();
   }
 
@@ -288,24 +309,30 @@ export class MapScene extends Phaser.Scene {
   makeBottom() {
     const bottom = this.insets.bottom;
     const next = nextChapterId();
-    const y = 1180 - bottom;
+    const land = UI.landscape;
+    const y = land ? 916 : 1180 - bottom;
     if (next) {
       const ch = chapterById(next);
       this.continueBtn = new Button(this, UI.width / 2 + 70, y, {
-        width: 440, height: 110, fontSize: 32, label: `여행 계속하기 · ${ch.name}`, color: 0xffd84a, shade: 0xd9a92b, textColor: '#2b2d5a',
+        width: 440, height: land ? 96 : 110, fontSize: 32, label: `여행 계속하기 · ${ch.name}`, color: 0xffd84a, shade: 0xd9a92b, textColor: '#2b2d5a',
         onPress: () => { sfx('tap'); startChapter(this, next); },
       });
     } else {
       this.continueBtn = new Button(this, UI.width / 2 + 70, y, {
-        width: 440, height: 110, fontSize: 32, label: '엔딩 다시 보기', color: 0xffd84a, shade: 0xd9a92b, textColor: '#2b2d5a',
+        width: 440, height: land ? 96 : 110, fontSize: 32, label: '엔딩 다시 보기', color: 0xffd84a, shade: 0xd9a92b, textColor: '#2b2d5a',
         onPress: () => { sfx('tap'); this.scene.start('Ending'); },
       });
     }
     new Button(this, 110, y, {
-      width: 160, height: 110, fontSize: 26, label: '타이틀', color: 0xfdf7ea, shade: 0xc9c0ae, textColor: '#2b2d5a',
+      width: 160, height: land ? 96 : 110, fontSize: 26, label: '타이틀', color: 0xfdf7ea, shade: 0xc9c0ae, textColor: '#2b2d5a',
       onPress: () => { sfx('tap'); this.scene.start('Title'); },
     });
   }
+
+  // 가로 (18절): 펼친 두 쪽이 다 보이게 조금 줄여서
+  landscapeView() { return landView(0.9, 360, 568); }
+
+  snapshot() { return { justCleared: null, page: this.page }; }
 
   // 도장 쾅 뒤에 별 개수만큼 띵
   dingStars(n) {
@@ -316,7 +343,7 @@ export class MapScene extends Phaser.Scene {
     sfx('tap');
     const ch = chapterById(id);
     const layer = this.add.container(0, 0).setDepth(20);
-    const dim = this.add.rectangle(0, -UI.offY, UI.width, UI.fullHeight, 0x0f2456, 0.55).setOrigin(0).setInteractive();
+    const dim = this.add.rectangle(-2000, -2000, 4720, 5280, 0x0f2456, 0.55).setOrigin(0).setInteractive();
     const g = this.add.graphics();
     drawPanel(g, 70, 420, 580, 420, ch.frame);
     layer.add([dim, g,

@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { UI } from './data/ui.js';
+import { UI, measureLayout, applyLayout } from './data/ui.js';
 import { platform } from './platform.js';
 import { BootScene } from './scenes/BootScene.js';
 import { TitleScene } from './scenes/TitleScene.js';
@@ -45,7 +45,8 @@ const game = new Phaser.Game({
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
-    width: UI.width,
+    // 실제 캔버스 크기 (세로 폰 720×길게, 가로 폰 길게×720 — ui.js measureLayout)
+    width: UI.fullWidth,
     height: UI.fullHeight,
   },
   input: { activePointers: 2 },
@@ -74,8 +75,14 @@ game.events.once('ready', () => {
   for (const sc of game.scene.scenes) {
     sc.events.on('create', () => {
       const cam = sc.cameras.main;
-      // 기준 1280 칸을 가운데로: 카메라를 offY 만큼 올려 본다. 바탕·어둡게 덮는 판은 y -offY 부터 fullHeight 로 끝까지 칠한다.
-      cam.setScroll(0, FULL_SCENES.has(sc.scene.key) ? 0 : -UI.offY);
+      // 기준 720×1280 칸을 가운데로: 카메라를 (offX, offY) 만큼 옮겨 본다(가로에선 위아래가 잘리고 양옆이 넓어짐).
+      // 바탕·어둡게 덮는 판은 (-offX, -offY)부터 fullWidth×fullHeight 로 끝까지 칠한다.
+      // 가로에서 화면이 landscapeView()(landView)를 주면 그 배율·가운데로 본다 (그림을 조금 줄이고 버튼을 옆으로 옮긴 배치)
+      const lv = UI.landscape && !FULL_SCENES.has(sc.scene.key) ? sc.landscapeView?.() : null;
+      cam.setZoom(lv ? lv.zoom : 1);
+      if (FULL_SCENES.has(sc.scene.key)) cam.setScroll(0, 0);
+      else if (lv) cam.centerOn(lv.x, lv.y);
+      else cam.setScroll(-UI.offX, -UI.offY);
     });
   }
 });
@@ -131,29 +138,47 @@ document.addEventListener('contextmenu', (e) => { if (!allowNative(e)) e.prevent
 document.addEventListener('dblclick', (e) => e.preventDefault());
 document.addEventListener('gesturestart', (e) => e.preventDefault());
 
-// 폰을 가로로 들면 덮개를 보여 주고 게임을 멈춘다. 태블릿·PC(짧은 변 600px 이상)는 그대로.
-const rotate = document.getElementById('rotate');
+// 세로·가로 자유롭게 (design-brief 18절): 방향이 바뀌면 캔버스 크기를 바꾸고 지금 화면을 새 배치로 다시 그린다.
+// 하던 것은 각 화면의 snapshot()(없으면 처음 받은 데이터)으로 이어 간다. 대사·일시정지·설정 창이 떠 있거나
+// 화면이 canRelayout() 으로 '지금은 안 돼'(진화 연출·퐁퐁 게임 중 등)라고 하면 끝날 때까지 기다린다(그동안은 예전 배치로 맞춰 보임).
+const OVERLAYS = ['Dialogue', 'Pause', 'Settings'];
+let pendingLayout = null;
 function checkOrientation() {
-  const w = window.innerWidth;
-  const h = window.innerHeight;
-  const sideways = w > h && Math.min(w, h) < 600 && platform.isTouch;
-  rotate.classList.toggle('show', sideways);
-  if (sideways) game.loop.sleep();
-  else if (!document.hidden) game.loop.wake();
+  const m = measureLayout();
+  const changed = m.landscape !== UI.landscape
+    || Math.abs(m.fullWidth - UI.fullWidth) > 60 || Math.abs(m.fullHeight - UI.fullHeight) > 60; // 주소창이 나타났다 사라지는 정도는 무시
+  pendingLayout = changed ? m : null;
+  if (!document.hidden) game.loop.wake();
 }
+function canRelayoutNow() {
+  const act = game.scene.getScenes(true);
+  if (act.some((s) => s.scene.key === 'Boot' || OVERLAYS.includes(s.scene.key))) return false;
+  const main = act.find((s) => s.scene.key !== 'Preload');
+  return !!main && (main.canRelayout?.() ?? true);
+}
+game.events.on('step', () => {
+  if (!pendingLayout || !canRelayoutNow()) return;
+  const m = pendingLayout;
+  pendingLayout = null;
+  const scenes = game.scene.getScenes(true).filter((s) => s.scene.key !== 'Preload');
+  const snaps = scenes.map((s) => [s, s.snapshot?.() ?? s.sys.settings.data ?? {}]);
+  applyLayout(m);
+  game.scale.setGameSize(UI.fullWidth, UI.fullHeight);
+  for (const [s, data] of snaps) s.scene.restart(data);
+  requestAnimationFrame(nudgeCanvas);
+});
 
-// 주소창이 나타났다 사라지며 화면 높이가 바뀌므로, 잠시 뒤 화면 맞춤을 다시 한다.
+// 주소창이 나타났다 사라지며 화면 크기가 바뀌므로, 잠시 뒤 화면 맞춤을 다시 하고 방향을 본다.
 let resizeTimer = 0;
 function onResize() {
   clearTimeout(resizeTimer);
   resizeTimer = setTimeout(() => {
     game.scale.refresh();
     checkOrientation();
-  }, 100);
+  }, 150);
 }
 (window.visualViewport || window).addEventListener('resize', onResize);
 window.addEventListener('orientationchange', onResize);
-checkOrientation();
 
 // 다른 앱·탭으로 가면 멈추고, 돌아오면 이어서 (저장·일시정지 메뉴는 6단계)
 document.addEventListener('visibilitychange', () => {

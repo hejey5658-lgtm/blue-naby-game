@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { UI } from '../data/ui.js';
+import { UI, landView } from '../data/ui.js';
 import { POP } from '../data/popgame.js';
 import { LOOK } from '../data/mazeLooks.js';
 import { state, save } from '../state.js';
@@ -54,22 +54,30 @@ export class PopScene extends Phaser.Scene {
     this.time.delayedCall(250, () => sfx(`arrive_${this.stage.chapter}`));
   }
 
+  // 가로 (18절): 게임 화면은 판 전체가 보이게 줄여서, 처음 화면은 왼쪽 제목 · 오른쪽 나라·버튼
+  landscapeView() { return this.step === 'menu' ? landView(0.8, 620, 640) : landView(0.65, 360, 556); }
+
+  canRelayout() { return this.step === 'menu' || !!this.ended; }
+
   // ── 처음 화면: 혼자 하기 · 둘이서 대결 + 나라 고르기 ──
   drawMenu() {
     setTheme('#f3e3c3', '#f3e3c3');
-    this.add.rectangle(0, -UI.offY, UI.width, UI.fullHeight, 0xf3e3c3).setOrigin(0);
+    this.add.rectangle(-2000, -2000, 4720, 5280, 0xf3e3c3).setOrigin(0);
     makePopIcons(this);
     // 둥둥 떠 있는 기념품 몇 개
     STAGES.flatMap((s) => s.types.slice(2).map((t) => t.icon)).concat(STAGES.map((s) => s.types[0].icon)).slice(0, 6).filter((k) => this.textures.exists(k)).forEach((k, i) => {
-      const im = this.add.image(90 + i * 108, 120 + this.top + (i % 2) * 34, k).setDisplaySize(70, 70);
+      const L = UI.landscape;
+      const im = this.add.image(L ? -150 + i * 100 : 90 + i * 108, L ? 270 + (i % 2) * 34 : 120 + this.top + (i % 2) * 34, k).setDisplaySize(70, 70);
       this.tweens.add({ targets: im, y: im.y - 12, duration: 1400 + i * 160, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
     });
-    this.add.text(UI.width / 2, 250 + this.top, '기념품 퐁퐁', { fontFamily: UI.fontTitle, fontSize: '78px', color: '#2b2d5a' }).setOrigin(0.5);
-    this.add.text(UI.width / 2, 345 + this.top, '같은 기념품 3개를 이으면 퐁!\n쓱 밀어 옮기고, 톡 눌러 돌려요', { fontFamily: UI.font, fontSize: '30px', color: '#5a5c88', align: 'center', lineSpacing: 10 }).setOrigin(0.5);
-    this.add.text(UI.width / 2, 465 + this.top, SERIES.n === 2 ? '어느 계절부터 할까요?' : '어느 나라부터 할까요?', { fontFamily: UI.fontTitle, fontSize: '32px', color: '#2b2d5a' }).setOrigin(0.5);
+    const land = UI.landscape;
+    const LX = 120, RX = 900; // 가로: 왼쪽·오른쪽 칸 가운데
+    this.add.text(land ? LX : UI.width / 2, land ? 420 : 250 + this.top, '기념품 퐁퐁', { fontFamily: UI.fontTitle, fontSize: '78px', color: '#2b2d5a' }).setOrigin(0.5);
+    this.add.text(land ? LX : UI.width / 2, land ? 530 : 345 + this.top, '같은 기념품 3개를 이으면 퐁!\n쓱 밀어 옮기고, 톡 눌러 돌려요', { fontFamily: UI.font, fontSize: '30px', color: '#5a5c88', align: 'center', lineSpacing: 10 }).setOrigin(0.5);
+    this.add.text(land ? RX : UI.width / 2, land ? 250 : 465 + this.top, SERIES.n === 2 ? '어느 계절부터 할까요?' : '어느 나라부터 할까요?', { fontFamily: UI.fontTitle, fontSize: '32px', color: '#2b2d5a' }).setOrigin(0.5);
     const reached = state.pop?.reached ?? 0;
     this.chips = STAGES.map((s, i) => {
-      const x = UI.width / 2 + (i % 2 ? 160 : -160), y = 550 + this.top + Math.floor(i / 2) * 100;
+      const x = (land ? RX : UI.width / 2) + (i % 2 ? 160 : -160), y = (land ? 330 : 550 + this.top) + Math.floor(i / 2) * 100;
       const c = this.add.container(x, y);
       const g = this.add.graphics();
       const t = this.add.text(0, -6, `${i + 1} · ${s.name}`, { fontFamily: UI.fontTitle, fontSize: '32px', color: '#2b2d5a' }).setOrigin(0.5);
@@ -78,8 +86,8 @@ export class PopScene extends Phaser.Scene {
       return { i, g, t, sub, locked: i > reached };
     });
     this.paintChips();
-    this.toastText = this.add.text(UI.width / 2, 790 + this.top, '', { fontFamily: UI.font, fontSize: '24px', color: '#c0563a' }).setOrigin(0.5);
-    this.soloBtn = new Button(this, UI.width / 2, 900, {
+    this.toastText = this.add.text(land ? RX : UI.width / 2, land ? 535 : 790 + this.top, '', { fontFamily: UI.font, fontSize: '24px', color: '#c0563a' }).setOrigin(0.5);
+    this.soloBtn = new Button(this, land ? RX : UI.width / 2, land ? 630 : 900, {
       label: '혼자 하기',
       onPress: () => {
         unlockAudio();
@@ -88,11 +96,11 @@ export class PopScene extends Phaser.Scene {
       },
     });
     // 둘이서: 한 화면에서 같이 · 각자 폰으로 (대결장 링크 보내기)
-    this.duoBtn = new Button(this, UI.width / 2 - 158, 1040, {
+    this.duoBtn = new Button(this, (land ? RX : UI.width / 2) - 158, land ? 770 : 1040, {
       width: 300, height: 110, fontSize: 30, label: '한 화면 대결', color: 0xff9fb8, shade: 0xe07a96, textColor: '#2b2d5a',
       onPress: () => { unlockAudio(); this.scene.start('Pop', { step: 'duo', stage: this.stageIdx }); },
     });
-    this.remoteBtn = new Button(this, UI.width / 2 + 158, 1040, {
+    this.remoteBtn = new Button(this, (land ? RX : UI.width / 2) + 158, land ? 770 : 1040, {
       width: 300, height: 110, fontSize: 30, label: '각자 폰 대결', color: 0x7ec8ff, shade: 0x4f9fe0, textColor: '#2b2d5a',
       onPress: async () => {
         unlockAudio();
@@ -101,7 +109,7 @@ export class PopScene extends Phaser.Scene {
         this.scene.start('Match', { id: m.id });
       },
     });
-    new Button(this, UI.width / 2, 1180, {
+    new Button(this, land ? LX : UI.width / 2, land ? 700 : 1180, {
       width: 320, height: 84, fontSize: 28, label: '처음 화면으로', color: 0xfffaf0, shade: 0xd8c8a8, textColor: '#2b2d5a', onPress: () => this.scene.start('Title'),
     });
     this.input.keyboard?.on('keydown-ENTER', () => this.soloBtn.trigger());
@@ -123,7 +131,13 @@ export class PopScene extends Phaser.Scene {
     this.look = LOOK[this.stage.chapter];
     Object.assign(this, { cols, rows, cell, ox, oy });
     this.tile = () => '.';
+    this.hudBottom = 108 + this.top;
     setTheme('#f3e3c3', '#f3e3c3');
+    // 미로 배경 그림은 캔버스 크기(fullWidth·fullHeight)를 보므로, 이 화면(기준 720×1280 좌표)에 맞춰 잠깐 바꿔 그린다
+    const keep = [UI.fullWidth, UI.fullHeight];
+    UI.fullWidth = UI.width; UI.fullHeight = UI.height;
+    // 가로·길쭉한 화면의 양옆·위아래는 그 나라 바탕색으로
+    this.add.rectangle(-2000, -2000, UI.width + 4000, UI.height + 4000, this.look.floor ?? 0xf3e3c3).setOrigin(0);
     const g = this.make.graphics({ x: 0, y: 0 }, false);
     drawBackdrop(this, g);
     if (this.textures.exists('pop_bg')) this.textures.remove('pop_bg');
@@ -131,6 +145,7 @@ export class PopScene extends Phaser.Scene {
     g.destroy();
     this.add.image(0, 0, 'pop_bg').setOrigin(0);
     addAmbient(this);
+    [UI.fullWidth, UI.fullHeight] = keep;
   }
 
   hudBar() {
@@ -183,8 +198,9 @@ export class PopScene extends Phaser.Scene {
     const top = this.top;
     this.text(UI.width / 2, 40 + top, `${this.stageIdx + 1}/4 · ${this.stage.name}`, 32).setOrigin(0.5);
     this.scoreText = this.text(UI.width - 36, 44 + top, '0', 34).setOrigin(1, 0.5);
-    this.goalText = this.text(UI.width / 2, 82 + top, '', 20, '#ffe9a8', UI.font).setOrigin(0.5);
-    this.text(UI.width - 36, 82 + top, `최고 ${state.pop?.best?.[this.stage.id] ?? 0}`, 18, '#ffe9a8', UI.font).setOrigin(1, 0.5);
+    const big = UI.landscape ? 1.35 : 1; // 가로는 화면을 줄여 보므로 작은 글자를 키운다
+    this.goalText = this.text(UI.width / 2, 82 + top, '', Math.round(20 * big), '#ffe9a8', UI.font).setOrigin(0.5);
+    this.text(UI.width - 36, 82 + top, `최고 ${state.pop?.best?.[this.stage.id] ?? 0}`, Math.round(18 * big), '#ffe9a8', UI.font).setOrigin(1, 0.5);
     // 목표 막대
     this.bar = this.add.graphics().setDepth(8);
     this.score = 0;
@@ -412,7 +428,7 @@ export class PopScene extends Phaser.Scene {
   // ── 결과 판: 왕관·도장·버튼 수에 맞춰 판 높이를 정한다 ──
   panel(title, body, { crown = false, stamp = false, buttons = 2 } = {}) {
     const layer = this.add.container(0, 0).setDepth(30);
-    const dim = this.add.rectangle(0, -UI.offY, UI.width, UI.fullHeight, 0x2b2d5a, 0.45).setOrigin(0).setInteractive();
+    const dim = this.add.rectangle(-2000, -2000, 4720, 5280, 0x2b2d5a, 0.45).setOrigin(0).setInteractive();
     let y = 300;
     const titleY = y + (crown ? 170 : 100);
     const bodyY = titleY + 82;
@@ -466,7 +482,8 @@ export class PopScene extends Phaser.Scene {
   }
 
   // ── 조작: 판마다 쓱(옮기기·아래로 내리기)·톡(돌리기), 키보드 ──
-  boardAt(x) { return this.boards.length === 1 ? this.boards[0] : this.boards[x < UI.width / 2 ? 0 : 1]; }
+  // x 는 화면(캔버스) 좌표 — 두 판은 화면 가운데를 기준으로 나뉜다 (세로·가로 모두)
+  boardAt(x) { return this.boards.length === 1 ? this.boards[0] : this.boards[x < UI.fullWidth / 2 ? 0 : 1]; }
 
   setupInput() {
     this.input.addPointer(2);

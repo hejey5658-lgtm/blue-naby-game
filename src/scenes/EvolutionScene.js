@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { afterDialogue } from '../ui/afterDialogue.js';
-import { UI } from '../data/ui.js';
+import { UI, landView } from '../data/ui.js';
 import { waitForAssets } from './PreloadScene.js';
 import { FORMS } from '../data/forms.js';
 import { state, save } from '../state.js';
@@ -84,7 +84,7 @@ export class EvolutionScene extends Phaser.Scene {
     this.input.once('pointerup', () => this.skip());
     const t = this.time;
     // 어두워짐
-    this.dark = this.add.rectangle(0, -UI.offY, UI.width, UI.fullHeight, 0x000000, 0).setOrigin(0).setDepth(1);
+    this.dark = this.add.rectangle(-2000, -2000, 4720, 5280, 0x000000, 0).setOrigin(0).setDepth(1);
     this.tweens.add({ targets: this.dark, fillAlpha: 0.45, duration: 600 });
     this.blue.anims.stop();
     this.blue.setFrame(3).setDepth(2);
@@ -114,7 +114,7 @@ export class EvolutionScene extends Phaser.Scene {
     this.revealed = true;
     state.form = this.to;
     save();
-    const flash = this.add.rectangle(0, -UI.offY, UI.width, UI.fullHeight, 0xffffff, 1).setOrigin(0).setDepth(10);
+    const flash = this.add.rectangle(-2000, -2000, 4720, 5280, 0xffffff, 1).setOrigin(0).setDepth(10);
     this.tweens.add({ targets: flash, alpha: 0, duration: 700, delay: 150, onComplete: () => flash.destroy() });
     this.cocoon?.destroy();
     this.dark?.destroy();
@@ -151,4 +151,9 @@ export class EvolutionScene extends Phaser.Scene {
       }).setDepth(12);
     });
   }
+
+  // 가로 (18절): 연출 화면이라 전체가 보이게 줄여서 보고, 연출 중에는 다시 그리지 않는다(다음 화면부터 새 배치)
+  landscapeView() { return landView(0.58, 360, 640); }
+
+  canRelayout() { return false; }
 }

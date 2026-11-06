@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
-import { UI } from '../data/ui.js';
+import { UI, landView } from '../data/ui.js';
+import { mark, shiftSince } from '../ui/landscape.js';
 import { CHAPTERS, stageLabel } from '../data/chapters.js';
 import { state } from '../state.js';
 import { setTheme } from '../ui/theme.js';
@@ -33,7 +34,7 @@ export class DuoScene extends Phaser.Scene {
 
   create() {
     setTheme('#f3e3c3', '#f3e3c3');
-    this.add.rectangle(0, -UI.offY, UI.width, UI.fullHeight, 0xf3e3c3).setOrigin(0);
+    this.add.rectangle(-2000, -2000, 4720, 5280, 0xf3e3c3).setOrigin(0);
     this.top = getSafeInsets(this.game).top;
     if (this.step === 'turn') this.drawTurn();
     else if (this.step === 'result') this.drawResult();
@@ -69,7 +70,10 @@ export class DuoScene extends Phaser.Scene {
       fontFamily: UI.font, fontSize: '27px', color: '#5a5c88', align: 'center', lineSpacing: 8,
     }).setOrigin(0.5);
     if (remote) this.drawMyName(); else this.drawNames();
+    // 가로 (18절): 나라 고르기·버튼은 오른쪽 칸으로
+    const m0 = mark(this);
     this.drawPicks(remote);
+    if (UI.landscape) shiftSince(this, m0, 700, -430);
   }
 
   // 각자 폰: 내 닉네임 칩 (대결장에 들어갈 이름)
@@ -158,7 +162,7 @@ export class DuoScene extends Phaser.Scene {
     }
     sfx('turn');
     vibrate('collect');
-    this.readyBtn = new Button(this, UI.width / 2, 1020, {
+    this.readyBtn = new Button(this, UI.width / 2, UI.landscape ? 935 : 1020, {
       label: '준비됐어요!',
       onPress: () => {
         unlockAudio();
@@ -198,12 +202,17 @@ export class DuoScene extends Phaser.Scene {
     const next = list[idx + 1];
     const again = () => this.scene.start('Duo', { step: 'turn', names: this.names, chapter: this.chapterId, turn: 1, results: [] });
     let y = 860;
+    const m0 = mark(this);
     if (next) {
       this.nextBtn = new Button(this, UI.width / 2, y, { label: `다음 나라로 · ${next.name}`, fontSize: 32, onPress: () => this.scene.start('Duo', { step: 'turn', names: this.names, chapter: next.id, turn: 1, results: [] }) });
       y += 150;
     }
     this.againBtn = new Button(this, UI.width / 2, y, { width: 400, height: 104, fontSize: 32, label: '다시 겨루기', color: 0xffb347, shade: 0xd98a2b, textColor: '#2b2d5a', onPress: again });
     new Button(this, UI.width / 2, y + 136, { width: 320, height: 88, fontSize: 28, label: '처음 화면으로', color: 0xfffaf0, shade: 0xd8c8a8, textColor: '#2b2d5a', onPress: () => this.scene.start('Title') });
+    if (UI.landscape) shiftSince(this, m0, 700, -420);
     this.input.keyboard?.on('keydown-ENTER', () => (this.nextBtn ?? this.againBtn).trigger());
   }
+
+  // 가로 (18절): 준비·결과는 왼쪽 칸 + 오른쪽 칸, 차례 카드는 가운데를 조금 줄여서
+  landscapeView() { return this.step === 'turn' ? landView(0.78, 360, 610) : landView(0.82, 710, this.step === 'result' ? 480 : 450); }
 }

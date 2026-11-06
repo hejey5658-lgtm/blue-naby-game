@@ -1,20 +1,39 @@
 // 화면 배치·크기 수치 (기준 화면 720×1280). 기획자가 직접 고쳐도 된다.
-// 길쭉한 폰은 캔버스를 화면 비율대로 길게 만들어 위아래 빈 띠를 없앤다 (2026-11-06 "디바이스 빈 화면 최소화").
-// height = 화면 배치 기준(1280, 모든 화면이 이 안에 그려짐), fullHeight = 실제 캔버스 높이(1280~1600),
-// offY = 기준 화면을 가운데 둘 때 위쪽 여백. 미로·입구는 fullHeight 전체를 쓰고, 나머지 화면은 가운데 1280에 그린다(main.js).
-const FULL_H = (() => {
+// 화면 맞춤 (2026-11-06 "빈 화면 최소화" + 18절 "세로·가로 자유롭게"):
+// - width·height = 세로 기준 화면 720×1280. 대부분의 화면은 이 좌표로 그린다.
+// - fullWidth·fullHeight = 실제 캔버스 크기. 세로 폰은 720×(1280~1600), 가로 폰(터치 기기)은 (1280~1600)×720, PC는 720×1280.
+// - offX·offY = 기준 화면을 캔버스 가운데에 둘 때의 여백(가로에선 offY가 음수: 기준 화면의 위아래가 잘려 보임).
+//   카메라를 (-offX, -offY)만큼 옮겨 보므로, 보이는 곳은 view = { left, top, right, bottom } (기준 좌표).
+// - landscape = 가로 배치. 화면마다 UI.landscape 를 보고 view 안에 다시 배치한다.
+//   미로·입구는 카메라를 옮기지 않고 캔버스 좌표(0~fullWidth, 0~fullHeight)를 그대로 쓴다.
+export function measureLayout() {
   try {
     const w = window.innerWidth, h = window.innerHeight;
-    if (!w || !h || w >= h) return 1280;
-    return Math.round(Math.min(1600, Math.max(1280, (720 * h) / w)));
-  } catch { return 1280; }
-})();
+    const touch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    if (!w || !h) return { landscape: false, fullWidth: 720, fullHeight: 1280 };
+    const clamp = (v) => Math.round(Math.min(1600, Math.max(1280, v)));
+    if (w > h && touch) return { landscape: true, fullWidth: clamp((720 * w) / h), fullHeight: 720 };
+    if (w >= h) return { landscape: false, fullWidth: 720, fullHeight: 1280 };
+    return { landscape: false, fullWidth: 720, fullHeight: clamp((720 * h) / w) };
+  } catch { return { landscape: false, fullWidth: 720, fullHeight: 1280 }; }
+}
+
+// 가로 배치에서 카메라를 zoom 배로 (cx, cy) 가운데로 볼 때 보이는 곳 (기준 좌표). 화면의 landscapeView() 가 돌려준다.
+export function landView(zoom, cx, cy) {
+  const w = UI.fullWidth / zoom, h = UI.fullHeight / zoom;
+  return { zoom, x: cx, y: cy, left: cx - w / 2, right: cx + w / 2, top: cy - h / 2, bottom: cy + h / 2, w, h };
+}
+
+export function applyLayout(m) {
+  Object.assign(UI, m);
+  UI.offX = Math.round((m.fullWidth - 720) / 2);
+  UI.offY = Math.round((m.fullHeight - 1280) / 2);
+  UI.view = { left: -UI.offX, top: -UI.offY, right: 720 + UI.offX, bottom: 1280 + UI.offY, cx: 360, cy: 640, w: m.fullWidth, h: m.fullHeight };
+}
 
 export const UI = {
   width: 720,
   height: 1280,
-  fullHeight: FULL_H,
-  offY: Math.round((FULL_H - 1280) / 2),
   minTouch: 96,
   gap: 16,
   fontSize: { dialogue: 34, button: 36, hud: 30, title: 72, small: 22 },
@@ -38,3 +57,4 @@ export const UI = {
   fontTitle: '"Jua", "Apple SD Gothic Neo", "Noto Sans KR", system-ui, sans-serif',
   font: '"Gowun Dodum", "Apple SD Gothic Neo", "Noto Sans KR", system-ui, sans-serif',
 };
+applyLayout(measureLayout());

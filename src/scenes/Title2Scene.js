@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { afterDialogue } from '../ui/afterDialogue.js';
-import { UI } from '../data/ui.js';
+import { UI, landView } from '../data/ui.js';
 import { CHAPTERS } from '../data/chapters.js';
 import { VERSION } from '../data/version.js';
 import { Button } from '../ui/Button.js';
@@ -41,11 +41,11 @@ export class Title2Scene extends Phaser.Scene {
     this.add.text(UI.width / 2, 248 + top, '블루나비의 세계여행 2탄', { fontFamily: UI.fontTitle, fontSize: '30px', color: '#2b2d5a' }).setOrigin(0.5);
 
     this.startBtn = new Button(this, UI.width / 2, 960, { label: hasProgress() ? '여행 이어하기' : '여행 시작하기', onPress: () => this.onStart() });
-    new Button(this, UI.width / 2 - 165, 1110, {
+    this.popBtn = new Button(this, UI.width / 2 - 165, 1110, {
       width: 310, height: 96, label: '기념품 퐁퐁', fontSize: 30, color: 0xffb347, shade: 0xd98a2b, textColor: '#2b2d5a',
       onPress: () => { sfx('tap'); unlockAudio(); this.scene.start('Pop', { step: 'menu' }); },
     });
-    new Button(this, UI.width / 2 + 165, 1110, {
+    this.duoBtn = new Button(this, UI.width / 2 + 165, 1110, {
       width: 310, height: 96, label: '둘이서 하기', fontSize: 30, color: 0xff9fb8, shade: 0xe07a96, textColor: '#2b2d5a',
       onPress: () => { sfx('tap'); unlockAudio(); this.scene.start('Duo', { step: 'setup' }); },
     });
@@ -69,26 +69,41 @@ export class Title2Scene extends Phaser.Scene {
     this.game.events.on('settings-closed', onClosed);
     this.events.once('shutdown', () => this.game.events.off('settings-closed', onClosed));
 
-    this.add.text(UI.width - 24, UI.height - 20 - bottom, `v${VERSION}`, { fontFamily: UI.font, fontSize: `${UI.fontSize.small}px`, color: '#2b2d5a' }).setOrigin(1, 1).setAlpha(0.6);
-    inAppBand(this, 1222 - bottom);
+    const ver = this.add.text(UI.width - 24, UI.height - 20 - bottom, `v${VERSION}`, { fontFamily: UI.font, fontSize: `${UI.fontSize.small}px`, color: '#2b2d5a' }).setOrigin(1, 1).setAlpha(0.6);
+    inAppBand(this, UI.landscape ? 840 : 1222 - bottom);
+    // 가로 (18절): 마당 그림을 조금 줄여 왼쪽에, 버튼은 오른쪽에 위아래로
+    if (UI.landscape) {
+      const v = this.landscapeView();
+      const ins = getSafeInsets(this.game);
+      this.startBtn.setPosition(1150, 380);
+      this.popBtn.setPosition(1150, 540);
+      this.duoBtn.setPosition(1150, 670);
+      gear.setPosition(v.right - 60 - ins.right / v.zoom, v.top + 56 + ins.top / v.zoom);
+      sw.setPosition(v.left + 126 + ins.left / v.zoom, v.top + 56 + ins.top / v.zoom);
+      ver.setPosition(v.right - 24, v.bottom - 16);
+    }
     updateBand(this, 236 + top);
     this.input.keyboard?.on('keydown-ENTER', () => this.input.enabled && this.startBtn.trigger());
     this.input.keyboard?.on('keydown-SPACE', () => this.input.enabled && this.startBtn.trigger());
   }
 
+  landscapeView() { return landView(0.8, 770, 470); }
+
   drawYard() {
     const g = this.add.graphics();
-    g.fillStyle(C.sky, 1).fillRect(0, 0, UI.width, 560);
-    g.fillStyle(C.sky2, 1).fillRect(0, 300, UI.width, 260);
+    // 가로·길쭉한 화면에서도 끝까지 (X0 ~ X1)
+    const X0 = -1200, XW = UI.width + 2400;
+    g.fillStyle(C.sky, 1).fillRect(X0, -900, XW, 1460);
+    g.fillStyle(C.sky2, 1).fillRect(X0, 300, XW, 260);
     g.fillStyle(0xffffff, 0.95).fillEllipse(140, 360, 120, 44).fillEllipse(110, 370, 80, 34).fillEllipse(560, 320, 110, 40);
     // 빨랫줄 + 작은 손수건
     g.lineStyle(3, C.fenceDark, 0.8).lineBetween(40, 330, 680, 300);
     [[180, 324, 0xffc2d6], [300, 318, 0xbfe3ff], [420, 312, 0xfff3a0]].forEach(([x, y, c]) => g.fillStyle(c, 1).fillRect(x, y, 46, 40));
     // 울타리
-    g.fillStyle(C.grass, 1).fillRect(0, 540, UI.width, UI.height - 540);
-    g.fillStyle(C.grass2, 1).fillRect(0, 540, UI.width, 14);
-    g.fillStyle(C.fenceDark, 1).fillRect(0, 470, UI.width, 12).fillRect(0, 510, UI.width, 12);
-    for (let x = 10; x < UI.width; x += 62) {
+    g.fillStyle(C.grass, 1).fillRect(X0, 540, XW, UI.height - 540 + 900);
+    g.fillStyle(C.grass2, 1).fillRect(X0, 540, XW, 14);
+    g.fillStyle(C.fenceDark, 1).fillRect(X0, 470, XW, 12).fillRect(X0, 510, XW, 12);
+    for (let x = 10 - 62 * 20; x < UI.width + 1200; x += 62) {
       g.fillStyle(C.fenceDark, 1).fillRoundedRect(x - 2, 418, 44, 132, { tl: 22, tr: 22, bl: 0, br: 0 });
       g.fillStyle(C.fence, 1).fillRoundedRect(x + 2, 422, 36, 126, { tl: 18, tr: 18, bl: 0, br: 0 });
     }
@@ -100,8 +115,8 @@ export class Title2Scene extends Phaser.Scene {
       g.fillStyle(0x6cc35a, 1).fillRect(x - 3, 720, 6, 50);
     }
     // 잔디 풀잎
-    for (let i = 0; i < 30; i++) {
-      const x = (i * 97) % UI.width, y = 860 + ((i * 53) % 360);
+    for (let i = 0; i < 60; i++) {
+      const x = X0 + 600 + ((i * 97) % (UI.width + 1200)), y = (UI.landscape ? 600 : 860) + ((i * 53) % 360);
       g.fillStyle(C.grass2, 1).fillTriangle(x, y, x + 6, y - 16, x + 12, y);
     }
   }

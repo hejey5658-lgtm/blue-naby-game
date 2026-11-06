@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { afterDialogue } from '../ui/afterDialogue.js';
-import { UI } from '../data/ui.js';
+import { UI, landView } from '../data/ui.js';
 import { CHAPTERS } from '../data/chapters.js';
 import { BOSSES } from '../data/bosses.js';
 import { state, save } from '../state.js';
@@ -75,4 +75,9 @@ export class Ending2Scene extends Phaser.Scene {
     this.tweens.add({ targets: row, alpha: 1, duration: 400, delay: 800 });
     this.done = true;
   }
+
+  // 가로 (18절): 연출 화면이라 전체가 보이게 줄여서 보고, 연출 중에는 다시 그리지 않는다(다음 화면부터 새 배치)
+  landscapeView() { return landView(0.58, 360, 640); }
+
+  canRelayout() { return false; }
 }

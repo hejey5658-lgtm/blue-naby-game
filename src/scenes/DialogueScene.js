@@ -46,29 +46,33 @@ export class DialogueScene extends Phaser.Scene {
   }
 
   create() {
+    // 가로 (18절): 화면 폭에 맞춰 낮고 넓은 대사창
+    this.box = UI.landscape
+      ? { x: UI.view.left + 40 + Math.max(0, (UI.view.w - 1240) / 2), w: Math.min(1160, UI.view.w - 80), h: 240, bottom: BOX.bottom }
+      : { ...BOX };
     // 대사창은 실제 화면 맨 아래에, 건너뛰기는 맨 위에 붙인다 (길쭉한 폰: 이 씬은 1280 칸이 가운데라 위아래로 offY 만큼 더 있음)
     const full = getSafeInsets(this.game, true);
     const bandB = UI.fullHeight - UI.height - UI.offY;
     const top = full.top - UI.offY;
-    const boxY = BOX.bottom + bandB - full.bottom - BOX.h;
+    const boxY = this.box.bottom + bandB - full.bottom - this.box.h;
     this.boxY = boxY;
 
     // 화면 전체를 받는 투명 판 (톡 = 다음)
-    this.add.zone(0, -UI.offY, UI.width, UI.fullHeight).setOrigin(0).setInteractive()
+    this.add.zone(-2000, -2000, 4720, 5280).setOrigin(0).setInteractive()
       .on('pointerup', () => this.advance());
 
     // 대사창 판 (그 장의 창틀 모양)
     const panel = this.add.graphics();
-    this.style = drawPanel(panel, BOX.x, boxY, BOX.w, BOX.h, this.frame);
+    this.style = drawPanel(panel, this.box.x, boxY, this.box.w, this.box.h, this.frame);
     this.panel = panel;
 
-    this.body = this.add.text(BOX.x + TEXT_PAD, boxY + 62, '', {
+    this.body = this.add.text(this.box.x + TEXT_PAD, boxY + 62, '', {
       fontFamily: UI.font, fontSize: `${UI.fontSize.dialogue}px`, color: this.style.text,
-      lineSpacing: 14, wordWrap: { width: BOX.w - TEXT_PAD * 2, useAdvancedWrap: true },
+      lineSpacing: 14, wordWrap: { width: this.box.w - TEXT_PAD * 2, useAdvancedWrap: true },
     });
     // 이름표와 얼굴
     this.nameTag = this.add.container(0, 0);
-    this.face = this.add.sprite(BOX.x + 90, boxY - 6, '__DEFAULT').setVisible(false);
+    this.face = this.add.sprite(this.box.x + 90, boxY - 6, '__DEFAULT').setVisible(false);
     this.next = this.add.graphics();
     this.tweens.add({ targets: this.next, y: 6, duration: 420, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
 
@@ -89,7 +93,7 @@ export class DialogueScene extends Phaser.Scene {
   }
 
   makeSkip(top) {
-    const c = this.add.container(UI.width - 110, 64 + top);
+    const c = this.add.container(UI.landscape ? UI.view.right - 130 : UI.width - 110, 64 + top);
     const bg = this.add.graphics();
     bg.fillStyle(0xffffff, 0.92).fillRoundedRect(-92, -34, 184, 68, 34);
     bg.lineStyle(3, 0x2b2d5a, 0.25).strokeRoundedRect(-92, -34, 184, 68, 34);
@@ -126,7 +130,7 @@ export class DialogueScene extends Phaser.Scene {
     const icon = this.add.graphics();
     const on = speak(line.text, () => { if (this.speaker === icon) { icon.destroy(); this.speaker = null; } });
     if (!on) { icon.destroy(); return; }
-    const x = BOX.x + BOX.w - 60, y = this.boxY + 40;
+    const x = this.box.x + this.box.w - 60, y = this.boxY + 40;
     icon.fillStyle(0x2f7bff, 1).fillRect(x - 18, y - 7, 10, 14).fillTriangle(x - 10, y - 7, x + 2, y - 16, x + 2, y + 16).fillTriangle(x - 10, y + 7, x + 2, y - 16, x + 2, y + 16);
     icon.lineStyle(3, 0x2f7bff, 1);
     icon.beginPath(); icon.arc(x + 4, y, 10, -0.8, 0.8); icon.strokePath();
@@ -146,7 +150,7 @@ export class DialogueScene extends Phaser.Scene {
     this.body.setColor(narrator ? '#4a4c78' : this.style.text);
 
     // 얼굴: 지금은 블루나비 얼굴 그림만 있다(다른 친구 얼굴은 그림 트랙 A3에서 추가)
-    let tagX = BOX.x + 36;
+    let tagX = this.box.x + 36;
     const faceKey = sp === 'blue' ? `face_blue_${this.form}` : `face_${sp}`;
     if (this.textures.exists(faceKey)) {
       const tex = this.textures.get(faceKey);
@@ -155,9 +159,9 @@ export class DialogueScene extends Phaser.Scene {
         ? MOOD_FRAME[line.mood ?? guessMood(line.text)] ?? 0
         : line.mood === 'happy' || /friend|ending/.test(this.key) ? 1 : 0;
       this.face.setTexture(faceKey, tex.has(frame) ? frame : undefined).setDisplaySize(140, 140).setVisible(true);
-      this.face.setPosition(BOX.x + 96, boxY - 34);
+      this.face.setPosition(this.box.x + 96, boxY - 34);
       this.tweens.add({ targets: this.face, scale: this.face.scale * 1.06, duration: 120, yoyo: true });
-      tagX = BOX.x + 180;
+      tagX = this.box.x + 180;
     }
     if (narrator) return;
     const name = guide ? '안내' : SPEAKER_NAMES[sp] ?? '';
@@ -194,7 +198,7 @@ export class DialogueScene extends Phaser.Scene {
     this.typing = null;
     this.body.setText(this.pages[this.page]);
     this.next.clear();
-    iconNext(this.next, BOX.x + BOX.w - 44, this.boxY + BOX.h - 40, 22, 0x2b2d5a);
+    iconNext(this.next, this.box.x + this.box.w - 44, this.boxY + this.box.h - 40, 22, 0x2b2d5a);
   }
 
   advance() {

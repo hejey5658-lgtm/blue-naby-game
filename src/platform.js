@@ -76,8 +76,7 @@ export function requestFullscreen() {
   safe(() => {
     const p = document.documentElement.requestFullscreen({ navigationUI: 'hide' });
     if (p && p.then) {
-      p.then(() => safe(() => screen.orientation.lock('portrait').catch(() => {})))
-        .catch(() => {});
+      p.catch(() => {}); // 세로·가로 자유롭게 (18절): 방향을 잠그지 않는다
     }
   });
 }

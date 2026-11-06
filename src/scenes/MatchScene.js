@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
-import { UI } from '../data/ui.js';
+import { UI, landView } from '../data/ui.js';
+import { mark, shiftSince } from '../ui/landscape.js';
 import { setTheme } from '../ui/theme.js';
 import { drawPanel } from '../ui/frames.js';
 import { Button } from '../ui/Button.js';
@@ -33,7 +34,7 @@ export class MatchScene extends Phaser.Scene {
 
   create() {
     setTheme('#f3e3c3', '#f3e3c3');
-    this.add.rectangle(0, -UI.offY, UI.width, UI.fullHeight, CREAM).setOrigin(0);
+    this.add.rectangle(-2000, -2000, 4720, 5280, CREAM).setOrigin(0);
     this.top = getSafeInsets(this.game).top;
     if (this.step === 'box') this.drawBox(); else this.drawView();
     this.input.keyboard?.on('keydown-ESC', () => this.scene.start('Title'));
@@ -82,7 +83,8 @@ export class MatchScene extends Phaser.Scene {
 
     if (v !== null) { sfx(v === 1 ? 'win' : 'respawn'); vibrate('special'); }
 
-    // 버튼: 위 = 지금 할 일, 가운데 = 대결장 다시/새 대결장, 아래 = 대결함 · 처음 화면
+    // 버튼: 위 = 지금 할 일, 가운데 = 대결장 다시/새 대결장, 아래 = 대결함 · 처음 화면 (가로: 오른쪽 칸)
+    const m0 = mark(this);
     if (!m.mine) {
       this.mainBtn = new Button(this, UI.width / 2, 930, { label: '시작하기', onPress: () => this.play() });
       if (amHost(m)) new Button(this, UI.width / 2, 1062, { ...SUB, width: 400, label: '대결장 다시 보내기', onPress: () => sendInvite(m) });
@@ -95,8 +97,12 @@ export class MatchScene extends Phaser.Scene {
     }
     new Button(this, UI.width / 2 - 160, 1190, { ...SUB, label: '대결함', onPress: () => this.scene.start('Match', { step: 'box' }) });
     new Button(this, UI.width / 2 + 160, 1190, { ...SUB, label: '처음 화면으로', onPress: () => this.scene.start(SERIES.meta.titleScene) });
+    if (UI.landscape) shiftSince(this, m0, 700, -520);
     this.input.keyboard?.on('keydown-ENTER', () => this.mainBtn.trigger());
   }
+
+  // 가로 (18절): 대결 카드는 왼쪽 두 사람 칸 + 오른쪽 버튼, 대결함은 목록이 다 보이게 줄여서
+  landscapeView() { return this.step === 'box' ? landView(0.72, 560, 600) : landView(0.82, 710, 470); }
 
   play() {
     unlockAudio();
@@ -139,7 +145,8 @@ export class MatchScene extends Phaser.Scene {
       ]);
       c.setSize(576, 116).setInteractive({ useHandCursor: true }).on('pointerup', () => { sfx('tap'); this.scene.start('Match', { id: m.id }); });
     });
-    new Button(this, UI.width / 2 - 160, 1190, { ...SUB, label: '둘이서 하기', onPress: () => this.scene.start('Duo', { step: 'setup', mode: 'remote' }) });
-    new Button(this, UI.width / 2 + 160, 1190, { ...SUB, label: '처음 화면으로', onPress: () => this.scene.start('Title') });
+    const L = UI.landscape;
+    new Button(this, L ? 1010 : UI.width / 2 - 160, L ? 520 : 1190, { ...SUB, label: '둘이서 하기', onPress: () => this.scene.start('Duo', { step: 'setup', mode: 'remote' }) });
+    new Button(this, L ? 1010 : UI.width / 2 + 160, L ? 660 : 1190, { ...SUB, label: '처음 화면으로', onPress: () => this.scene.start('Title') });
   }
 }

@@ -18,12 +18,15 @@ export class PauseScene extends Phaser.Scene {
   }
 
   create() {
-    this.add.rectangle(0, -UI.offY, UI.width, UI.fullHeight, 0x2b2d5a, 0.5).setOrigin(0).setInteractive();
+    this.add.rectangle(-2000, -2000, 4720, 5280, 0x2b2d5a, 0.5).setOrigin(0).setInteractive();
     const root = this.add.container(0, 0);
     const g = this.add.graphics();
-    const y = 270;
-    drawPanel(g, 90, y, 540, 720, this.frame);
-    root.add([g, this.add.text(UI.width / 2, y + 90, '잠깐 쉬는 중', { fontFamily: UI.fontTitle, fontSize: '46px', color: '#2b2d5a' }).setOrigin(0.5)]);
+    // 가로 (18절): 낮고 넓은 판에 버튼 2열
+    const land = UI.landscape;
+    const y = land ? 400 : 270;
+    if (land) drawPanel(g, 360 - 450, y, 900, 480, this.frame);
+    else drawPanel(g, 90, y, 540, 720, this.frame);
+    root.add([g, this.add.text(UI.width / 2, y + (land ? 76 : 90), '잠깐 쉬는 중', { fontFamily: UI.fontTitle, fontSize: '46px', color: '#2b2d5a' }).setOrigin(0.5)]);
 
     const buttons = [
       ['계속하기', 0x2f7bff, 0x1f5fd6, '#ffffff', () => this.resume()],
@@ -32,7 +35,8 @@ export class PauseScene extends Phaser.Scene {
       ['타이틀로', 0xffb347, 0xd98a2b, '#2b2d5a', () => this.toTitle()],
     ];
     buttons.forEach(([label, color, shade, textColor, fn], i) => {
-      root.add(new Button(this, UI.width / 2, y + 220 + i * 128, { width: 400, height: 104, fontSize: 32, label, color, shade, textColor, onPress: () => { sfx('tap'); fn(); } }));
+      const [bx, by] = land ? [UI.width / 2 + (i % 2 ? 205 : -205), y + 200 + Math.floor(i / 2) * 140] : [UI.width / 2, y + 220 + i * 128];
+      root.add(new Button(this, bx, by, { width: 400, height: 104, fontSize: 32, label, color, shade, textColor, onPress: () => { sfx('tap'); fn(); } }));
     });
 
     this.input.keyboard?.on('keydown-ESC', () => this.resume());

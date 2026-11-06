@@ -72,7 +72,7 @@ export class PopScene extends Phaser.Scene {
     const land = UI.landscape;
     const LX = 120, RX = 900; // 가로: 왼쪽·오른쪽 칸 가운데
     this.add.text(land ? LX : UI.width / 2, land ? 420 : 250 + this.top, '기념품 퐁퐁', { fontFamily: UI.fontTitle, fontSize: '78px', color: '#2b2d5a' }).setOrigin(0.5);
-    this.add.text(land ? LX : UI.width / 2, land ? 530 : 345 + this.top, '같은 기념품 3개를 이으면 퐁!\n쓱 밀어 옮기고, 톡 눌러 돌려요', { fontFamily: UI.font, fontSize: '30px', color: '#5a5c88', align: 'center', lineSpacing: 10 }).setOrigin(0.5);
+    this.add.text(land ? LX : UI.width / 2, land ? 530 : 345 + this.top, '같은 기념품 3개를 이으면 퐁!\n쓱 옆으로 옮기고 · 톡 돌리고\n꾹 누르면 빨리 · 아래로 쓱 바로 쿵', { fontFamily: UI.font, fontSize: '30px', color: '#5a5c88', align: 'center', lineSpacing: 10 }).setOrigin(0.5);
     this.add.text(land ? RX : UI.width / 2, land ? 250 : 465 + this.top, SERIES.n === 2 ? '어느 계절부터 할까요?' : '어느 나라부터 할까요?', { fontFamily: UI.fontTitle, fontSize: '32px', color: '#2b2d5a' }).setOrigin(0.5);
     const reached = state.pop?.reached ?? 0;
     this.chips = STAGES.map((s, i) => {
@@ -486,21 +486,28 @@ export class PopScene extends Phaser.Scene {
   setupInput() {
     this.input.addPointer(2);
     this.touches = new Map();
+    // 터치만으로 (2026-11-06 키보드 끔): 쓱 옆 = 옮기기, 쓱 아래 = 바로 내리기, 톡 = 돌리기, 꾹 누르고 있기 = 빨리 떨어지기
     this.input.on('pointerdown', (p, over) => {
       if (over.length || this.ended) return;
-      this.touches.set(p.id, { x: p.x, y: p.y, board: this.boardAt(p.x), moved: false, dropped: false });
+      const t = { x: p.x, y: p.y, board: this.boardAt(p.x), moved: false, dropped: false, holding: false };
+      t.timer = this.time.delayedCall(UI.popHoldMs, () => { if (!t.moved && this.touches.get(p.id) === t && !this.ended) { t.holding = true; t.board.soft = true; } });
+      this.touches.set(p.id, t);
     });
     this.input.on('pointermove', (p) => {
       const t = this.touches.get(p.id);
       if (!t || !p.isDown || t.dropped) return;
       const dx = p.x - t.x, dy = p.y - t.y;
+      if (t.holding) return;
       if (dy > SWIPE * 1.6 && Math.abs(dy) > Math.abs(dx)) { t.board.drop(); t.dropped = true; t.moved = true; return; }
       if (Math.abs(dx) >= SWIPE) { t.board.move(dx > 0 ? 1 : -1); t.x = p.x; t.moved = true; }
     });
     this.input.on('pointerup', (p) => {
       const t = this.touches.get(p.id);
       this.touches.delete(p.id);
-      if (t && !t.moved && !this.ended) t.board.rotate();
+      if (!t) return;
+      t.timer?.remove();
+      if (t.holding) { t.board.soft = false; return; } // 꾹 누르기는 돌리지 않는다
+      if (!t.moved && !this.ended) t.board.rotate();
     });
     const kb = this.input.keyboard;
     if (!kb) return;

@@ -37,6 +37,8 @@ export const UI = {
   gap: 16,
   fontSize: { dialogue: 34, button: 36, hud: 30, title: 72, small: 22 },
   swipeMinPx: 40,
+  // 기념품 퐁퐁: 판을 이만큼 꾹 누르고 있으면 빨리 떨어진다 (손을 떼면 보통 빠르기)
+  popHoldMs: 350,
   vibrate: { collect: 15, bump: 40, special: [30, 40, 30], cocoon: 20, stamp: 40 },
   // 반짝가루: 미로마다 1번, 이 시간 동안 반짝반짝 — 방해물·웅덩이·거미줄·물방울에 닿아도 괜찮다 (2026-11-04, 밤 골목 어둠이 없어져서 바꿈)
   sparkleMs: 8000,

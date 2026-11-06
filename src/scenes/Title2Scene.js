@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { afterDialogue } from '../ui/afterDialogue.js';
 import { UI, landView } from '../data/ui.js';
+import { drawSkyline, drawRoad, addCars } from '../maze/seoulCity.js';
 import { CHAPTERS } from '../data/chapters.js';
 import { VERSION } from '../data/version.js';
 import { Button } from '../ui/Button.js';
@@ -27,6 +28,7 @@ export class Title2Scene extends Phaser.Scene {
     setTheme('#cfeaff', '#a8dd8f');
     const { top, bottom } = getSafeInsets(this.game);
     this.drawYard();
+    addCars(this, { x0: -1200, x1: UI.width + 1200, y: 392, count: 7, scale: 1, seed: 21 });
     // 포포 (가운데, 마당 잔디 위)
     this.popo = this.add.sprite(UI.width / 2, 700, 'blue_popoSpring_battle', 0).setDisplaySize(330, 330);
     if (this.anims.exists('blue_popoSpring_battle_idle')) this.popo.play('blue_popoSpring_battle_idle');
@@ -96,6 +98,9 @@ export class Title2Scene extends Phaser.Scene {
     g.fillStyle(C.sky, 1).fillRect(X0, -900, XW, 1460);
     g.fillStyle(C.sky2, 1).fillRect(X0, 300, XW, 260);
     g.fillStyle(0xffffff, 0.95).fillEllipse(140, 360, 120, 44).fillEllipse(110, 370, 80, 34).fillEllipse(560, 320, 110, 40);
+    // 서울 빌딩 숲 + 남산 타워 + 울타리 너머 찻길 (2026-11-06 "도시적인 그림으로")
+    drawSkyline(g, { x0: X0, x1: X0 + XW, baseY: 392, maxH: 108, season: 'spring', seed: 5 });
+    drawRoad(g, X0, X0 + XW, 392, 30);
     // 빨랫줄 + 작은 손수건
     g.lineStyle(3, C.fenceDark, 0.8).lineBetween(40, 330, 680, 300);
     [[180, 324, 0xffc2d6], [300, 318, 0xbfe3ff], [420, 312, 0xfff3a0]].forEach(([x, y, c]) => g.fillStyle(c, 1).fillRect(x, y, 46, 40));

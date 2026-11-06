@@ -3,6 +3,7 @@
 // (봄 개나리 노랑, 여름 수박 빨강, 가을 은행잎 노란 부채, 겨울 여섯 갈래 눈송이 → 판 위에는 쓰지 않고, 눈은 작은 동그라미로만).
 import { UI } from '../data/ui.js';
 import { platform } from '../platform.js';
+import { drawSkyline, drawRoad, addCars } from './seoulCity.js';
 
 const hash = (x, y, k = 0) => {
   let h = (x * 73856093) ^ (y * 19349663) ^ (k * 83492791);
@@ -213,3 +214,28 @@ const winter = {
 };
 
 export const KINDS2 = { spring, summer, autumn, winter };
+
+// 판 위 여백(상태 줄과 판 사이)에 서울 빌딩 숲 + 찻길 위 자동차 (2026-11-06 "도시적인 그림으로 채워")
+// 여백이 넉넉한 화면(길쭉한 폰)에서만 — 좁으면 건너뛴다. 기념품 퐁퐁 배경(같은 그림)에도 나온다.
+const cityBand = (scene) => {
+  const { oy } = board(scene);
+  const top = (scene.hudBottom ?? 0) + 6;
+  const road = oy - 32;
+  const maxH = Math.min(230, road - top - 14);
+  return maxH >= 56 ? { road, maxH } : null;
+};
+Object.entries(KINDS2).forEach(([season, k], i) => {
+  const bd = k.backdrop, am = k.ambient;
+  k.backdrop = (scene, g, sc) => {
+    bd(scene, g, sc);
+    const b = cityBand(scene);
+    if (!b) return;
+    drawSkyline(g, { x0: 0, x1: UI.fullWidth, baseY: b.road, maxH: b.maxH, season, seed: 11 + i * 7 });
+    drawRoad(g, 0, UI.fullWidth, b.road, 28);
+  };
+  k.ambient = (scene, sc) => {
+    am?.(scene, sc);
+    const b = cityBand(scene);
+    if (b) addCars(scene, { x0: 0, x1: UI.fullWidth, y: b.road, count: 4, scale: 0.9, depth: 0.5, seed: 3 + i });
+  };
+});

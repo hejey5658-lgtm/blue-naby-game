@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { afterDialogue } from '../ui/afterDialogue.js';
 import { UI, landView } from '../data/ui.js';
+import { drawSkyline, drawRoad, addCars } from '../maze/seoulCity.js';
 import { CHAPTERS } from '../data/chapters.js';
 import { BOSSES } from '../data/bosses.js';
 import { state, save } from '../state.js';
@@ -29,6 +30,9 @@ export class Ending2Scene extends Phaser.Scene {
     const g = this.add.graphics();
     // 가로·길쭉한 화면에서도 빈 곳 없이 하늘·마당을 넉넉히
     g.fillStyle(0xfde3ea, 1).fillRect(-1500, -1500, UI.width + 3000, 2120).fillStyle(0xa8dd8f, 1).fillRect(-1500, 620, UI.width + 3000, UI.height - 620 + 1500);
+    // 다시 돌아온 봄의 서울: 빌딩 숲 + 남산 타워 + 찻길
+    drawSkyline(g, { x0: -1500, x1: UI.width + 1500, baseY: 594, maxH: 230, season: 'spring', seed: 9 });
+    drawRoad(g, -1500, UI.width + 1500, 594, 28);
     for (let i = -20; i < 29; i++) g.fillStyle(0xffd84a, 1).fillCircle(40 + i * 82, 640, 14);
     // 마당 풀잎·꽃 몇 송이 (양옆 넓은 곳에도)
     for (let i = 0; i < 70; i++) {
@@ -37,6 +41,7 @@ export class Ending2Scene extends Phaser.Scene {
       g.fillStyle(0x7fc36b, 1).fillTriangle(x, y, x + 6, y - 16, x + 12, y);
       if (i % 4 === 0) g.fillStyle([0xffd84a, 0xff9fb8, 0xffffff][i % 3], 1).fillCircle(x + 20, y - 6, 7);
     }
+    addCars(this, { x0: -1500, x1: UI.width + 1500, y: 594, count: 8, scale: 1, seed: 31 });
     this.popo = this.add.image(UI.width / 2, 700, 'blue_popoSpring_battle', 6).setDisplaySize(300, 300);
     FRIENDS.forEach((f, i) => {
       const x = 90 + i * 135, y = i % 2 ? 500 : 470;

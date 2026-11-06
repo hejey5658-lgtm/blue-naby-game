@@ -965,7 +965,8 @@ export class MazeScene extends Phaser.Scene {
     const play = () => {
       const k = keys.shift();
       if (!k) { this.locked = false; this.saveProgress(); return; }
-      afterDialogue(this, play);
+      // 앞 대사창이 닫히는 중에 바로 다시 띄우면 같이 닫혀 버리므로 조금 뒤에
+      afterDialogue(this, () => this.time.delayedCall(120, play));
       this.scene.launch('Dialogue', { key: k, frame: this.chapter.frame, form: this.chapter.form });
     };
     this.time.delayedCall(300, play);

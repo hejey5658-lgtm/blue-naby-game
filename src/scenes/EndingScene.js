@@ -59,27 +59,29 @@ export class EndingScene extends Phaser.Scene {
 
   drawField() {
     const g = this.add.graphics();
+    const X0 = -1500, XW = UI.width + 3000;
     // 하늘 (띠로 그라데이션)
     const top = Phaser.Display.Color.ValueToColor(0x7fc3ff);
     const bot = Phaser.Display.Color.ValueToColor(0xd6efff);
     for (let i = 0; i < 12; i++) {
       const c = Phaser.Display.Color.Interpolate.ColorWithColor(top, bot, 11, i);
-      g.fillStyle(Phaser.Display.Color.GetColor(c.r, c.g, c.b), 1).fillRect(0, i * 46, UI.width, 47);
+      // 가로·길쭉한 화면에서도 빈 곳 없이: 맨 위 띠는 위로, 모든 띠는 양옆으로 넉넉히
+      g.fillStyle(Phaser.Display.Color.GetColor(c.r, c.g, c.b), 1).fillRect(X0, i === 0 ? -1500 : i * 46, XW, i === 0 ? 1547 : 47);
     }
     g.fillStyle(0xffe9a8, 1).fillCircle(600, 140, 56);
     g.fillStyle(0xffffff, 0.9).fillCircle(150, 170, 34).fillCircle(190, 160, 44).fillCircle(232, 174, 30);
     // 먼 단풍 숲
     const maples = [0xc0563a, 0xe8794f, 0xd9643f, 0xf0a04b];
-    for (let i = 0; i < 16; i++) g.fillStyle(maples[i % 4], 1).fillCircle(i * 50 - 10, 520 + (i % 3) * 10, 46 + (i % 2) * 12);
+    for (let i = -32; i < 48; i++) g.fillStyle(maples[(i + 64) % 4], 1).fillCircle(i * 50 - 10, 520 + ((i + 63) % 3) * 10, 46 + ((i + 64) % 2) * 12);
     // 튤립 꽃밭: 아래로 갈수록 크게 (원근)
-    g.fillStyle(0x5fb84f, 1).fillRect(0, 540, UI.width, UI.height - 540);
+    g.fillStyle(0x5fb84f, 1).fillRect(X0, 540, XW, UI.height - 540 + 1500);
     const tulips = [0xff6b5b, 0xffd84a, 0xff9fb8, 0xffffff, 0xe8584a];
-    for (let row = 0; row < 11; row++) {
+    for (let row = 0; row < 13; row++) {
       const y = 570 + row * row * 6.4 + row * 10;
       const r = 6 + row * 2.2;
       const gap = r * 3.2;
       const col = tulips[row % tulips.length];
-      for (let x = (row % 2) * gap * 0.5; x < UI.width + gap; x += gap) {
+      for (let x = (row % 2) * gap * 0.5 - Math.ceil(800 / gap) * gap; x < UI.width + 800; x += gap) {
         g.fillStyle(0x3f8f3c, 1).fillRect(x - 1.5, y, 3, r * 1.2);
         g.fillStyle(col, 1).fillEllipse(x, y, r * 1.4, r * 1.7);
       }
@@ -142,6 +144,9 @@ export class EndingScene extends Phaser.Scene {
     this.blue.setFrame(6);
     const t = this.add.text(UI.width / 2, 120, '블루나비의 세계여행', { fontFamily: UI.fontTitle, fontSize: '56px', color: '#ffffff', stroke: '#2b2d5a', strokeThickness: 10 }).setOrigin(0.5).setDepth(10).setAlpha(0);
     const t2 = this.add.text(UI.width / 2, 192, '— 끝 —', { fontFamily: UI.fontTitle, fontSize: '40px', color: '#ffe9a8', stroke: '#2b2d5a', strokeThickness: 8 }).setOrigin(0.5).setDepth(10).setAlpha(0);
+    const land = UI.landscape;
+    // 가로: 가운데 꽃밭은 그대로, 제목은 왼쪽 칸, 기록 카드·버튼은 오른쪽 칸
+    if (land) { t.setPosition(-230, 560).setFontSize(44); t2.setPosition(-230, 640); }
     this.tweens.add({ targets: [t, t2], alpha: 1, y: '+=10', duration: 700, ease: 'Sine.easeOut' });
 
     // 장별 기록 카드
@@ -163,6 +168,13 @@ export class EndingScene extends Phaser.Scene {
       const sec = state.records[c.id]?.mazeSec;
       card.add(this.add.text(x, 1100, sec != null ? fmt(sec) : '-', { fontFamily: UI.font, fontSize: '22px', color: '#5a5c88' }).setOrigin(0.5));
     });
+    if (land) {
+      // 오른쪽 칸 폭에 맞춰 카드 크기 (넓은 폰일수록 크게)
+      const v = this.landscapeView();
+      const k = Math.min(0.85, Math.max(0.6, (v.right - 800) / 700));
+      this.rightX = Math.min(950 + (k - 0.68) * 300, (760 + v.right) / 2 - 20);
+      card.setScale(k).setPosition(this.rightX - 360 * k, 600 - 1042 * k);
+    }
     this.tweens.add({ targets: card, alpha: 1, duration: 500, delay: 400 });
 
     const by = 1200;
@@ -202,16 +214,24 @@ export class EndingScene extends Phaser.Scene {
       if (res === 'downloaded') this.toast('기록 카드를 저장했어요!');
     });
     buttons.add(rc);
+    if (land) {
+      const [photo, home] = buttons.list;
+      photo.setPosition(this.rightX, 860);
+      home.setPosition(this.rightX, 990);
+      fb.setPosition(1090, 360);
+      rc.setPosition(-370, 360);
+      if (window.BB_EMBED) buttons.list[2].setPosition(-230, 760);
+    }
     this.tweens.add({ targets: buttons, alpha: 1, duration: 400, delay: 900 });
   }
 
   toast(msg) {
-    const t = this.add.text(UI.width / 2, 1110, msg, { fontFamily: UI.font, fontSize: '26px', color: '#ffffff', backgroundColor: '#2b2d5acc', padding: { x: 16, y: 8 } }).setOrigin(0.5).setDepth(12);
+    const t = this.add.text(UI.landscape ? 950 : UI.width / 2, UI.landscape ? 760 : 1110, msg, { fontFamily: UI.font, fontSize: '26px', color: '#ffffff', backgroundColor: '#2b2d5acc', padding: { x: 16, y: 8 } }).setOrigin(0.5).setDepth(12);
     this.tweens.add({ targets: t, alpha: 0, delay: 1800, duration: 400, onComplete: () => t.destroy() });
   }
 
   // 가로 (18절): 연출 화면이라 전체가 보이게 줄여서 보고, 연출 중에는 다시 그리지 않는다(다음 화면부터 새 배치)
-  landscapeView() { return landView(0.58, 360, 640); }
+  landscapeView() { return landView(0.78, 360, 760); }
 
   canRelayout() { return false; }
 }

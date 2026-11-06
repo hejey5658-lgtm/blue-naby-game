@@ -27,8 +27,16 @@ export class Ending2Scene extends Phaser.Scene {
     state.step = 'map';
     save();
     const g = this.add.graphics();
-    g.fillStyle(0xfde3ea, 1).fillRect(0, 0, UI.width, 620).fillStyle(0xa8dd8f, 1).fillRect(0, 620, UI.width, UI.height - 620);
-    for (let i = 0; i < 9; i++) g.fillStyle(0xffd84a, 1).fillCircle(40 + i * 82, 640, 14);
+    // 가로·길쭉한 화면에서도 빈 곳 없이 하늘·마당을 넉넉히
+    g.fillStyle(0xfde3ea, 1).fillRect(-1500, -1500, UI.width + 3000, 2120).fillStyle(0xa8dd8f, 1).fillRect(-1500, 620, UI.width + 3000, UI.height - 620 + 1500);
+    for (let i = -20; i < 29; i++) g.fillStyle(0xffd84a, 1).fillCircle(40 + i * 82, 640, 14);
+    // 마당 풀잎·꽃 몇 송이 (양옆 넓은 곳에도)
+    for (let i = 0; i < 70; i++) {
+      const x = -1100 + ((i * 197) % 2920), y = 700 + ((i * 113) % 900);
+      if (x > 20 && x < 700 && y < 1000) continue;
+      g.fillStyle(0x7fc36b, 1).fillTriangle(x, y, x + 6, y - 16, x + 12, y);
+      if (i % 4 === 0) g.fillStyle([0xffd84a, 0xff9fb8, 0xffffff][i % 3], 1).fillCircle(x + 20, y - 6, 7);
+    }
     this.popo = this.add.image(UI.width / 2, 700, 'blue_popoSpring_battle', 6).setDisplaySize(300, 300);
     FRIENDS.forEach((f, i) => {
       const x = 90 + i * 135, y = i % 2 ? 500 : 470;
@@ -51,6 +59,9 @@ export class Ending2Scene extends Phaser.Scene {
     vibrate('special');
     const t = this.add.text(UI.width / 2, 130, '포포의 사계절 서울', { fontFamily: UI.fontTitle, fontSize: '60px', color: '#ffffff', stroke: '#2b2d5a', strokeThickness: 10 }).setOrigin(0.5).setAlpha(0);
     const t2 = this.add.text(UI.width / 2, 206, '— 끝 —', { fontFamily: UI.fontTitle, fontSize: '40px', color: '#2b2d5a' }).setOrigin(0.5).setAlpha(0);
+    const land = UI.landscape;
+    // 가로: 가운데 마당은 그대로, 제목은 왼쪽 칸, 기록 카드·버튼은 오른쪽 칸
+    if (land) { t.setPosition(-230, 520).setFontSize(46); t2.setPosition(-230, 600); }
     this.tweens.add({ targets: [t, t2], alpha: 1, duration: 700 });
     // 계절별 미로 시간 + 사귄 친구 수 (별 없음)
     const card = this.add.container(0, 0).setAlpha(0);
@@ -65,6 +76,13 @@ export class Ending2Scene extends Phaser.Scene {
       const sec = state.records[c.id]?.mazeSec;
       card.add(this.add.text(x, 1040, sec != null ? fmt(sec) : '-', { fontFamily: UI.font, fontSize: '24px', color: '#5a5c88' }).setOrigin(0.5));
     });
+    if (land) {
+      // 오른쪽 칸 폭에 맞춰 카드 크기 (넓은 폰일수록 크게)
+      const v = this.landscapeView();
+      const k = Math.min(0.85, Math.max(0.6, (v.right - 800) / 700));
+      this.rightX = Math.min(950 + (k - 0.68) * 300, (760 + v.right) / 2 - 20);
+      card.setScale(k).setPosition(this.rightX - 360 * k, 520 - 993 * k);
+    }
     this.tweens.add({ targets: card, alpha: 1, duration: 500, delay: 300 });
     const by = 1190;
     const row = this.add.container(0, 0).setAlpha(0);
@@ -72,12 +90,13 @@ export class Ending2Scene extends Phaser.Scene {
       onPress: async () => { row.setVisible(false); await new Promise((r) => this.time.delayedCall(60, r)); await takePhoto(this.game, 'popo-ending.png'); row.setVisible(true); } }));
     row.add(new Button(this, 360, by, { width: 220, height: 96, fontSize: 26, label: '기록 자랑', color: 0xff9fb8, shade: 0xe07a96, textColor: '#2b2d5a', onPress: () => sendRecordCard(this.game) }));
     row.add(new Button(this, 590, by, { width: 220, height: 96, fontSize: 26, label: '앨범으로', onPress: () => this.scene.start('Album') }));
+    if (land) row.list.forEach((b, i) => b.setPosition(this.rightX, 720 + i * 112));
     this.tweens.add({ targets: row, alpha: 1, duration: 400, delay: 800 });
     this.done = true;
   }
 
   // 가로 (18절): 연출 화면이라 전체가 보이게 줄여서 보고, 연출 중에는 다시 그리지 않는다(다음 화면부터 새 배치)
-  landscapeView() { return landView(0.58, 360, 640); }
+  landscapeView() { return landView(0.78, 360, 620); }
 
   canRelayout() { return false; }
 }

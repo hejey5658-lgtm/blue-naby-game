@@ -46,12 +46,15 @@ export class DialogueScene extends Phaser.Scene {
   }
 
   create() {
-    const { top, bottom } = getSafeInsets(this.game);
-    const boxY = BOX.bottom - bottom - BOX.h;
+    // 대사창은 실제 화면 맨 아래에, 건너뛰기는 맨 위에 붙인다 (길쭉한 폰: 이 씬은 1280 칸이 가운데라 위아래로 offY 만큼 더 있음)
+    const full = getSafeInsets(this.game, true);
+    const bandB = UI.fullHeight - UI.height - UI.offY;
+    const top = full.top - UI.offY;
+    const boxY = BOX.bottom + bandB - full.bottom - BOX.h;
     this.boxY = boxY;
 
     // 화면 전체를 받는 투명 판 (톡 = 다음)
-    this.add.zone(0, 0, UI.width, UI.height).setOrigin(0).setInteractive()
+    this.add.zone(0, -UI.offY, UI.width, UI.fullHeight).setOrigin(0).setInteractive()
       .on('pointerup', () => this.advance());
 
     // 대사창 판 (그 장의 창틀 모양)

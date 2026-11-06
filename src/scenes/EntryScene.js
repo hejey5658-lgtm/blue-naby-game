@@ -35,9 +35,12 @@ export class EntryScene extends Phaser.Scene {
     this.leaving = false;
     this.rot = 0;
     setTheme('#8f6440', '#8f6440');
-    this.insets = getSafeInsets(this.game);
+    // 캔버스 전체 높이(길쭉한 폰)를 쓴다: 책상·지도 종이는 끝까지, 지구본·카드는 남는 높이의 가운데로 (dy)
+    this.insets = getSafeInsets(this.game, true);
+    this.dy = UI.offY;
+    this.titleY = Math.max(92, this.insets.top + 56);
     this.drawMap();
-    this.globe = this.add.container(GLOBE.x, GLOBE.y);
+    this.globe = this.add.container(GLOBE.x, GLOBE.y + this.dy);
     this.drawStand();
     this.surface = this.add.graphics();
     this.shine = this.add.graphics();
@@ -54,9 +57,11 @@ export class EntryScene extends Phaser.Scene {
   // ── 펼친 세계지도 (한 장으로 구움) ─────────────────
   drawMap() {
     const g = this.make.graphics({ x: 0, y: 0 }, false);
-    g.fillStyle(C.desk, 1).fillRect(0, 0, UI.width, UI.height);
-    for (let y = 30; y < UI.height; y += 64) g.fillStyle(C.deskDark, 0.18).fillRect(0, y, UI.width, 3);
-    const P = { x: 22, y: 150, w: UI.width - 44, h: 1060 };
+    const FH = UI.fullHeight, dy = this.dy;
+    g.fillStyle(C.desk, 1).fillRect(0, 0, UI.width, FH);
+    for (let y = 30; y < FH; y += 64) g.fillStyle(C.deskDark, 0.18).fillRect(0, y, UI.width, 3);
+    const py = this.titleY + 58;
+    const P = { x: 22, y: py, w: UI.width - 44, h: FH - 70 - this.insets.bottom * 0.5 - py };
     g.fillStyle(0x000000, 0.18).fillRoundedRect(P.x + 6, P.y + 10, P.w, P.h, 20);
     g.fillStyle(C.paperEdge, 1).fillRoundedRect(P.x, P.y, P.w, P.h, 20);
     g.fillStyle(C.paper, 1).fillRoundedRect(P.x + 8, P.y + 8, P.w - 16, P.h - 16, 16);
@@ -68,7 +73,8 @@ export class EntryScene extends Phaser.Scene {
       const y = P.y + 60 + ((i * 131) % (P.h - 130));
       g.beginPath(); g.arc(x, y, 9, Math.PI, 0); g.arc(x + 18, y, 9, Math.PI, 0, true); g.strokePath();
     }
-    // 둥근 대륙 덩어리 (평면 지도)
+    // 둥근 대륙 덩어리 (평면 지도) — 길쭉한 폰이면 dy 만큼 아래로
+    g.translateCanvas(0, dy);
     const blob = (pts) => {
       for (const [x, y, r] of pts) g.fillStyle(C.landEdge, 1).fillCircle(x, y + 4, r);
       for (const [x, y, r] of pts) g.fillStyle(C.land, 1).fillCircle(x, y, r);
@@ -88,20 +94,21 @@ export class EntryScene extends Phaser.Scene {
       for (let k = 0; k <= n; k++) g.fillCircle(x1 + ((x2 - x1) * k) / n, y1 + ((y2 - y1) * k) / n, 3.5);
     }
     for (const [x, y] of route) g.fillStyle(C.blue, 0.8).fillCircle(x, y, 6);
+    g.translateCanvas(0, -dy);
     // 접힌 자국
     g.fillStyle(C.fold, 0.5).fillRect(P.x + P.w / 3, P.y + 12, 3, P.h - 24).fillRect(P.x + (P.w * 2) / 3, P.y + 12, 3, P.h - 24).fillRect(P.x + 12, P.y + P.h / 2, P.w - 24, 3);
     // 나침반 (오른쪽 아래)
-    const cx = 624, cy = 1128;
+    const cx = 624, cy = 1128 + dy;
     g.fillStyle(C.paper, 1).fillCircle(cx, cy, 46);
     g.lineStyle(3, C.ink, 0.6).strokeCircle(cx, cy, 46);
     g.fillStyle(0xe8584a, 1).fillTriangle(cx, cy - 40, cx - 10, cy, cx + 10, cy);
     g.fillStyle(C.ink, 0.8).fillTriangle(cx, cy + 40, cx - 10, cy, cx + 10, cy);
     g.fillStyle(C.ink, 0.5).fillTriangle(cx - 40, cy, cx, cy - 8, cx, cy + 8).fillTriangle(cx + 40, cy, cx, cy - 8, cx, cy + 8);
     if (this.textures.exists('entry_map')) this.textures.remove('entry_map');
-    g.generateTexture('entry_map', UI.width, UI.height);
+    g.generateTexture('entry_map', UI.width, FH);
     g.destroy();
     this.add.image(0, 0, 'entry_map').setOrigin(0);
-    this.add.text(624, 1066, 'N', { fontFamily: UI.fontTitle, fontSize: '22px', color: '#2b2d5a' }).setOrigin(0.5);
+    this.add.text(624, 1066 + dy, 'N', { fontFamily: UI.fontTitle, fontSize: '22px', color: '#2b2d5a' }).setOrigin(0.5);
   }
 
   // ── 지구본 모형 ────────────────────────────────
@@ -189,7 +196,7 @@ export class EntryScene extends Phaser.Scene {
 
   // ── 이름표 카드 (핀이 작아도 여기를 눌러 들어갈 수 있게) ──
   makeCards() {
-    const y = 960;
+    const y = 960 + this.dy;
     [[1, 190], [2, 530]].forEach(([n, x]) => {
       const c = this.add.container(x, y);
       const g = this.add.graphics();
@@ -210,16 +217,16 @@ export class EntryScene extends Phaser.Scene {
       c.on('pointerdown', () => c.setScale(0.96));
       c.on('pointerout', () => c.setScale(1));
     });
-    this.add.text(300, 1092, '핀이나 카드를 톡 눌러 여행을 골라요', { fontFamily: UI.font, fontSize: '24px', color: '#5a4630' }).setOrigin(0.5);
+    this.add.text(300, 1092 + this.dy, '핀이나 카드를 톡 눌러 여행을 골라요', { fontFamily: UI.font, fontSize: '24px', color: '#5a4630' }).setOrigin(0.5);
   }
 
   makeChrome() {
     const { top, bottom } = this.insets;
-    this.add.text(UI.width / 2, 92 + top, '어디로 여행할까요?', { fontFamily: UI.fontTitle, fontSize: '52px', color: '#fffaf0', stroke: '#6e4a2e', strokeThickness: 10 }).setOrigin(0.5);
+    this.add.text(UI.width / 2, this.titleY, '어디로 여행할까요?', { fontFamily: UI.fontTitle, fontSize: '52px', color: '#fffaf0', stroke: '#6e4a2e', strokeThickness: 10 }).setOrigin(0.5);
     const tag = IS_TEST_BUILD ? `테스트 버전 ${VERSION}` : `v${VERSION}`;
-    this.add.text(36, UI.height - 26 - bottom, tag, { fontFamily: UI.font, fontSize: '22px', color: '#fffaf0' }).setOrigin(0, 1).setAlpha(0.8);
+    this.add.text(36, UI.fullHeight - 26 - bottom, tag, { fontFamily: UI.font, fontSize: '22px', color: '#fffaf0' }).setOrigin(0, 1).setAlpha(0.8);
     // 설정 (오른쪽 아래)
-    const gear = this.add.container(UI.width - 64, UI.height - 52 - bottom);
+    const gear = this.add.container(UI.width - 64, UI.fullHeight - 52 - bottom);
     const gg = this.add.graphics();
     gg.fillStyle(0xffffff, 0.95).fillCircle(0, 0, 34);
     iconGear(gg, 0, 0, 42);
@@ -258,7 +265,7 @@ export class EntryScene extends Phaser.Scene {
     this.tweens.killTweensOf(pin);
     this.tweens.add({ targets: pin, scale: 1.4, duration: 200, yoyo: true });
     this.tweens.add({
-      targets: this.globe, scale: 3.2, x: GLOBE.x - pin.x * 3.2, y: 640 - pin.y * 3.2,
+      targets: this.globe, scale: 3.2, x: GLOBE.x - pin.x * 3.2, y: 640 + this.dy - pin.y * 3.2,
       duration: 900, ease: 'Cubic.easeIn',
     });
     this.time.delayedCall(560, () => this.cameras.main.fadeOut(340, 255, 250, 240));

@@ -33,7 +33,7 @@ export class DuoScene extends Phaser.Scene {
 
   create() {
     setTheme('#f3e3c3', '#f3e3c3');
-    this.add.rectangle(0, 0, UI.width, UI.height, 0xf3e3c3).setOrigin(0);
+    this.add.rectangle(0, -UI.offY, UI.width, UI.fullHeight, 0xf3e3c3).setOrigin(0);
     this.top = getSafeInsets(this.game).top;
     if (this.step === 'turn') this.drawTurn();
     else if (this.step === 'result') this.drawResult();

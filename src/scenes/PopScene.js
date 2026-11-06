@@ -57,7 +57,7 @@ export class PopScene extends Phaser.Scene {
   // ── 처음 화면: 혼자 하기 · 둘이서 대결 + 나라 고르기 ──
   drawMenu() {
     setTheme('#f3e3c3', '#f3e3c3');
-    this.add.rectangle(0, 0, UI.width, UI.height, 0xf3e3c3).setOrigin(0);
+    this.add.rectangle(0, -UI.offY, UI.width, UI.fullHeight, 0xf3e3c3).setOrigin(0);
     makePopIcons(this);
     // 둥둥 떠 있는 기념품 몇 개
     STAGES.flatMap((s) => s.types.slice(2).map((t) => t.icon)).concat(STAGES.map((s) => s.types[0].icon)).slice(0, 6).filter((k) => this.textures.exists(k)).forEach((k, i) => {
@@ -412,7 +412,7 @@ export class PopScene extends Phaser.Scene {
   // ── 결과 판: 왕관·도장·버튼 수에 맞춰 판 높이를 정한다 ──
   panel(title, body, { crown = false, stamp = false, buttons = 2 } = {}) {
     const layer = this.add.container(0, 0).setDepth(30);
-    const dim = this.add.rectangle(0, 0, UI.width, UI.height, 0x2b2d5a, 0.45).setOrigin(0).setInteractive();
+    const dim = this.add.rectangle(0, -UI.offY, UI.width, UI.fullHeight, 0x2b2d5a, 0.45).setOrigin(0).setInteractive();
     let y = 300;
     const titleY = y + (crown ? 170 : 100);
     const bodyY = titleY + 82;

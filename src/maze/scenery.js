@@ -56,7 +56,7 @@ function tween(scene, cfg) { if (!still()) scene.tweens.add(cfg); }
 const home = {
   // 작은 꽃무늬 벽지, 아래에 창 한 조각과 창턱 위 화분 (블루나비가 태어난 그 화분)
   backdrop(scene, g, sc) {
-    const { width: W, height: H } = UI;
+    const { width: W, fullHeight: H } = UI;
     g.fillStyle(sc.wallpaper, 1).fillRect(0, 0, W, H);
     for (let y = 24; y < H; y += 56) {
       for (let x = (y / 56) % 2 ? 52 : 24; x < W; x += 56) {
@@ -181,7 +181,7 @@ function pot(g, x, baseY, s) {
 // 판은 대부분 어둠에 가려지므로, 창문 불빛·밤하늘은 어둠 위(깊이 7.5)에 따로 놓는다.
 const hasWindow = (s, x, y) => !isEdge(s, x, y) && hash(x, y, 40) < 0.32;
 const alley = {
-  backdrop(scene, g) { g.fillStyle(0x23254d, 1).fillRect(0, 0, UI.width, UI.height); },
+  backdrop(scene, g) { g.fillStyle(0x23254d, 1).fillRect(0, 0, UI.width, UI.fullHeight); },
   // 보도블록: 1/3칸 높이 벽돌을 어긋나게
   floor(scene, g, sc) {
     const { cell, ox, oy, W, H } = board(scene);
@@ -233,13 +233,13 @@ const alley = {
     if (sc.sky === false) return; // 한국 단계의 골목 구역: 판 바깥 밤하늘 없음
     // 밤하늘 (판 바깥만, 어둠 위): 별·달
     const sky = scene.add.graphics().setDepth(7.5);
-    const outer = [[0, 108, UI.width, oy - 108], [0, bottom, UI.width, UI.height - bottom]];
+    const outer = [[0, scene.hudBottom, UI.width, oy - scene.hudBottom], [0, bottom, UI.width, UI.fullHeight - bottom]];
     for (let i = 0; i < sc.stars; i++) {
       const [rx, ry, rw, rh] = outer[i % 2];
       if (rh < 12) continue;
       sky.fillStyle(0xffffff, 0.55 + hash(i, 2, 44) * 0.4).fillCircle(rx + hash(i, 0, 44) * rw, ry + 6 + hash(i, 1, 44) * (rh - 12), 1.2 + hash(i, 3, 44) * 1.4);
     }
-    const my = (108 + oy) / 2;
+    const my = (scene.hudBottom + oy) / 2;
     sky.fillStyle(0xfff3c4, 0.15).fillCircle(UI.width - 70, my, 30);
     sky.fillStyle(0xfff3c4, 1).fillCircle(UI.width - 70, my, 20);
     sky.fillStyle(0xe8dca8, 1).fillCircle(UI.width - 76, my - 5, 4).fillCircle(UI.width - 63, my + 6, 3);
@@ -256,7 +256,7 @@ const steamer = (s, x, y) => !isEdge(s, x, y) && hash(x, y, 50) < 0.08;
 const market = {
   // 아래: 줄무늬 차양 지붕이 이어진 시장 골목, 그 위로 줄 깃발이 걸린 줄
   backdrop(scene, g, sc) {
-    const { width: W, height: H } = UI;
+    const { width: W, fullHeight: H } = UI;
     g.fillStyle(0xf6c48f, 1).fillRect(0, 0, W, H);
     const top = H - 74;
     for (let x = 0, i = 0; x < W; x += 48, i++) {
@@ -340,7 +340,7 @@ const market = {
 const bamboo = {
   // 아래: 먼 산 능선 위 만리장성, 가까운 언덕
   backdrop(scene, g, sc) {
-    const { width: W, height: H } = UI;
+    const { width: W, fullHeight: H } = UI;
     g.fillStyle(0xcfe8b8, 1).fillRect(0, 0, W, H);
     const { bottom } = board(scene);
     const ridge = (x) => bottom + 60 + Math.sin(x / 90) * 22 + Math.sin(x / 37) * 8;
@@ -409,7 +409,7 @@ const bamboo = {
     const xs = [16, 44, UI.width - 44, UI.width - 16].slice(0, sc.sway);
     xs.forEach((x, i) => {
       const h = 150 + hash(i, 1, 72) * 60;
-      const c = scene.add.container(x, UI.height);
+      const c = scene.add.container(x, UI.fullHeight);
       const s = scene.add.graphics();
       s.fillStyle(sc.stalks[i % sc.stalks.length], 1).fillRoundedRect(-6, -h, 12, h, 6);
       s.fillStyle(sc.node, 1);
@@ -422,15 +422,15 @@ const bamboo = {
 };
 
 // ═════ 5장 일본 벚꽃 정원 ═════════════════════════════
-const POND = { x: UI.width / 2, y: UI.height - 70, w: 760, h: 230 };
+const POND = { x: UI.width / 2, y: UI.fullHeight - 70, w: 760, h: 230 };
 const garden = {
   // 위: 벚꽃 가지 / 아래: 연잎이 뜬 연못
   backdrop(scene, g, sc) {
-    const { width: W, height: H } = UI;
+    const { width: W, fullHeight: H } = UI;
     g.fillStyle(0xfbe0e6, 1).fillRect(0, 0, W, H);
     const { oy } = board(scene);
     const branch = (pts, w) => { g.lineStyle(w, sc.branch, 1); for (let i = 1; i < pts.length; i++) g.lineBetween(pts[i - 1][0], pts[i - 1][1], pts[i][0], pts[i][1]); };
-    const ty = (108 + oy) / 2;
+    const ty = (scene.hudBottom + oy) / 2;
     branch([[-10, ty + 26], [90, ty + 8], [200, ty + 14], [300, ty - 6]], 9);
     branch([[200, ty + 14], [250, ty + 34]], 5);
     branch([[W + 10, ty + 20], [W - 110, ty + 2], [W - 210, ty + 10]], 8);
@@ -489,7 +489,7 @@ const garden = {
       tween(scene, { targets: r, scale: 1.6, alpha: 0, duration: 2600, delay: i * 1300, repeat: -1, repeatDelay: 1200, ease: 'Sine.easeOut' });
     }
     // 꽃잎: 판 바깥 여백(위 가지 아래, 연못 위)에서만 작게
-    const zones = [[108, oy - 4], [bottom + 4, POND.y - 40]];
+    const zones = [[scene.hudBottom, oy - 4], [bottom + 4, POND.y - 40]];
     for (let i = 0; i < sc.petals; i++) {
       const [y0, y1] = zones[i % 2];
       if (y1 - y0 < 20) continue;
@@ -504,7 +504,7 @@ const garden = {
 const park = {
   // 아래: 빌딩 숲 + 가로수 줄
   backdrop(scene, g, sc) {
-    const { width: W, height: H } = UI;
+    const { width: W, fullHeight: H } = UI;
     g.fillStyle(0xd9ecc8, 1).fillRect(0, 0, W, H);
     for (let x = -10, i = 0; x < W; i++) {
       const bw = 52 + hash(i, 1, 90) * 50, bh = 90 + hash(i, 2, 90) * 120;
@@ -551,11 +551,11 @@ const park = {
       tween(scene, { targets: s, x: s.x + W * 0.9, y: s.y + 60, duration: 30000 + i * 9000, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
     }
     // 위 여백의 구름
-    clouds(scene, sc.clouds, (108 + oy) / 2, oy - 108);
+    clouds(scene, sc.clouds, (scene.hudBottom + oy) / 2, oy - scene.hudBottom);
     // 비눗방울: 아래 공원에서 둥실
     for (let i = 0; i < sc.bubbles; i++) {
       const x = 60 + hash(i, 1, 95) * (UI.width - 120);
-      const b = scene.add.circle(x, UI.height - 70, 7 + hash(i, 2, 95) * 6).setStrokeStyle(2, 0xffffff, 0.8);
+      const b = scene.add.circle(x, UI.fullHeight - 70, 7 + hash(i, 2, 95) * 6).setStrokeStyle(2, 0xffffff, 0.8);
       tween(scene, { targets: b, y: bottom + 16, x: x + (hash(i, 3, 95) - 0.5) * 60, alpha: 0, duration: 5200 + hash(i, 4, 95) * 2500, delay: i * 1100, repeat: -1, ease: 'Sine.easeOut' });
     }
   },
@@ -577,7 +577,7 @@ function clouds(scene, n, y, room) {
 const maple = {
   // 탁 트인 하늘 · 아래 단풍 산과 호수, 단풍 숲
   backdrop(scene, g, sc) {
-    const { width: W, height: H } = UI;
+    const { width: W, fullHeight: H } = UI;
     g.fillStyle(0xcfe7ff, 1).fillRect(0, 0, W, H);
     g.fillStyle(0xe2f0ff, 1).fillRect(0, 0, W, H * 0.45);
     const { bottom } = board(scene);
@@ -622,7 +622,7 @@ const maple = {
   },
   ambient(scene, sc) {
     const { oy } = board(scene);
-    clouds(scene, sc.clouds, (108 + oy) / 2, oy - 108);
+    clouds(scene, sc.clouds, (scene.hudBottom + oy) / 2, oy - scene.hudBottom);
     // 단풍잎 그림을 색마다 한 번 만들어 두고 여러 장 떨어뜨린다 (캔버스 모드는 색 입히기(tint)가 안 돼서 색을 구워 둔다)
     sc.bush.forEach((color, k) => {
       const key = `maple_leaf_${k}`;
@@ -638,7 +638,7 @@ const maple = {
       const x = 30 + hash(i, 1, 109) * (UI.width - 60);
       const leaf = scene.add.image(x, -30, `maple_leaf_${i % sc.bush.length}`).setAlpha(0.9).setScale(0.8 + hash(i, 2, 109) * 0.5);
       if (still()) { leaf.setPosition(x, 130 + hash(i, 3, 109) * 1000).setAngle(hash(i, 4, 109) * 360); continue; }
-      scene.tweens.add({ targets: leaf, y: UI.height + 30, angle: 360 * (i % 2 ? 1 : -1), duration: 11000 + hash(i, 5, 109) * 5000, delay: i * 1500, repeat: -1 });
+      scene.tweens.add({ targets: leaf, y: UI.fullHeight + 30, angle: 360 * (i % 2 ? 1 : -1), duration: 11000 + hash(i, 5, 109) * 5000, delay: i * 1500, repeat: -1 });
       scene.tweens.add({ targets: leaf, x: x + 50, duration: 2200 + hash(i, 6, 109) * 1200, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
     }
   },

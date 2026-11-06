@@ -29,7 +29,7 @@ export class SettingsScene extends Phaser.Scene {
 
   create() {
     // 뒤를 살짝 어둡게, 판 밖을 누르면 닫힘
-    this.add.rectangle(0, 0, UI.width, UI.height, 0x2b2d5a, 0.45).setOrigin(0)
+    this.add.rectangle(0, -UI.offY, UI.width, UI.fullHeight, 0x2b2d5a, 0.45).setOrigin(0)
       .setInteractive().on('pointerup', () => this.close());
 
     const root = this.add.container(0, 0);
@@ -142,7 +142,7 @@ export class SettingsScene extends Phaser.Scene {
   // 판 위에 겹쳐 띄우는 작은 안내판
   popup(title, body, buttons) {
     const layer = this.add.container(0, 0);
-    const dim = this.add.rectangle(0, 0, UI.width, UI.height, 0x2b2d5a, 0.35).setOrigin(0).setInteractive();
+    const dim = this.add.rectangle(0, -UI.offY, UI.width, UI.fullHeight, 0x2b2d5a, 0.35).setOrigin(0).setInteractive();
     const g = this.add.graphics();
     const h = 520;
     const y = (UI.height - h) / 2;

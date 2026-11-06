@@ -28,7 +28,7 @@ export class DressScene extends Phaser.Scene {
   create() {
     if (waitForAssets(this, [`blue_${this.from}_battle`, `blue_${this.to}_battle`], this.initData)) return;
     setTheme(this.chapter.theme, this.chapter.theme);
-    this.bg = this.add.rectangle(0, 0, UI.width, UI.height, Phaser.Display.Color.HexStringToColor(this.chapter.theme).color).setOrigin(0);
+    this.bg = this.add.rectangle(0, -UI.offY, UI.width, UI.fullHeight, Phaser.Display.Color.HexStringToColor(this.chapter.theme).color).setOrigin(0);
     this.popo = this.add.image(UI.width / 2, 640, `blue_${this.from}_battle`, 0).setDisplaySize(380, 380);
     afterDialogue(this, () => this.dress());
     this.time.delayedCall(300, () => this.scene.launch('Dialogue', { key: `dress_${this.to}_pre`, frame: this.chapter.frame, form: this.from }));
@@ -47,7 +47,7 @@ export class DressScene extends Phaser.Scene {
     sfx('evolve');
     this.time.delayedCall(1100, () => {
       ring.forEach((d) => d.destroy());
-      const flash = this.add.rectangle(0, 0, UI.width, UI.height, 0xffffff, 1).setOrigin(0).setDepth(5);
+      const flash = this.add.rectangle(0, -UI.offY, UI.width, UI.fullHeight, 0xffffff, 1).setOrigin(0).setDepth(5);
       this.tweens.add({ targets: flash, alpha: 0, duration: 500, onComplete: () => flash.destroy() });
       this.bg.setFillStyle(NEXT_SKY[this.to] ?? 0xffffff);
       this.popo.setTexture(`blue_${this.to}_battle`, 6);

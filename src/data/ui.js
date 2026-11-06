@@ -1,7 +1,20 @@
 // 화면 배치·크기 수치 (기준 화면 720×1280). 기획자가 직접 고쳐도 된다.
+// 길쭉한 폰은 캔버스를 화면 비율대로 길게 만들어 위아래 빈 띠를 없앤다 (2026-11-06 "디바이스 빈 화면 최소화").
+// height = 화면 배치 기준(1280, 모든 화면이 이 안에 그려짐), fullHeight = 실제 캔버스 높이(1280~1600),
+// offY = 기준 화면을 가운데 둘 때 위쪽 여백. 미로·입구는 fullHeight 전체를 쓰고, 나머지 화면은 가운데 1280에 그린다(main.js).
+const FULL_H = (() => {
+  try {
+    const w = window.innerWidth, h = window.innerHeight;
+    if (!w || !h || w >= h) return 1280;
+    return Math.round(Math.min(1600, Math.max(1280, (720 * h) / w)));
+  } catch { return 1280; }
+})();
+
 export const UI = {
   width: 720,
   height: 1280,
+  fullHeight: FULL_H,
+  offY: Math.round((FULL_H - 1280) / 2),
   minTouch: 96,
   gap: 16,
   fontSize: { dialogue: 34, button: 36, hud: 30, title: 72, small: 22 },

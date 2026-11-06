@@ -31,8 +31,9 @@ import { iconStar } from '../ui/icons.js';
 // 미로 안에 친구가 숨어 있다(숨바꼭질, 17절): 세 번 찾으면 출구 앞에서 기다리고, 출구에서 친구가 된다.
 // 수집품을 다 모으고 친구를 모두 찾으면 출구가 열린다. 순찰하는 방해물·떨어지는 물방울·움직이는 웅덩이에 닿으면 퐁! → [다시 시작] → 체크포인트.
 // 움직이는 거미줄에 닿으면 잠깐 느려진다 (design-brief 11절).
-// (화면 배치: 상태 줄 y 0–150 — 3줄째에 에너지·숨은 친구 하트, 미로 y 158–1080, 아래 영역 y 1090–1280)
-const AREA = { x: 8, y: 158, w: 704, h: 922 };
+// (화면 배치: 상태 줄 위 140 — 3줄째에 에너지·숨은 친구 하트, 그 아래 미로, 맨 아래 아이템·말풍선 줄.
+//  캔버스 전체 높이(UI.fullHeight, 길쭉한 폰은 1280보다 김)를 쓰고, 노치·홈 바 안쪽으로 맞춘다. 기준 화면이면 미로 y 158–1080)
+const AREA_X = 8, AREA_W = 704;
 const DIRS = { left: [-1, 0], right: [1, 0], up: [0, -1], down: [0, 1] };
 const OPPOSITE = { left: 'right', right: 'left', up: 'down', down: 'up' };
 const PATROL_STEP_MS = 400;
@@ -78,12 +79,19 @@ export class MazeScene extends Phaser.Scene {
     const g = this.maze.grid;
     this.rows = g.length;
     this.cols = g[0].length;
-    this.cell = Math.floor(Math.min(AREA.w / this.cols, AREA.h / this.rows));
-    this.ox = AREA.x + (AREA.w - this.cols * this.cell) / 2;
-    this.oy = AREA.y + (AREA.h - this.rows * this.cell) / 2;
-    this.insets = getSafeInsets(this.game);
+    this.insets = getSafeInsets(this.game, true);
+    this.dpad = state.settings.control === 'dpad';
+    const H = UI.fullHeight;
+    this.hudBottom = 148 + this.insets.top;
+    this.bottomY = H - 95 - this.insets.bottom;     // 아이템·말풍선 줄 (방향 버튼이면 그 위)
+    this.midY = Math.round((this.hudBottom + this.bottomY) / 2) - 20;
+    const areaY = this.hudBottom + 10;
+    const areaB = this.dpad ? H - 200 - this.insets.bottom : this.bottomY - 105;
+    this.cell = Math.floor(Math.min(AREA_W / this.cols, (areaB - areaY) / this.rows));
+    this.ox = AREA_X + (AREA_W - this.cols * this.cell) / 2;
+    this.oy = areaY + (areaB - areaY - this.rows * this.cell) / 2;
     // 바탕 (화면 아래 영역까지 그 장의 색으로)
-    this.add.rectangle(0, 0, UI.width, UI.height, Phaser.Display.Color.HexStringToColor(this.chapter.theme).color).setOrigin(0);
+    this.add.rectangle(0, 0, UI.width, H, Phaser.Display.Color.HexStringToColor(this.chapter.theme).color).setOrigin(0);
 
     this.items = new Map(); // "x,y" → 스프라이트
     this.start = this.find('S')[0];
@@ -139,7 +147,7 @@ export class MazeScene extends Phaser.Scene {
   // 각자 폰 대결: 셋, 둘, 하나, 출발! 동안은 움직이지 않고 시간도 멈춰 있다
   countdown() {
     this.locked = true;
-    const t = this.add.text(UI.width / 2, 600, '', { fontFamily: UI.fontTitle, fontSize: '140px', color: '#2f7bff', stroke: '#fffaf0', strokeThickness: 14 }).setOrigin(0.5).setDepth(20);
+    const t = this.add.text(UI.width / 2, this.midY, '', { fontFamily: UI.fontTitle, fontSize: '140px', color: '#2f7bff', stroke: '#fffaf0', strokeThickness: 14 }).setOrigin(0.5).setDepth(20);
     ['셋', '둘', '하나', '출발!'].forEach((w, i) => this.time.delayedCall(i * 800, () => {
       t.setText(w).setScale(0.6);
       this.tweens.add({ targets: t, scale: 1, duration: 220, ease: 'Back.easeOut' });
@@ -225,7 +233,7 @@ export class MazeScene extends Phaser.Scene {
       }
     }
     if (this.textures.exists('maze_board')) this.textures.remove('maze_board');
-    bg.generateTexture('maze_board', UI.width, UI.height);
+    bg.generateTexture('maze_board', UI.width, UI.fullHeight);
     bg.destroy();
     this.add.image(0, 0, 'maze_board').setOrigin(0);
     // 햇살·먼지 같은 배경 움직임 (수집품·블루나비보다 아래)
@@ -824,7 +832,7 @@ export class MazeScene extends Phaser.Scene {
 
   showRestart() {
     if (this.restartBtn) return;
-    this.restartBtn = new Button(this, UI.width / 2, 600, {
+    this.restartBtn = new Button(this, UI.width / 2, this.midY, {
       width: 340, height: 112, label: '다시 시작', fontSize: 40,
       onPress: () => this.respawn(),
     }).setDepth(20);
@@ -1095,8 +1103,7 @@ export class MazeScene extends Phaser.Scene {
   // ── 아래 영역: 도트 말풍선, (설정 시) 방향 버튼 ────
   makeBottom() {
     const bottom = this.insets.bottom;
-    this.dpad = state.settings.control === 'dpad';
-    const by = (this.dpad ? 1036 : 1185) - (this.dpad ? 0 : bottom);
+    const by = this.dpad ? this.bottomY - 149 : this.bottomY;
     this.dot = this.add.image(70, by, SERIES.meta.helperTex, SERIES.meta.helperFrame).setDisplaySize(84, 84).setDepth(8).setAlpha(0);
     this.bubble = this.add.container(0, 0).setDepth(8).setAlpha(0);
     this.bubbleG = this.add.graphics();
@@ -1109,7 +1116,7 @@ export class MazeScene extends Phaser.Scene {
     this.makeItemButton(bottom);
 
     if (this.dpad) {
-      const y = 1190 - bottom;
+      const y = this.bottomY + 5;
       const arrows = [['left', '왼쪽'], ['up', '위'], ['down', '아래'], ['right', '오른쪽']];
       arrows.forEach(([dir], i) => {
         const x = 108 + i * 168;
@@ -1130,14 +1137,15 @@ export class MazeScene extends Phaser.Scene {
     }
   }
 
-  // 오른쪽 아래 둥근 아이템 버튼 (미로마다 아이템마다 1번씩, 15절 아이템 줄): 반짝가루 = 8초 무엇에 닿아도 괜찮음,
+  // 오른쪽 아래 둥근 아이템 버튼 (미로마다 아이템마다 1번씩, 15절 아이템 줄). 반짝가루는 2026-11-06 사용자 요청으로 뺌(옛 저장에 있어도 버튼 없음).
   // 대나무 피리 = 가장 가까운 수집품 쪽 길 안내 (피리를 받은 중국 미로는 빼고), 씽씽 자전거 = 10초 2배 빠르게(에너지 안 줄어듦),
   // 비눗방울 막대 = 둘레 3칸 방해물이 비눗방울에 싸여 날아감, 꿀 도시락 = 에너지 가득.
   makeItemButton(bottom) {
     const COLORS = { sparkle: 0xffd84a, flute: 0x7cc56a, bike: 0x7ec8ff, bubble: 0xc9b6ff, honey: 0xffb347 };
-    const list = ['sparkle', 'flute', 'bike', 'bubble', 'honey']
+    const list = ['flute', 'bike', 'bubble', 'honey']
       .filter((k) => this.hasItem(k) && ITEMS[k] && !(k === 'flute' && this.chapter.id === 'ch4'));
-    const y = (this.dpad ? 1036 : 1180) - (this.dpad ? 0 : bottom);
+    const y = (this.dpad ? this.bottomY - 149 : this.bottomY - 5);
+    void bottom;
     list.forEach((key, n) => {
       const c = this.add.container(UI.width - 62 - n * 114, y).setDepth(9);
       const g = this.add.graphics();
@@ -1459,7 +1467,7 @@ export class MazeScene extends Phaser.Scene {
   }
 
   band(title, sub) {
-    const c = this.add.container(UI.width / 2, 520).setDepth(20);
+    const c = this.add.container(UI.width / 2, this.midY - 80).setDepth(20);
     const g = this.add.graphics();
     drawPanel(g, -300, -80, 600, sub ? 170 : 130, this.chapter.frame);
     c.add([g, this.add.text(0, sub ? -24 : -16, title, { fontFamily: UI.fontTitle, fontSize: '40px', color: '#2f7bff' }).setOrigin(0.5)]);
@@ -1475,7 +1483,7 @@ export class MazeScene extends Phaser.Scene {
     results[turn - 1] = { sec, rolls: this.rolls };
     sfx('open');
     vibrate('special');
-    const c = this.add.container(UI.width / 2, 600).setDepth(20);
+    const c = this.add.container(UI.width / 2, this.midY).setDepth(20);
     const g = this.add.graphics();
     drawPanel(g, -280, -90, 560, 180, this.chapter.frame);
     c.add([g,
@@ -1509,11 +1517,11 @@ export class MazeScene extends Phaser.Scene {
     if (chal) lines.push(chal.win ? `${josa(chal.nick, '을', '를')} 이겼어요! (${fmtShort(chal.theirs)})` : `아깝다! ${chal.nick} ${fmtShort(chal.theirs)} — 다시 도전?`);
     if (chal?.win) vibrate('special');
     const layer = this.add.container(0, 0).setDepth(30);
-    const dim = this.add.rectangle(0, 0, UI.width, UI.height, 0x2b2d5a, 0.45).setOrigin(0).setInteractive();
+    const dim = this.add.rectangle(0, 0, UI.width, UI.fullHeight, 0x2b2d5a, 0.45).setOrigin(0).setInteractive();
     const g = this.add.graphics();
     const showStars = SERIES.meta.stars;
     const h = 330 + lines.length * 50 + (showStars ? 90 : 0);
-    const y = Math.round((UI.height - h) / 2);
+    const y = Math.round((UI.fullHeight - h) / 2);
     drawPanel(g, 50, y, 620, h, ch.frame);
     layer.add([dim, g]);
     layer.add(this.add.text(UI.width / 2, y + 80, `${ch.name} 미로 통과!`, { fontFamily: UI.fontTitle, fontSize: '42px', color: '#2b2d5a' }).setOrigin(0.5));

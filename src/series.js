@@ -36,7 +36,7 @@ export const SERIES = { n: 1, meta: META[1], game: null };
 const PROGRESS_KEYS = ['chapter', 'step', 'form', 'items', 'friends', 'stars', 'records', 'mazeState', 'bossIndex', 'playing', 'cleared', 'mazeTimeStar', 'pop'];
 export function freshProgress(n) {
   return {
-    chapter: 1, step: 'new', form: n === 2 ? 'popoSpring' : 'caterpillar', items: n === 2 ? ['sparkle'] : [], friends: [], stars: {}, records: {},
+    chapter: 1, step: 'new', form: n === 2 ? 'popoSpring' : 'caterpillar', items: [], friends: [], stars: {}, records: {},
     mazeState: null, bossIndex: 0, playing: null, cleared: false, mazeTimeStar: {}, pop: { reached: 0, best: {} },
   };
 }

@@ -24,13 +24,13 @@ function cloud(g, x, y, s, a = 0.9) {
   g.fillStyle(0xffffff, a).fillEllipse(x, y, 60 * s, 26 * s).fillEllipse(x - 22 * s, y + 4 * s, 40 * s, 20 * s).fillEllipse(x + 24 * s, y + 5 * s, 44 * s, 18 * s);
 }
 // 판 바깥 위·아래 여백 (움직임은 여기에서만)
-const margins = (scene) => { const { oy, bottom } = board(scene); return [[0, 108, UI.width, Math.max(0, oy - 108)], [0, bottom, UI.width, UI.height - bottom]]; };
+const margins = (scene) => { const { oy, bottom } = board(scene); return [[0, scene.hudBottom, UI.width, Math.max(0, oy - scene.hudBottom)], [0, bottom, UI.width, UI.fullHeight - bottom]]; };
 
 // ═════ 봄 · 한강 벚꽃길 ═════
 const spring = {
   // 연분홍 하늘, 아래로 한강 물결과 다리 실루엣, 강둑 벚나무
   backdrop(scene, g, sc) {
-    const { width: W, height: H } = UI;
+    const { width: W, fullHeight: H } = UI;
     g.fillStyle(0xfde3ea, 1).fillRect(0, 0, W, H);
     const { bottom } = board(scene);
     const ry = bottom + 70;
@@ -79,7 +79,7 @@ const spring = {
 // ═════ 여름 · 한강 물놀이장 ═════
 const summer = {
   backdrop(scene, g) {
-    const { width: W, height: H } = UI;
+    const { width: W, fullHeight: H } = UI;
     g.fillStyle(0xd6efff, 1).fillRect(0, 0, W, H);
     const { bottom } = board(scene);
     g.fillStyle(0x7fc7ff, 1).fillRect(0, bottom + 24, W, H - bottom);
@@ -109,7 +109,7 @@ const summer = {
   ambient(scene, sc) {
     const { bottom } = board(scene);
     for (let i = 0; i < sc.sparkles; i++) {
-      const x = 30 + hash(i, 1, 212) * (UI.width - 60), y = bottom + 40 + hash(i, 2, 212) * (UI.height - bottom - 60);
+      const x = 30 + hash(i, 1, 212) * (UI.width - 60), y = bottom + 40 + hash(i, 2, 212) * (UI.fullHeight - bottom - 60);
       const s = scene.add.circle(x, y, 3, 0xffffff, 0.9);
       tween(scene, { targets: s, alpha: 0.1, scale: 1.8, duration: 900 + hash(i, 3, 212) * 900, yoyo: true, repeat: -1, delay: hash(i, 4, 212) * 1500 });
     }
@@ -120,7 +120,7 @@ const summer = {
 const autumn = {
   // 남산 언덕과 꼭대기 탑(이름 없는 둥근 전망탑 실루엣), 노란 가로수는 바깥에만
   backdrop(scene, g, sc) {
-    const { width: W, height: H } = UI;
+    const { width: W, fullHeight: H } = UI;
     g.fillStyle(0xfbe7c2, 1).fillRect(0, 0, W, H);
     const { bottom } = board(scene);
     g.fillStyle(sc.hill, 1).fillEllipse(W * 0.5, bottom + 170, W * 1.3, 220);
@@ -168,7 +168,7 @@ const autumn = {
 const winter = {
   // 회청색 하늘, 아래로 눈 쌓인 기와지붕 줄
   backdrop(scene, g, sc) {
-    const { width: W, height: H } = UI;
+    const { width: W, fullHeight: H } = UI;
     g.fillStyle(0xe6f0fa, 1).fillRect(0, 0, W, H);
     const { bottom } = board(scene);
     for (let i = 0; i < 5; i++) {

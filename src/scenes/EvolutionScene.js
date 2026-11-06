@@ -84,7 +84,7 @@ export class EvolutionScene extends Phaser.Scene {
     this.input.once('pointerup', () => this.skip());
     const t = this.time;
     // 어두워짐
-    this.dark = this.add.rectangle(0, 0, UI.width, UI.height, 0x000000, 0).setOrigin(0).setDepth(1);
+    this.dark = this.add.rectangle(0, -UI.offY, UI.width, UI.fullHeight, 0x000000, 0).setOrigin(0).setDepth(1);
     this.tweens.add({ targets: this.dark, fillAlpha: 0.45, duration: 600 });
     this.blue.anims.stop();
     this.blue.setFrame(3).setDepth(2);
@@ -114,7 +114,7 @@ export class EvolutionScene extends Phaser.Scene {
     this.revealed = true;
     state.form = this.to;
     save();
-    const flash = this.add.rectangle(0, 0, UI.width, UI.height, 0xffffff, 1).setOrigin(0).setDepth(10);
+    const flash = this.add.rectangle(0, -UI.offY, UI.width, UI.fullHeight, 0xffffff, 1).setOrigin(0).setDepth(10);
     this.tweens.add({ targets: flash, alpha: 0, duration: 700, delay: 150, onComplete: () => flash.destroy() });
     this.cocoon?.destroy();
     this.dark?.destroy();

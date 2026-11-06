@@ -33,7 +33,7 @@ export class MatchScene extends Phaser.Scene {
 
   create() {
     setTheme('#f3e3c3', '#f3e3c3');
-    this.add.rectangle(0, 0, UI.width, UI.height, CREAM).setOrigin(0);
+    this.add.rectangle(0, -UI.offY, UI.width, UI.fullHeight, CREAM).setOrigin(0);
     this.top = getSafeInsets(this.game).top;
     if (this.step === 'box') this.drawBox(); else this.drawView();
     this.input.keyboard?.on('keydown-ESC', () => this.scene.start('Title'));

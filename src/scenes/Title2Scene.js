@@ -128,7 +128,6 @@ export class Title2Scene extends Phaser.Scene {
     afterDialogue(this, () => {
       const first = CHAPTERS[0];
       Object.assign(state, { step: `${first.id}_maze`, chapter: 1, playing: first.id, mazeState: null });
-      if (!state.items.includes('sparkle')) state.items.push('sparkle');
       save();
       this.cameras.main.fadeOut(300, 207, 234, 255);
       this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('Maze', { chapter: first.id, fresh: true }));

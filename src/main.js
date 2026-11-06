@@ -46,7 +46,7 @@ const game = new Phaser.Game({
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
     width: UI.width,
-    height: UI.height,
+    height: UI.fullHeight,
   },
   input: { activePointers: 2 },
   render: { antialias: true, powerPreference: 'high-performance' },
@@ -65,6 +65,17 @@ game.events.once('ready', () => {
       if (key === 'Maze') { if (sc.chapter) wantMusic(sc.chapter.id); return; }
       const song = SCENE_SONG[SERIES.n][key] ?? SCENE_SONG[1][key];
       if (song) wantMusic(song);
+    });
+  }
+});
+// 캔버스가 화면 비율대로 길어졌으므로(ui.js fullHeight): 미로·입구는 전체 높이로 배치하고, 나머지 화면은 1280 칸을 가운데에 그린다
+const FULL_SCENES = new Set(['Maze', 'Entry']);
+game.events.once('ready', () => {
+  for (const sc of game.scene.scenes) {
+    sc.events.on('create', () => {
+      const cam = sc.cameras.main;
+      // 기준 1280 칸을 가운데로: 카메라를 offY 만큼 올려 본다. 바탕·어둡게 덮는 판은 y -offY 부터 fullHeight 로 끝까지 칠한다.
+      cam.setScroll(0, FULL_SCENES.has(sc.scene.key) ? 0 : -UI.offY);
     });
   }
 });

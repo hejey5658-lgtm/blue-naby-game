@@ -34,7 +34,7 @@ export class MapScene extends Phaser.Scene {
     this.insets = getSafeInsets(this.game);
     const top = this.insets.top;
     // 여권 표지 색 바탕 + 은은한 무늬
-    this.add.rectangle(0, 0, UI.width, UI.height, 0x1f3a7a).setOrigin(0);
+    this.add.rectangle(0, -UI.offY, UI.width, UI.fullHeight, 0x1f3a7a).setOrigin(0);
     const bg = this.add.graphics();
     bg.lineStyle(2, 0x2c4c94, 1);
     for (let y = -40; y < UI.height + 40; y += 46) {
@@ -251,7 +251,7 @@ export class MapScene extends Phaser.Scene {
     sfx('tap');
     const ch = chapterById(id);
     const layer = this.add.container(0, 0).setDepth(20);
-    const dim = this.add.rectangle(0, 0, UI.width, UI.height, 0x0f2456, 0.55).setOrigin(0).setInteractive();
+    const dim = this.add.rectangle(0, -UI.offY, UI.width, UI.fullHeight, 0x0f2456, 0.55).setOrigin(0).setInteractive();
     const g = this.add.graphics();
     drawPanel(g, 70, 420, 580, 420, ch.frame);
     layer.add([dim, g,

@@ -18,7 +18,7 @@ export class PauseScene extends Phaser.Scene {
   }
 
   create() {
-    this.add.rectangle(0, 0, UI.width, UI.height, 0x2b2d5a, 0.5).setOrigin(0).setInteractive();
+    this.add.rectangle(0, -UI.offY, UI.width, UI.fullHeight, 0x2b2d5a, 0.5).setOrigin(0).setInteractive();
     const root = this.add.container(0, 0);
     const g = this.add.graphics();
     const y = 270;

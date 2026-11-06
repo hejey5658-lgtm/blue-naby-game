@@ -29,7 +29,7 @@ export class AlbumScene extends Phaser.Scene {
   create() {
     setTheme('#fdf7ea', '#fdf7ea');
     this.top = getSafeInsets(this.game).top;
-    this.add.rectangle(0, 0, UI.width, UI.height, 0xf3e3c3).setOrigin(0);
+    this.add.rectangle(0, -UI.offY, UI.width, UI.fullHeight, 0xf3e3c3).setOrigin(0);
     // 앨범 표지 느낌: 천 무늬 띠
     const g = this.add.graphics();
     g.fillStyle(0xe0aa7e, 1).fillRect(0, 0, 60, UI.height);
@@ -108,7 +108,7 @@ export class AlbumScene extends Phaser.Scene {
     });
     // 막 깬 계절: 흰 빛 '찰칵' → 사진이 위에서 내려온다
     if (snap === ch.id && done) {
-      const flash = this.add.rectangle(0, 0, UI.width, UI.height, 0xffffff, 1).setOrigin(0).setDepth(30);
+      const flash = this.add.rectangle(0, -UI.offY, UI.width, UI.fullHeight, 0xffffff, 1).setOrigin(0).setDepth(30);
       this.tweens.add({ targets: flash, alpha: 0, duration: 450, onComplete: () => flash.destroy() });
       photo.y -= 60; photo.setAlpha(0);
       this.tweens.add({ targets: photo, y: photo.y + 60, alpha: 1, duration: 420, delay: 150, ease: 'Back.easeOut' });
@@ -152,7 +152,7 @@ export class AlbumScene extends Phaser.Scene {
     sfx('tap');
     const ch = chapterById(id);
     const layer = this.add.container(0, 0).setDepth(20);
-    const dim = this.add.rectangle(0, 0, UI.width, UI.height, 0x2b2d5a, 0.5).setOrigin(0).setInteractive();
+    const dim = this.add.rectangle(0, -UI.offY, UI.width, UI.fullHeight, 0x2b2d5a, 0.5).setOrigin(0).setInteractive();
     const g = this.add.graphics();
     drawPanel(g, 70, 420, 580, 400, ch.frame);
     layer.add([dim, g,

@@ -1,7 +1,8 @@
 // 화면 배치·크기 수치 (기준 화면 720×1280). 기획자가 직접 고쳐도 된다.
 // 화면 맞춤 (2026-11-06 "빈 화면 최소화" + 18절 "세로·가로 자유롭게"):
 // - width·height = 세로 기준 화면 720×1280. 대부분의 화면은 이 좌표로 그린다.
-// - fullWidth·fullHeight = 실제 캔버스 크기. 세로 폰은 720×(1280~1600), 가로 폰(터치 기기)은 (1280~1600)×720, PC는 720×1280.
+// - fullWidth·fullHeight = 실제 캔버스 크기. 세로 화면은 720×(1280~1600), 가로 화면은 (1280~1600)×720.
+//   모바일 전용(2026-11-06): PC 창도 폰과 같은 배치(창이 가로면 가로 배치), PC 전용 안내·QR 없음.
 // - offX·offY = 기준 화면을 캔버스 가운데에 둘 때의 여백(가로에선 offY가 음수: 기준 화면의 위아래가 잘려 보임).
 //   카메라를 (-offX, -offY)만큼 옮겨 보므로, 보이는 곳은 view = { left, top, right, bottom } (기준 좌표).
 // - landscape = 가로 배치. 화면마다 UI.landscape 를 보고 view 안에 다시 배치한다.
@@ -9,11 +10,9 @@
 export function measureLayout() {
   try {
     const w = window.innerWidth, h = window.innerHeight;
-    const touch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
     if (!w || !h) return { landscape: false, fullWidth: 720, fullHeight: 1280 };
     const clamp = (v) => Math.round(Math.min(1600, Math.max(1280, v)));
-    if (w > h && touch) return { landscape: true, fullWidth: clamp((720 * w) / h), fullHeight: 720 };
-    if (w >= h) return { landscape: false, fullWidth: 720, fullHeight: 1280 };
+    if (w > h) return { landscape: true, fullWidth: clamp((720 * w) / h), fullHeight: 720 };
     return { landscape: false, fullWidth: 720, fullHeight: clamp((720 * h) / w) };
   } catch { return { landscape: false, fullWidth: 720, fullHeight: 1280 }; }
 }

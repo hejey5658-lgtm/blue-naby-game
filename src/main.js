@@ -24,7 +24,6 @@ import { initSeries, SERIES } from './series.js';
 import { setupPWA } from './pwa.js';
 import { readChallengeFromUrl } from './social/social.js';
 import { readMatchFromUrl } from './social/match.js';
-import { setupPcPanel } from './pcPanel.js';
 import { suspendAudio, unlockAudio } from './ui/feedback.js';
 import { wantMusic, refreshMusic, nowPlaying } from './ui/music.js';
 import { unlockSpeech } from './ui/narrator.js';
@@ -200,6 +199,5 @@ window.addEventListener('pageshow', (e) => {
 });
 
 setupPWA(game);
-setupPcPanel();
 // 자동 시험용: 개발 중이거나 ?canvas 주소일 때만 (실제 플레이에는 영향 없음)
 if (import.meta.env.DEV || new URLSearchParams(location.search).has('canvas')) window.__game = game;

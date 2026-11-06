@@ -13,7 +13,6 @@ export const CREDITS_TEXT = `기획·이야기·캐릭터: 블루나비 기획�
 그림·개발: Claude Code
 글꼴: 주아, 고운돋움 (SIL OFL)
 게임 엔진: Phaser (MIT)
-QR 코드: qrcode-generator (MIT)
 홈 화면 설치: Workbox (MIT)
 
 광고·후원·결제 없는 비영리 게임이에요.`;

@@ -25,7 +25,6 @@
 | 이름 | 버전 | 라이선스 | 쓰는 곳 |
 |---|---|---|---|
 | Phaser | 3.80.1 | MIT | 게임 엔진 |
-| qrcode-generator | 2.0.4 | MIT | PC 화면 QR 코드 |
 | vite-plugin-pwa / Workbox | 1.3.0 / 7.4.1 | MIT | 홈 화면 설치·오프라인 |
 | Vite | 6.4.4 | MIT | 만들기 도구(게임에 들어가지 않음) |
 | @resvg/resvg-js | 2.6.2 | MPL-2.0 | 그림 굽기 도구(게임에 들어가지 않음) |

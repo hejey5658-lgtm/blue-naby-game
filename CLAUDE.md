@@ -210,6 +210,7 @@
 | 2026-11-04 | 1탄 **한마디 소개글 + 게임 그림, 작성자: 블루나비** | `docs/presentation/intro-1tan.png` (1080×1350): "작은 파란 애벌레가 한국에서 캐나다까지 날아가며, 심술 난 친구들과 놀아 주고 나비로 자라는 귀여운 미로 모험!" |
 | 2026-11-04 | 정식 주소에 **올려** (1.4~2.1) | v2.1.0 정식 주소 배포 완료 (1탄 5단계·각자 폰 대결·2탄·모바일 최적화·배경음) |
 | 2026-11-04 | 1탄 **PPT·발표 스크립트** (이후 "2~3분으로 줄여" → 장마다 한두 문장, 약 2분 30초, 6·8번을 앞 장과 합쳐 8장) | 게임과 같은 모양(주아·고운돋움, 크림·남색·파랑) 슬라이드 https://claude.ai/artifact/Gt1QaCMAsbrA7B9gHQj6es (발표자 노트 = 스크립트, PPTX·PDF로 받기 가능), 스크립트 파일 `docs/presentation/script-1tan.md` |
+| 2026-11-06 | 1탄 소개 카드를 **이미지와 소개글로 분리**해서 다시 | 그림 `docs/presentation/intro-1tan-image.png`(제목·블루나비 세 모습·한국 미로·친구 8명, 문장 없음), 글 `docs/presentation/intro-1tan.txt`(제목·한마디 소개·작성자: 블루나비·주소). 합쳐진 옛 카드 `intro-1tan.png`도 남김 |
 | 2026-10-30 | 작업 브랜치: `claude/firebase-server-integration-84bkga`에서 개발·커밋·푸시 (다른 브랜치로 푸시 금지, PR은 요청할 때만) | — |
 
 ## 8. 참고 문서 (스킬 `blue-butterfly-game`의 `references/`)

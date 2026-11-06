@@ -1,0 +1,284 @@
+import Phaser from 'phaser';
+import { UI } from '../data/ui.js';
+import { VERSION, IS_TEST_BUILD } from '../data/version.js';
+import { state } from '../state.js';
+import { useSeries, META } from '../series.js';
+import { setTheme } from '../ui/theme.js';
+import { getSafeInsets } from '../ui/safeArea.js';
+import { iconGear } from '../ui/icons.js';
+import { sfx, vibrate, unlockAudio } from '../ui/feedback.js';
+import { platform } from '../platform.js';
+
+// 게임 입구 (design-brief 16절): 책상 위에 펼친 옛 세계지도 + 가운데 지구본 모형.
+// 지구본 위 핀(1탄 파란 나비 / 2탄 강아지 발바닥)이나 아래 이름표 카드를 톡 → 지구본이 커지며 그 탄 타이틀로.
+// 그림은 파일 없이 모두 Graphics로 그린다(첫 화면이라 가볍게). 지도는 한 장으로 구워 둔다(entry_map).
+// 나라 경계선·국기는 그리지 않는다(6절 나라 표현 규칙). 대륙은 둥근 덩어리.
+const C = {
+  desk: 0x8f6440, deskDark: 0x6e4a2e, paper: 0xf6ead0, paperEdge: 0xe2cfa4, fold: 0xd9c393,
+  sea: 0xdcebe2, wave: 0xbdd6cc, land: 0xe3c98f, landEdge: 0xc9a86a, ink: 0x2b2d5a,
+  ocean: 0x7ec8ff, oceanDeep: 0x2f7bff, green: 0x6cc35a, greenLight: 0x9edc7c, gold: 0xe0a93a, goldLight: 0xffd84a,
+  wood: 0xb98a5e, woodDark: 0x8f6440, blue: 0x2f7bff, sky: 0x7ec8ff, pink: 0xff9fb8, cream: 0xfffaf0, brown: 0xc98a5a,
+};
+const GLOBE = { x: 360, y: 520, r: 200 };
+// 지구본 대륙: 경도(라디안)·위도(-1~1)·크기 덩어리 (실제 모양이 아니라 둥근 장난감 지구본 느낌)
+const LANDS = [
+  [0.0, -0.35, 0.9], [0.35, -0.45, 0.7], [0.55, -0.2, 0.55], [0.2, 0.05, 0.5], [0.75, 0.25, 0.35],       // 아시아
+  [-0.7, -0.3, 0.55], [-0.85, 0.1, 0.65], [-0.6, 0.4, 0.4],                                              // 유럽·아프리카
+  [2.3, -0.45, 0.75], [2.05, -0.15, 0.6], [2.45, -0.1, 0.45], [2.6, 0.35, 0.4], [2.75, 0.6, 0.35],        // 아메리카
+  [1.15, 0.55, 0.45], [1.3, 0.6, 0.3],                                                                    // 오세아니아
+];
+
+export class EntryScene extends Phaser.Scene {
+  constructor() { super('Entry'); }
+
+  create() {
+    this.leaving = false;
+    this.rot = 0;
+    setTheme('#8f6440', '#8f6440');
+    this.insets = getSafeInsets(this.game);
+    this.drawMap();
+    this.globe = this.add.container(GLOBE.x, GLOBE.y);
+    this.drawStand();
+    this.surface = this.add.graphics();
+    this.shine = this.add.graphics();
+    this.globe.add([this.surface, this.shine]);
+    this.drawRing();
+    this.drawShine();
+    this.makePins();
+    this.makeCards();
+    this.makeChrome();
+    this.drawSurface();
+    this.cameras.main.fadeIn(260, 143, 100, 64);
+  }
+
+  // ── 펼친 세계지도 (한 장으로 구움) ─────────────────
+  drawMap() {
+    const g = this.make.graphics({ x: 0, y: 0 }, false);
+    g.fillStyle(C.desk, 1).fillRect(0, 0, UI.width, UI.height);
+    for (let y = 30; y < UI.height; y += 64) g.fillStyle(C.deskDark, 0.18).fillRect(0, y, UI.width, 3);
+    const P = { x: 22, y: 150, w: UI.width - 44, h: 1060 };
+    g.fillStyle(0x000000, 0.18).fillRoundedRect(P.x + 6, P.y + 10, P.w, P.h, 20);
+    g.fillStyle(C.paperEdge, 1).fillRoundedRect(P.x, P.y, P.w, P.h, 20);
+    g.fillStyle(C.paper, 1).fillRoundedRect(P.x + 8, P.y + 8, P.w - 16, P.h - 16, 16);
+    // 바다 (옅은 청록) + 물결
+    g.fillStyle(C.sea, 1).fillRoundedRect(P.x + 30, P.y + 30, P.w - 60, P.h - 60, 14);
+    g.lineStyle(3, C.wave, 1);
+    for (let i = 0; i < 26; i++) {
+      const x = P.x + 60 + ((i * 197) % (P.w - 140));
+      const y = P.y + 60 + ((i * 131) % (P.h - 130));
+      g.beginPath(); g.arc(x, y, 9, Math.PI, 0); g.arc(x + 18, y, 9, Math.PI, 0, true); g.strokePath();
+    }
+    // 둥근 대륙 덩어리 (평면 지도)
+    const blob = (pts) => {
+      for (const [x, y, r] of pts) g.fillStyle(C.landEdge, 1).fillCircle(x, y + 4, r);
+      for (const [x, y, r] of pts) g.fillStyle(C.land, 1).fillCircle(x, y, r);
+    };
+    blob([[110, 300, 70], [170, 270, 60], [150, 360, 45], [200, 420, 40], [240, 470, 30]]);               // 아메리카 북
+    blob([[230, 560, 40], [250, 620, 45], [240, 690, 35], [225, 750, 25]]);                                // 아메리카 남
+    blob([[350, 260, 45], [395, 300, 40], [370, 380, 40], [390, 450, 55], [410, 520, 45], [400, 580, 30]]); // 유럽·아프리카
+    blob([[480, 250, 60], [560, 270, 65], [620, 320, 45], [520, 340, 55], [600, 400, 35], [640, 360, 22]]); // 아시아
+    blob([[600, 560, 40], [640, 590, 30]]);                                                                // 오세아니아
+    // 블루나비 여행길 (한국 → 중국 → 일본 → 미국 → 캐나다) 점선 — 지구본 뒤로 은은하게 보인다
+    const route = [[628, 330], [575, 340], [655, 320], [690, 260], [180, 330], [150, 250]];
+    g.fillStyle(C.blue, 0.55);
+    for (let i = 0; i < route.length - 1; i++) {
+      const [x1, y1] = route[i], [x2, y2] = route[i + 1];
+      if (i === 3) continue; // 태평양은 지도 끝을 돌아서 (오른쪽 끝 → 왼쪽 끝)
+      const n = Math.max(2, Math.round(Math.hypot(x2 - x1, y2 - y1) / 16));
+      for (let k = 0; k <= n; k++) g.fillCircle(x1 + ((x2 - x1) * k) / n, y1 + ((y2 - y1) * k) / n, 3.5);
+    }
+    for (const [x, y] of route) g.fillStyle(C.blue, 0.8).fillCircle(x, y, 6);
+    // 접힌 자국
+    g.fillStyle(C.fold, 0.5).fillRect(P.x + P.w / 3, P.y + 12, 3, P.h - 24).fillRect(P.x + (P.w * 2) / 3, P.y + 12, 3, P.h - 24).fillRect(P.x + 12, P.y + P.h / 2, P.w - 24, 3);
+    // 나침반 (오른쪽 아래)
+    const cx = 624, cy = 1128;
+    g.fillStyle(C.paper, 1).fillCircle(cx, cy, 46);
+    g.lineStyle(3, C.ink, 0.6).strokeCircle(cx, cy, 46);
+    g.fillStyle(0xe8584a, 1).fillTriangle(cx, cy - 40, cx - 10, cy, cx + 10, cy);
+    g.fillStyle(C.ink, 0.8).fillTriangle(cx, cy + 40, cx - 10, cy, cx + 10, cy);
+    g.fillStyle(C.ink, 0.5).fillTriangle(cx - 40, cy, cx, cy - 8, cx, cy + 8).fillTriangle(cx + 40, cy, cx, cy - 8, cx, cy + 8);
+    if (this.textures.exists('entry_map')) this.textures.remove('entry_map');
+    g.generateTexture('entry_map', UI.width, UI.height);
+    g.destroy();
+    this.add.image(0, 0, 'entry_map').setOrigin(0);
+    this.add.text(624, 1066, 'N', { fontFamily: UI.fontTitle, fontSize: '22px', color: '#2b2d5a' }).setOrigin(0.5);
+  }
+
+  // ── 지구본 모형 ────────────────────────────────
+  drawStand() {
+    const g = this.add.graphics();
+    const { r } = GLOBE;
+    g.fillStyle(0x000000, 0.18).fillEllipse(6, r + 108, 300, 46);
+    g.fillStyle(C.woodDark, 1).fillEllipse(0, r + 98, 280, 56);
+    g.fillStyle(C.wood, 1).fillEllipse(0, r + 90, 280, 50);
+    g.fillStyle(C.woodDark, 1).fillRoundedRect(-16, r - 6, 32, 100, 10);
+    g.fillStyle(C.wood, 1).fillRoundedRect(-11, r - 6, 16, 96, 8);
+    this.globe.add(g);
+  }
+
+  // 금빛 반원 고리 (앞쪽 위에 겹쳐 보이게 공보다 나중에)
+  drawRing() {
+    const g = this.add.graphics();
+    const R = GLOBE.r + 22;
+    g.lineStyle(16, 0x9c6b1e, 1);
+    g.beginPath(); g.arc(0, 0, R, -Math.PI * 0.62, Math.PI * 0.62); g.strokePath();
+    g.lineStyle(10, C.gold, 1);
+    g.beginPath(); g.arc(0, 0, R, -Math.PI * 0.62, Math.PI * 0.62); g.strokePath();
+    g.lineStyle(4, C.goldLight, 1);
+    g.beginPath(); g.arc(-2, -2, R, -Math.PI * 0.55, Math.PI * 0.2); g.strokePath();
+    g.fillStyle(C.gold, 1).fillCircle(0, -R, 12).fillCircle(0, R, 12);
+    this.globe.add(g);
+  }
+
+  drawShine() {
+    const g = this.shine;
+    const { r } = GLOBE;
+    g.fillStyle(0xffffff, 0.28).fillEllipse(-r * 0.38, -r * 0.42, r * 0.7, r * 0.42);
+    g.fillStyle(0xffffff, 0.55).fillEllipse(-r * 0.46, -r * 0.5, r * 0.22, r * 0.12);
+  }
+
+  // 공과 대륙: 대륙 덩어리를 경도만큼 옆으로 흘리고, 가장자리로 갈수록 납작하게 (캔버스·WebGL 같게)
+  drawSurface() {
+    const g = this.surface.clear();
+    const { r } = GLOBE;
+    g.fillStyle(C.ink, 1).fillCircle(0, 0, r + 6);
+    g.fillStyle(C.oceanDeep, 1).fillCircle(0, 0, r);
+    g.fillStyle(C.ocean, 1).fillCircle(-r * 0.06, -r * 0.06, r * 0.9);
+    for (const [lon, lat, size] of LANDS) {
+      const a = lon + this.rot;
+      const z = Math.cos(a);
+      if (z <= 0.05) continue;
+      const k = Math.sqrt(1 - lat * lat * 0.7);
+      const x = Math.sin(a) * r * 0.86 * k;
+      const y = lat * r * 0.82;
+      const w = size * r * 0.62 * z;
+      const h = size * r * 0.6;
+      g.fillStyle(0x3f8f3a, 0.9).fillEllipse(x, y + 4, w, h);
+      g.fillStyle(C.green, 1).fillEllipse(x, y, w, h);
+      g.fillStyle(C.greenLight, 0.8).fillEllipse(x - w * 0.12, y - h * 0.16, w * 0.5, h * 0.36);
+    }
+  }
+
+  // ── 핀 두 개 = 입구 ─────────────────────────────
+  makePins() {
+    this.pins = {
+      1: this.makePin(-70, -96, 1),
+      2: this.makePin(92, 4, 2),
+    };
+    // 마지막에 하던 탄의 핀이 통통
+    const last = state.series === 2 ? 2 : 1;
+    this.tweens.add({ targets: this.pins[last], y: this.pins[last].y - 18, duration: 420, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+  }
+
+  makePin(x, y, n) {
+    const c = this.add.container(x, y);
+    const g = this.add.graphics();
+    const col = n === 1 ? C.blue : C.pink;
+    // 물방울 모양 핀
+    g.fillStyle(0x000000, 0.2).fillEllipse(4, 64, 30, 10);
+    g.fillStyle(C.ink, 1).fillCircle(0, 0, 40).fillTriangle(-30, 22, 30, 22, 0, 66);
+    g.fillStyle(col, 1).fillCircle(0, 0, 34).fillTriangle(-24, 22, 24, 22, 0, 58);
+    g.fillStyle(C.cream, 1).fillCircle(0, 0, 25);
+    if (n === 1) drawButterfly(g, 0, 0, 1);
+    else drawPaw(g, 0, 2, 1);
+    c.add(g);
+    c.setSize(110, 140).setInteractive({ useHandCursor: true }).on('pointerup', () => this.enter(n));
+    this.globe.add(c);
+    return c;
+  }
+
+  // ── 이름표 카드 (핀이 작아도 여기를 눌러 들어갈 수 있게) ──
+  makeCards() {
+    const y = 960;
+    [[1, 190], [2, 530]].forEach(([n, x]) => {
+      const c = this.add.container(x, y);
+      const g = this.add.graphics();
+      const col = n === 1 ? C.blue : C.pink;
+      g.fillStyle(0x000000, 0.2).fillRoundedRect(-156, -76, 316, 168, 28);
+      g.fillStyle(C.ink, 1).fillRoundedRect(-160, -84, 320, 168, 28);
+      g.fillStyle(C.cream, 1).fillRoundedRect(-154, -78, 308, 156, 24);
+      g.fillStyle(col, 1).fillRoundedRect(-154, -78, 308, 40, { tl: 24, tr: 24, bl: 0, br: 0 });
+      g.fillStyle(C.cream, 1).fillCircle(-98, 18, 44);
+      g.lineStyle(4, col, 1).strokeCircle(-98, 18, 44);
+      if (n === 1) drawButterfly(g, -98, 18, 1.5); else drawPaw(g, -98, 20, 1.5);
+      c.add(g);
+      c.add(this.add.text(0, -58, n === 1 ? '1탄' : '2탄', { fontFamily: UI.fontTitle, fontSize: '26px', color: '#ffffff' }).setOrigin(0.5));
+      const [a, b] = n === 1 ? ['블루나비의', '세계여행'] : ['포포의', '사계절 서울'];
+      c.add(this.add.text(50, 0, a, { fontFamily: UI.fontTitle, fontSize: '30px', color: '#2b2d5a' }).setOrigin(0.5));
+      c.add(this.add.text(50, 40, b, { fontFamily: UI.fontTitle, fontSize: '32px', color: n === 1 ? '#2f7bff' : '#d0537a' }).setOrigin(0.5));
+      c.setSize(320, 168).setInteractive({ useHandCursor: true }).on('pointerup', () => this.enter(n));
+      c.on('pointerdown', () => c.setScale(0.96));
+      c.on('pointerout', () => c.setScale(1));
+    });
+    this.add.text(300, 1092, '핀이나 카드를 톡 눌러 여행을 골라요', { fontFamily: UI.font, fontSize: '24px', color: '#5a4630' }).setOrigin(0.5);
+  }
+
+  makeChrome() {
+    const { top, bottom } = this.insets;
+    this.add.text(UI.width / 2, 92 + top, '어디로 여행할까요?', { fontFamily: UI.fontTitle, fontSize: '52px', color: '#fffaf0', stroke: '#6e4a2e', strokeThickness: 10 }).setOrigin(0.5);
+    const tag = IS_TEST_BUILD ? `테스트 버전 ${VERSION}` : `v${VERSION}`;
+    this.add.text(36, UI.height - 26 - bottom, tag, { fontFamily: UI.font, fontSize: '22px', color: '#fffaf0' }).setOrigin(0, 1).setAlpha(0.8);
+    // 설정 (오른쪽 아래)
+    const gear = this.add.container(UI.width - 64, UI.height - 52 - bottom);
+    const gg = this.add.graphics();
+    gg.fillStyle(0xffffff, 0.95).fillCircle(0, 0, 34);
+    iconGear(gg, 0, 0, 42);
+    gear.add(gg).setSize(96, 96).setInteractive({ useHandCursor: true }).on('pointerup', () => {
+      sfx('tap'); unlockAudio(); this.input.enabled = false; this.scene.launch('Settings', { frame: 'woodWindow', from: 'Entry' });
+    });
+    const onClosed = () => { this.input.enabled = true; };
+    this.game.events.on('settings-closed', onClosed);
+    this.events.once('shutdown', () => this.game.events.off('settings-closed', onClosed));
+    // 게임장(한 파일 버전) 안이면 왼쪽 위 [← 게임장]
+    if (window.BB_EMBED) {
+      const hub = this.add.container(112, 40 + top);
+      const hg = this.add.graphics();
+      hg.fillStyle(0xffffff, 0.95).fillRoundedRect(-88, -28, 176, 56, 28);
+      hub.add([hg, this.add.text(0, 0, '← 게임장', { fontFamily: UI.fontTitle, fontSize: '26px', color: '#2b2d5a' }).setOrigin(0.5)]);
+      hub.setSize(180, 80).setInteractive({ useHandCursor: true })
+        .on('pointerup', () => { sfx('tap'); try { parent.postMessage({ type: 'bb-close' }, '*'); } catch { /* 무시 */ } });
+    }
+  }
+
+  update(_, delta) {
+    if (platform.reducedMotion && !this.leaving) return;
+    this.rot += (delta / 1000) * (this.leaving ? 2.4 : 0.22);
+    this.drawSurface();
+  }
+
+  // 들어가기: 지구본이 그 핀 쪽으로 빙글 돌며 커진 뒤 그 탄의 타이틀로
+  enter(n) {
+    if (this.leaving) return;
+    this.leaving = true;
+    unlockAudio();
+    sfx('open');
+    vibrate('collect');
+    useSeries(n);
+    const pin = this.pins[n];
+    this.tweens.killTweensOf(pin);
+    this.tweens.add({ targets: pin, scale: 1.4, duration: 200, yoyo: true });
+    this.tweens.add({
+      targets: this.globe, scale: 3.2, x: GLOBE.x - pin.x * 3.2, y: 640 - pin.y * 3.2,
+      duration: 900, ease: 'Cubic.easeIn',
+    });
+    this.time.delayedCall(560, () => this.cameras.main.fadeOut(340, 255, 250, 240));
+    this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start(META[n].titleScene));
+  }
+}
+
+// 파란 나비 (핀·카드 그림)
+function drawButterfly(g, x, y, s) {
+  g.fillStyle(C.ink, 1).fillEllipse(x - 10 * s, y - 6 * s, 20 * s, 22 * s).fillEllipse(x + 10 * s, y - 6 * s, 20 * s, 22 * s)
+    .fillEllipse(x - 8 * s, y + 9 * s, 15 * s, 15 * s).fillEllipse(x + 8 * s, y + 9 * s, 15 * s, 15 * s);
+  g.fillStyle(C.sky, 1).fillEllipse(x - 10 * s, y - 6 * s, 15 * s, 17 * s).fillEllipse(x + 10 * s, y - 6 * s, 15 * s, 17 * s);
+  g.fillStyle(C.blue, 1).fillEllipse(x - 8 * s, y + 9 * s, 10 * s, 10 * s).fillEllipse(x + 8 * s, y + 9 * s, 10 * s, 10 * s);
+  g.fillStyle(C.ink, 1).fillRoundedRect(x - 2.5 * s, y - 12 * s, 5 * s, 26 * s, 2.5 * s);
+  g.lineStyle(2 * s, C.ink, 1).lineBetween(x, y - 12 * s, x - 6 * s, y - 20 * s).lineBetween(x, y - 12 * s, x + 6 * s, y - 20 * s);
+}
+
+// 강아지 발바닥
+function drawPaw(g, x, y, s) {
+  g.fillStyle(C.brown, 1).fillEllipse(x, y + 5 * s, 22 * s, 18 * s);
+  g.fillCircle(x - 12 * s, y - 7 * s, 5.5 * s).fillCircle(x - 4 * s, y - 13 * s, 5.5 * s).fillCircle(x + 5 * s, y - 13 * s, 5.5 * s).fillCircle(x + 13 * s, y - 7 * s, 5.5 * s);
+  g.fillStyle(C.pink, 1).fillEllipse(x, y + 6 * s, 12 * s, 9 * s);
+}

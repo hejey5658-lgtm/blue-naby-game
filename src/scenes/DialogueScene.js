@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { speak, stopSpeaking } from '../ui/narrator.js';
 import { UI } from '../data/ui.js';
 import { DIALOGUE, SPEAKER_NAMES } from '../data/dialogue.js';
 import { state } from '../state.js';
@@ -24,6 +25,9 @@ function guessMood(text) {
   return 'joy';
 }
 
+// 해설 음성으로 읽는 대사 (프롤로그의 해설 줄만, design-brief 15절)
+const NARRATED = new Set(['prologue', 'prologue2']);
+
 export class DialogueScene extends Phaser.Scene {
   constructor() { super('Dialogue'); }
 
@@ -38,6 +42,7 @@ export class DialogueScene extends Phaser.Scene {
     this.typing = null;
     // 씬은 다시 쓰이므로 지난번 대사창의 '끝남' 표시를 지운다 (안 지우면 두 번째 대사부터 넘어가지 않음)
     this.finished = false;
+    this.speaker = null;
   }
 
   create() {
@@ -76,6 +81,7 @@ export class DialogueScene extends Phaser.Scene {
     parts.forEach((p) => { p.y += 40; p.alpha = 0; });
     this.tweens.add({ targets: parts, y: '-=40', alpha: 1, duration: 260, ease: 'Back.easeOut' });
 
+    this.events.once('shutdown', stopSpeaking);
     this.showLine(0);
   }
 
@@ -97,6 +103,7 @@ export class DialogueScene extends Phaser.Scene {
     this.index = i;
     const line = this.lines[i];
     this.drawSpeaker(line);
+    this.readAloud(line);
     // 엔딩처럼 대사에 맞춰 연출하는 씬을 위해 알린다
     this.game.events.emit('dialogue-line', { key: this.key, index: i, speaker: line.speaker });
     // 3줄씩 쪽으로 나눈다
@@ -105,6 +112,24 @@ export class DialogueScene extends Phaser.Scene {
     for (let p = 0; p < wrapped.length; p += MAX_LINES) this.pages.push(wrapped.slice(p, p + MAX_LINES).join('\n'));
     this.page = 0;
     this.typePage();
+  }
+
+  // 해설 줄이면 소리 내어 읽고, 읽는 동안 대사창 오른쪽 위에 작은 스피커가 움직인다
+  readAloud(line) {
+    stopSpeaking();
+    this.speaker?.destroy();
+    this.speaker = null;
+    if (!NARRATED.has(this.key) || line.speaker !== 'narrator') return;
+    const icon = this.add.graphics();
+    const on = speak(line.text, () => { if (this.speaker === icon) { icon.destroy(); this.speaker = null; } });
+    if (!on) { icon.destroy(); return; }
+    const x = BOX.x + BOX.w - 60, y = this.boxY + 40;
+    icon.fillStyle(0x2f7bff, 1).fillRect(x - 18, y - 7, 10, 14).fillTriangle(x - 10, y - 7, x + 2, y - 16, x + 2, y + 16).fillTriangle(x - 10, y + 7, x + 2, y - 16, x + 2, y + 16);
+    icon.lineStyle(3, 0x2f7bff, 1);
+    icon.beginPath(); icon.arc(x + 4, y, 10, -0.8, 0.8); icon.strokePath();
+    icon.beginPath(); icon.arc(x + 4, y, 18, -0.8, 0.8); icon.strokePath();
+    this.tweens.add({ targets: icon, alpha: 0.35, duration: 420, yoyo: true, repeat: -1 });
+    this.speaker = icon;
   }
 
   drawSpeaker(line) {
@@ -180,6 +205,8 @@ export class DialogueScene extends Phaser.Scene {
   finish() {
     if (this.finished) return;
     this.finished = true;
+    stopSpeaking();
+    this.speaker?.destroy();
     this.typing?.remove();
     const parts = [this.panel, this.body, this.nameTag, this.face, this.next];
     this.tweens.add({

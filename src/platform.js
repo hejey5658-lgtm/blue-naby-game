@@ -51,6 +51,8 @@ export const platform = {
     // 아이폰은 전체 화면이 안 되고, 인앱 브라우저도 대부분 안 된다.
     fullscreen: !isIOS && !inApp && !!document.documentElement.requestFullscreen,
     share: typeof navigator.share === 'function',
+    // 해설 음성(브라우저 음성 합성). 인앱 브라우저 중엔 없거나 목소리가 없는 곳도 있다 — 없으면 글만.
+    speech: typeof window !== 'undefined' && 'speechSynthesis' in window && typeof window.SpeechSynthesisUtterance === 'function',
     clipboard: !!(navigator.clipboard && navigator.clipboard.writeText),
     persist: !!(navigator.storage && navigator.storage.persist),
     install: false,

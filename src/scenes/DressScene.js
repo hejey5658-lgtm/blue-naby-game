@@ -35,7 +35,7 @@ export class DressScene extends Phaser.Scene {
   }
 
   dress() {
-    const gift = this.chapter.rewards?.[this.chapter.bosses.length - 1] ?? this.chapter.rewards?.[0];
+    const gift = [].concat(this.chapter.rewards?.[this.chapter.bosses.length - 1] ?? this.chapter.rewards?.[0] ?? [])[0]; // 첫 선물 = 계절 옷
     // 선물이 반짝이 고리를 그리며 포포에게
     const ring = [];
     for (let i = 0; i < 12; i++) {

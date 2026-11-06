@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { state } from '../state.js';
 import { createAnims, queueAssets } from './PreloadScene.js';
 import { UI } from '../data/ui.js';
 import { createPlaceholders } from '../art/placeholders.js';
@@ -49,7 +50,9 @@ export class BootScene extends Phaser.Scene {
       : Promise.resolve();
     const timeout = new Promise((r) => setTimeout(r, 3000));
     Promise.race([fonts, timeout]).catch(() => {}).then(() => {
-      this.scene.start('Title');
+      // 게임 입구(지구본, 16절)부터. 대결장·도전장 링크로 들어왔으면 입구를 건너뛰고 바로 (Title이 알맞은 화면으로 보낸다)
+      const viaLink = !!state.pendingMatch || !!state.newChallenge;
+      this.scene.start(viaLink ? 'Title' : 'Entry');
       this.scene.launch('Preload');
     });
   }

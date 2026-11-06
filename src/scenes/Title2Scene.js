@@ -11,11 +11,10 @@ import { unlockAudio, sfx, vibrate } from '../ui/feedback.js';
 import { iconGear } from '../ui/icons.js';
 import { updateBand, inAppBand } from '../ui/bands.js';
 import { setTheme } from '../ui/theme.js';
-import { useSeries } from '../series.js';
 import { waitForAssets } from './PreloadScene.js';
 
 // 2탄 타이틀: 포포네 마당 (docs/design-brief.md 13절). 나무 울타리·개나리 화분·빨랫줄, 울타리 위를 팔랑이는 블루나비.
-// 왼쪽 위 [◀ 1탄 블루나비]로 1탄 타이틀로 (진행 기록은 탄마다 따로).
+// 왼쪽 위 [◀ 지구본]으로 게임 입구로 (진행 기록은 탄마다 따로).
 const C = { sky: 0xcfeaff, sky2: 0xe6f5ff, grass: 0xa8dd8f, grass2: 0x8cc97a, fence: 0xe0aa7e, fenceDark: 0xa8673c, ink: 0x2b2d5a };
 
 export class Title2Scene extends Phaser.Scene {
@@ -51,12 +50,12 @@ export class Title2Scene extends Phaser.Scene {
       onPress: () => { sfx('tap'); unlockAudio(); this.scene.start('Duo', { step: 'setup' }); },
     });
 
-    // 1탄으로 (왼쪽 위)
-    const sw = this.add.container(150, 64 + top);
+    // 지구본 입구로 (왼쪽 위) — 1탄·2탄은 입구에서 고른다 (16절)
+    const sw = this.add.container(130, 64 + top);
     const sg = this.add.graphics();
-    sg.fillStyle(0xffffff, 0.95).fillRoundedRect(-126, -30, 252, 60, 30).lineStyle(3, C.ink, 0.2).strokeRoundedRect(-126, -30, 252, 60, 30);
-    sw.add([sg, this.add.text(0, 0, '◀ 1탄 블루나비', { fontFamily: UI.fontTitle, fontSize: '26px', color: '#2b2d5a' }).setOrigin(0.5)]);
-    sw.setSize(256, 96).setInteractive({ useHandCursor: true }).on('pointerup', () => { sfx('tap'); useSeries(1); this.scene.start('Title'); });
+    sg.fillStyle(0xffffff, 0.95).fillRoundedRect(-106, -30, 212, 60, 30).lineStyle(3, C.ink, 0.2).strokeRoundedRect(-106, -30, 212, 60, 30);
+    sw.add([sg, this.add.text(0, 0, '◀ 지구본', { fontFamily: UI.fontTitle, fontSize: '26px', color: '#2b2d5a' }).setOrigin(0.5)]);
+    sw.setSize(216, 96).setInteractive({ useHandCursor: true }).on('pointerup', () => { sfx('tap'); this.scene.start('Entry'); });
 
     // 설정 (오른쪽 위)
     const gear = this.add.container(UI.width - 64, 64 + top);
@@ -118,7 +117,7 @@ export class Title2Scene extends Phaser.Scene {
       this.opening = false;
       const playing = state.playing ?? CHAPTERS[state.chapter - 1]?.id ?? CHAPTERS[0].id;
       if (state.step.endsWith('_maze')) { this.scene.start('Maze', { chapter: playing }); return; }
-      if (state.step.endsWith('_boss')) { this.scene.start('Battle', { chapter: playing, bossIndex: state.bossIndex ?? 0 }); return; }
+      if (state.step.endsWith('_boss')) { this.scene.start('Maze', { chapter: playing, fresh: true }); return; } // 예전 대결 중 저장 → 미로부터
       if (hasProgress()) { this.scene.start('Album'); return; }
       this.playPrologue();
     });

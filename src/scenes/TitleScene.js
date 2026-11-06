@@ -11,7 +11,7 @@ import { unlockAudio, sfx, vibrate } from '../ui/feedback.js';
 import { iconGear, iconPuzzle } from '../ui/icons.js';
 import { updateBand, inAppBand, challengeBand } from '../ui/bands.js';
 import { setTheme } from '../ui/theme.js';
-import { SERIES, useSeries } from '../series.js';
+import { SERIES } from '../series.js';
 
 // 타이틀: 화면 위쪽은 창가(나무 창틀이 화면의 틀), 유리창 너머로 바깥 세상이 보이고
 // 화분 위의 애벌레 블루나비가 창밖을 본다. 시작을 누르면 창문이 열린다.
@@ -237,12 +237,12 @@ export class TitleScene extends Phaser.Scene {
     this.gear.add(gg).setSize(96, 96).setInteractive({ useHandCursor: true })
       .on('pointerup', () => this.openSettings());
 
-    // 2탄으로 (왼쪽 위, 게임장 버튼이 있으면 그 아래)
-    const sw = this.add.container(150, window.BB_EMBED ? 140 : 64);
+    // 지구본 입구로 (왼쪽 위, 게임장 버튼이 있으면 그 아래) — 1탄·2탄은 입구에서 고른다 (16절)
+    const sw = this.add.container(130, window.BB_EMBED ? 140 : 64);
     const sg = this.add.graphics();
-    sg.fillStyle(0xffffff, 0.95).fillRoundedRect(-126, -30, 252, 60, 30).lineStyle(3, 0x2b2d5a, 0.2).strokeRoundedRect(-126, -30, 252, 60, 30);
-    sw.add([sg, this.add.text(0, 0, '2탄 포포 ▶', { fontFamily: UI.fontTitle, fontSize: '26px', color: '#2b2d5a' }).setOrigin(0.5)]);
-    sw.setSize(256, 96).setInteractive({ useHandCursor: true }).on('pointerup', () => { sfx('tap'); useSeries(2); this.scene.start('Title2'); });
+    sg.fillStyle(0xffffff, 0.95).fillRoundedRect(-106, -30, 212, 60, 30).lineStyle(3, 0x2b2d5a, 0.2).strokeRoundedRect(-106, -30, 212, 60, 30);
+    sw.add([sg, this.add.text(0, 0, '◀ 지구본', { fontFamily: UI.fontTitle, fontSize: '26px', color: '#2b2d5a' }).setOrigin(0.5)]);
+    sw.setSize(216, 96).setInteractive({ useHandCursor: true }).on('pointerup', () => { sfx('tap'); this.scene.start('Entry'); });
     this.seriesChip = sw;
 
     // 게임장(eunyoug_3st_index.html) 안에서 열렸을 때만: 왼쪽 위 [← 게임장]
@@ -324,8 +324,9 @@ export class TitleScene extends Phaser.Scene {
         this.scene.start('Maze', { chapter: playing });
         return;
       }
+      // 예전 대결 화면 중이던 저장은 그 단계 미로부터 다시 (17절, 친구·선물은 그대로)
       if (state.step.endsWith('_boss')) {
-        this.scene.start('Battle', { chapter: playing, bossIndex: state.bossIndex ?? 0 });
+        this.scene.start('Maze', { chapter: playing, fresh: true });
         return;
       }
       if (hasProgress()) {

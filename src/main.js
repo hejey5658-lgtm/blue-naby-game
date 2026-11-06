@@ -5,9 +5,9 @@ import { BootScene } from './scenes/BootScene.js';
 import { TitleScene } from './scenes/TitleScene.js';
 import { DialogueScene } from './scenes/DialogueScene.js';
 import { SettingsScene } from './scenes/SettingsScene.js';
+import { EntryScene } from './scenes/EntryScene.js';
 import { MazeScene } from './scenes/MazeScene.js';
 import { PauseScene } from './scenes/PauseScene.js';
-import { BattleScene } from './scenes/BattleScene.js';
 import { MapScene } from './scenes/MapScene.js';
 import { EvolutionScene } from './scenes/EvolutionScene.js';
 import { PreloadScene } from './scenes/PreloadScene.js';
@@ -27,6 +27,7 @@ import { readMatchFromUrl } from './social/match.js';
 import { setupPcPanel } from './pcPanel.js';
 import { suspendAudio, unlockAudio } from './ui/feedback.js';
 import { wantMusic, refreshMusic, nowPlaying } from './ui/music.js';
+import { unlockSpeech } from './ui/narrator.js';
 import { SCENE_SONG } from './data/music.js';
 
 // 마지막에 하던 탄(1탄 블루나비 / 2탄 포포)의 데이터로
@@ -49,7 +50,7 @@ const game = new Phaser.Game({
   },
   input: { activePointers: 2 },
   render: { antialias: true, powerPreference: 'high-performance' },
-  scene: [BootScene, PreloadScene, TitleScene, MazeScene, BattleScene, MapScene, EvolutionScene, EndingScene, PopScene, DuoScene, MatchScene, Title2Scene, AlbumScene, DressScene, Ending2Scene, DialogueScene, PauseScene, SettingsScene],
+  scene: [BootScene, PreloadScene, EntryScene, TitleScene, MazeScene, MapScene, EvolutionScene, EndingScene, PopScene, DuoScene, MatchScene, Title2Scene, AlbumScene, DressScene, Ending2Scene, DialogueScene, PauseScene, SettingsScene],
 });
 // 하는 탄 그림만 받기 (모바일 최적화): PreloadScene·waitForAssets 가 registry 'series'를 본다
 game.registry.set('series', state.series === 2 ? 2 : 1);
@@ -69,6 +70,8 @@ game.events.once('ready', () => {
 });
 // 폰은 첫 탭 전에는 소리를 못 낸다 → 아무 데나 처음 톡 하면 오디오를 열고 지금 화면 곡을 시작
 window.addEventListener('pointerdown', () => { unlockAudio(); if (!nowPlaying()) setTimeout(refreshMusic, 50); }, { passive: true });
+// 해설 음성: 아이폰은 손가락을 뗄 때(터치 끝) 첫 읽기를 풀어 둬야 나중에 읽힌다
+for (const ev of ['touchend', 'click']) window.addEventListener(ev, unlockSpeech, { passive: true, once: true });
 
 // 길쭉한 폰(20:9 등): 남는 위아래 여백 중 아래쪽을 줄여 게임을 엄지 쪽으로 조금 내린다 (홈 바 안전 영역은 남김, 모바일 최적화 14절)
 function nudgeCanvas() {

@@ -58,8 +58,10 @@ export class SettingsScene extends Phaser.Scene {
     y += 54;
 
     // 두 개씩 나란히 (판 안에 다 들어가게)
-    this.makeLinkRow(root, y, '저장 코드 복사', () => this.copyCode(), '#2b2d5a', 0);
-    this.makeLinkRow(root, y, '저장 코드 넣기', () => this.pasteCode(), '#2b2d5a', 1);
+    // 입구(지구본)에서 열면 어느 탄인지 정해지지 않았으므로 복사·처음부터는 각 탄 타이틀에서만
+    const entry = this.from === 'Entry';
+    if (!entry) this.makeLinkRow(root, y, '저장 코드 복사', () => this.copyCode(), '#2b2d5a', 0);
+    this.makeLinkRow(root, y, '저장 코드 넣기', () => this.pasteCode(), '#2b2d5a', entry ? null : 1);
     y += 98;
     const install = canOfferInstall();
     this.makeLinkRow(root, y, '의견 보내기', () => sendFeedback(), '#2f7bff', install ? 0 : null);
@@ -68,7 +70,7 @@ export class SettingsScene extends Phaser.Scene {
     this.makeLinkRow(root, y, '만든 사람들', () => this.showCredits(), '#2b2d5a', 0);
     this.makeLinkRow(root, y, '개인정보 안내', () => this.showPrivacy(), '#2b2d5a', 1);
     y += 98;
-    if (hasProgress()) this.makeLinkRow(root, y, '처음부터 다시 하기', () => this.confirmReset(), '#a4523a');
+    if (hasProgress() && !entry) this.makeLinkRow(root, y, '처음부터 다시 하기', () => this.confirmReset(), '#a4523a');
 
     root.add(this.add.text(UI.width / 2, PANEL.y + PANEL.h - 40, `블루나비의 세계여행 · ${VERSION}`, {
       fontFamily: UI.font, fontSize: '22px', color: '#8a8cae',

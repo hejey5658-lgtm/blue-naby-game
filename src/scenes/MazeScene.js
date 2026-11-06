@@ -20,12 +20,19 @@ import { placeDrifters, patrolPath } from '../maze/drift.js';
 import { saveMyResult } from '../social/match.js';
 import { ITEMS } from '../data/items.js';
 import { SERIES } from '../series.js';
+import { BOSSES } from '../data/bosses.js';
+import { DIALOGUE } from '../data/dialogue.js';
+import { placeFriends } from '../maze/hide.js';
+import { afterChapter, startChapter, giftsOf, syncGifts } from '../flow.js';
+import { iconStar } from '../ui/icons.js';
 
-// 미로: 쓱 밀면 그 방향으로 벽·갈림길·수집품까지 미끄러져 간다. 톡 누르면 멈춘다.
-// 수집품을 다 모으면 출구가 열린다. 순찰하는 방해물·떨어지는 물방울·움직이는 웅덩이에 닿으면 퐁! → [다시 시작] → 체크포인트.
+// 미로: 쓱 밀면 그 방향으로 벽·갈림길·수집품까지 미끄러져 간다. 칸을 톡 누르면 그 칸까지 길을 찾아 걸어가고(15절),
+// 블루나비를 톡 누르면 멈춘다. 달리기 에너지: 걸을 때마다 줄고 수집품으로 찬다, 0이면 천천히 기어간다(15절).
+// 미로 안에 친구가 숨어 있다(숨바꼭질, 17절): 세 번 찾으면 출구 앞에서 기다리고, 출구에서 친구가 된다.
+// 수집품을 다 모으고 친구를 모두 찾으면 출구가 열린다. 순찰하는 방해물·떨어지는 물방울·움직이는 웅덩이에 닿으면 퐁! → [다시 시작] → 체크포인트.
 // 움직이는 거미줄에 닿으면 잠깐 느려진다 (design-brief 11절).
-// (systems.md 3절, 화면 배치 9절: 상태 줄 y 0–110, 미로 y 120–1080, 아래 영역 y 1090–1280)
-const AREA = { x: 8, y: 120, w: 704, h: 960 };
+// (화면 배치: 상태 줄 y 0–150 — 3줄째에 에너지·숨은 친구 하트, 미로 y 158–1080, 아래 영역 y 1090–1280)
+const AREA = { x: 8, y: 158, w: 704, h: 922 };
 const DIRS = { left: [-1, 0], right: [1, 0], up: [0, -1], down: [0, 1] };
 const OPPOSITE = { left: 'right', right: 'left', up: 'down', down: 'up' };
 const PATROL_STEP_MS = 400;
@@ -57,13 +64,16 @@ export class MazeScene extends Phaser.Scene {
     this.fresh = !!data.fresh || !!this.duo;
     this.intro = !!data.intro && !this.duo;
     // 씬은 다시 쓰이므로 지난번 미로의 상태를 지운다
-    Object.assign(this, { lampTold: false, scarfTold: false, umbrellaTold: false, slowUntil: 0, shineUntil: 0, lastPull: 0, locked: false, rolling: false, heldDir: null, stopRequested: false, itemBtns: [], shineGlow: null, swipeFrom: null, lastAutoSave: -1, popped: false, restartBtn: null });
+    Object.assign(this, { lampTold: false, scarfTold: false, umbrellaTold: false, slowUntil: 0, shineUntil: 0, lastPull: 0, locked: false, rolling: false, heldDir: null, stopRequested: false, itemBtns: [], shineGlow: null, swipeFrom: null, lastAutoSave: -1, popped: false, restartBtn: null,
+      path: null, pathTarget: null, pathDots: null, bikeUntil: 0, bikeFx: null, tiredTold: false, friends: [], meeting: false, exitShown: false, result: null, resultShown: false });
   }
 
   create() {
     // 하는 탄 그림만 받으므로(모바일 최적화) 이 미로가 쓰는 그림이 다 있는지 확인한다
     const kinds = [this.chapter.patrolKind, ...(this.maze.patrols ?? []).map((p) => p.kind)].filter(Boolean).map((k) => `enemy_${k}`);
-    if (waitForAssets(this, [`blue_${this.chapter.form}`, `face_blue_${this.chapter.form}`, `item_${this.chapter.item}`, SERIES.meta.helperTex, ...kinds], this.initData)) return;
+    const pals = this.chapter.bosses.flatMap((k) => [`boss_${k}`, `face_${k}`]);
+    if (waitForAssets(this, [`blue_${this.chapter.form}`, `face_blue_${this.chapter.form}`, `item_${this.chapter.item}`, SERIES.meta.helperTex, ...kinds, ...pals], this.initData)) return;
+    if (!this.duo) syncGifts();
     setTheme(this.chapter.theme, this.chapter.theme);
     const g = this.maze.grid;
     this.rows = g.length;
@@ -79,6 +89,7 @@ export class MazeScene extends Phaser.Scene {
     this.start = this.find('S')[0];
     this.exitCell = this.find('E')[0];
     this.restore();
+    this.makeFriends();
 
     this.drawMaze();
     this.drawItems();
@@ -112,8 +123,9 @@ export class MazeScene extends Phaser.Scene {
     // 나라에 도착한 인사 소리 (장마다 다름)
     this.time.delayedCall(250, () => sfx(`arrive_${this.chapter.id}`));
     const hint = () => {
+      if (this.meetFriends()) return;
       if (this.collected.size === 0 && this.sec === 0) {
-        this.time.delayedCall(500, () => this.say(`${josa(COLLECTIBLES[this.chapter.item], '을', '를')} 모두 모으면 출구가 열려!`));
+        this.time.delayedCall(500, () => this.say(`${josa(COLLECTIBLES[this.chapter.item], '을', '를')} 모으고 숨은 친구를 찾으면 출구가 열려!`));
       }
     };
     // 장 도입 대사 (2장부터). 대사가 끝날 때까지 미로와 시간은 멈춰 있다.
@@ -147,6 +159,9 @@ export class MazeScene extends Phaser.Scene {
     this.collected = new Set((ms?.collected ?? []).map((c) => c.join()));
     this.sec = ms?.sec ?? 0;
     this.rolls = ms?.rolls ?? 0;
+    this.energy = ms?.energy ?? UI.energy.max;
+    this.savedFound = ms?.found ?? [];
+    this.met = new Set(this.duo ? this.chapter.bosses : (ms?.met ?? []));
   }
 
   saveProgress() {
@@ -161,6 +176,9 @@ export class MazeScene extends Phaser.Scene {
       collected: [...this.collected].map((k) => k.split(',').map(Number)),
       sec: Math.floor(this.sec),
       rolls: this.rolls,
+      energy: Math.round(this.energy),
+      found: this.friends.map((f) => f.found),
+      met: [...this.met],
     };
     save();
   }
@@ -318,15 +336,17 @@ export class MazeScene extends Phaser.Scene {
   }
 
   drawExit() {
-    const [x, y] = this.exitCell;
     this.exitG = this.add.graphics();
     this.exitGlow = this.add.graphics().setAlpha(0);
+    this.exitShown = this.exitOpen;
     this.updateExit(false);
   }
 
   get total() { return this.find('L').length; }
 
-  get exitOpen() { return this.collected.size >= this.total; }
+  get friendsLeft() { return this.friends.filter((f) => f.found < 3).length; }
+
+  get exitOpen() { return this.collected.size >= this.total && this.friendsLeft === 0; }
 
   updateExit(animate) {
     const [x, y] = this.exitCell;
@@ -390,16 +410,100 @@ export class MazeScene extends Phaser.Scene {
   // 방향 입력 (스와이프·방향 버튼·키보드 공통)
   request(dir) {
     if (this.finished || this.rolling || this.locked) return;
+    this.clearPath();
     if (this.moving) { this.queued = dir; return; }
     if (this.canGo(dir)) { this.dir = dir; this.step(); return; }
     const [dx, dy] = DIRS[dir];
-    if (this.tile(this.pos[0] + dx, this.pos[1] + dy) === 'E') {
-      const left = this.total - this.collected.size;
-      this.say(`아직 ${josa(COLLECTIBLES[this.chapter.item], '이', '가')} ${left}개 남았어!`);
-      this.nudge(dir);
-    } else {
-      this.nudge(dir);
+    if (this.tile(this.pos[0] + dx, this.pos[1] + dy) === 'E') this.exitClosedSay();
+    this.nudge(dir);
+  }
+
+  // 출구가 아직 닫혀 있을 때: 남은 수집품·숨은 친구 수
+  exitClosedSay() {
+    const left = this.total - this.collected.size;
+    const hide = this.friendsLeft;
+    const a = left ? `${josa(COLLECTIBLES[this.chapter.item], '이', '가')} ${left}개` : '';
+    const b = hide ? `숨은 친구 ${hide}명` : '';
+    this.say(`아직 ${[a, b].filter(Boolean).join(', ')} 남았어!`);
+  }
+
+  // ── 톡 눌러 길 찾아 가기 (15절) ─────────────────────
+  // 누른 칸까지 가장 가까운 길(BFS). 벽·닫힌 출구를 누르면 그 옆의 가장 가까운 길 칸으로.
+  findPath(tx, ty) {
+    const start = this.pos.join();
+    const prev = new Map([[start, null]]);
+    const q = [this.pos];
+    while (q.length) {
+      const [x, y] = q.shift();
+      for (const [dx, dy] of Object.values(DIRS)) {
+        const k = `${x + dx},${y + dy}`;
+        if (prev.has(k) || !this.passable(x + dx, y + dy)) continue;
+        prev.set(k, `${x},${y}`);
+        q.push([x + dx, y + dy]);
+      }
     }
+    let goal = prev.has(`${tx},${ty}`) ? `${tx},${ty}` : null;
+    if (!goal) {
+      let best = Infinity;
+      for (const k of prev.keys()) {
+        const [x, y] = k.split(',').map(Number);
+        const d = Math.abs(x - tx) + Math.abs(y - ty);
+        if (d < best) { best = d; goal = k; }
+      }
+    }
+    if (!goal || goal === start) return [];
+    const out = [];
+    for (let k = goal; k !== start; k = prev.get(k)) out.unshift(k.split(',').map(Number));
+    return out;
+  }
+
+  goTo(tx, ty) {
+    if (this.finished || this.rolling || this.locked) return;
+    const path = this.findPath(tx, ty);
+    if (!path.length) { this.clearPath(); if (this.tile(tx, ty) === 'E' && !this.exitOpen) this.exitClosedSay(); return; }
+    this.path = path;
+    this.pathTarget = [tx, ty];
+    this.queued = null;
+    this.heldDir = null;
+    this.drawPath(true);
+    if (!this.moving) this.followPath();
+  }
+
+  // 다음 칸으로 한 걸음. 길에서 벗어났으면(바람·등불) 그 자리에서 다시 길을 찾는다.
+  followPath() {
+    if (!this.path?.length) { this.clearPath(); return false; }
+    const [nx, ny] = this.path[0];
+    const dx = nx - this.pos[0], dy = ny - this.pos[1];
+    const dir = Object.keys(DIRS).find((d) => DIRS[d][0] === dx && DIRS[d][1] === dy);
+    if (!dir || !this.passable(nx, ny)) {
+      const [tx, ty] = this.pathTarget;
+      this.path = this.findPath(tx, ty);
+      if (!this.path.length) { this.clearPath(); return false; }
+      this.drawPath(false);
+      return this.followPath();
+    }
+    this.dir = dir;
+    this.step();
+    return true;
+  }
+
+  // 가는 길 점선 (지나간 칸은 지워진다)
+  drawPath(fresh) {
+    if (!this.pathDots) this.pathDots = this.add.graphics().setDepth(4.8);
+    const g = this.pathDots.clear();
+    const r = Math.max(3, this.cell * 0.08);
+    (this.path ?? []).forEach(([x, y], i) => {
+      g.fillStyle(0x2b2d5a, 0.25).fillCircle(this.cx(x), this.cy(y) + 2, r);
+      g.fillStyle(0xfffaf0, 0.95).fillCircle(this.cx(x), this.cy(y), r);
+      if (i === this.path.length - 1) g.lineStyle(3, 0x2f7bff, 0.9).strokeCircle(this.cx(x), this.cy(y), this.cell * 0.3);
+    });
+    if (fresh) { g.setAlpha(0); this.tweens.add({ targets: g, alpha: 1, duration: 120 }); }
+  }
+
+  clearPath() {
+    this.path = null;
+    this.pathTarget = null;
+    this.pathDots?.clear();
   }
 
   // 못 가는 쪽으로 밀면 살짝 '콩'
@@ -412,6 +516,7 @@ export class MazeScene extends Phaser.Scene {
   stop() {
     this.stopRequested = true;
     this.queued = null;
+    this.clearPath();
   }
 
   step() {
@@ -422,23 +527,36 @@ export class MazeScene extends Phaser.Scene {
     this.playAnim('move');
     const nx = this.pos[0] + dx;
     const ny = this.pos[1] + dy;
-    const slow = this.slowUntil && this.time.now < this.slowUntil ? 2 : 1;
+    const now = this.time.now;
+    const slow = (this.slowUntil > now ? 2 : 1) * (this.energy <= 0 && !(this.bikeUntil > now) ? UI.energy.tiredSlow : 1) * (this.bikeUntil > now ? 0.5 : 1);
     this.moveTween = this.tweens.add({
       targets: this.blue, x: this.cx(nx), y: this.cy(ny), duration: this.form.stepMs * slow,
       onComplete: () => { this.pos = [nx, ny]; this.arrive(); },
     });
   }
 
-  arrive() {
+  arrive(pushed = false) {
     const [x, y] = this.pos;
     const key = `${x},${y}`;
     const t = this.tile(x, y);
     let stopHere = false;
+    if (!pushed) this.useEnergy();
     if (this.items.has(key)) { this.collect(key); stopHere = true; }
+    if (this.checkFind()) stopHere = true;
     if (t === 'C' && this.checkpoint.join() !== key) this.reachCheckpoint();
     if (t === 'E') { this.finish(); return; }
     if (t === 'w') this.slowDown();
     if ('<>^v'.includes(t)) { this.blowWind(t); return; }
+    if (this.meetFriends()) { this.moving = false; this.clearPath(); this.playAnim('idle'); return; }
+    if (this.path) {
+      if (this.path[0]?.[0] === x && this.path[0]?.[1] === y) this.path.shift();
+      this.drawPath(false);
+      if (this.path.length && this.followPath()) return;
+      this.clearPath();
+      this.moving = false;
+      this.playAnim('idle');
+      return;
+    }
 
     const held = this.heldDir && this.heldDir === this.dir;
     const sides = Object.keys(DIRS).filter((d) => d !== this.dir && d !== OPPOSITE[this.dir] && this.canGo(d));
@@ -478,7 +596,7 @@ export class MazeScene extends Phaser.Scene {
         this.blue.angle = 0;
         this.pos = [x, y];
         this.stopRequested = true;
-        this.arrive();
+        this.arrive(true);
       },
     });
     if ((this.hasItem('scarf') || this.hasItem('knitHat')) && !this.scarfTold) { this.scarfTold = true; this.say(`${(ITEMS.scarf ?? ITEMS.knitHat).name} 덕분에 조금만 밀렸어!`, 1800); }
@@ -495,15 +613,21 @@ export class MazeScene extends Phaser.Scene {
     sfx('tap');
     vibrate('collect');
     this.updateHudItems(true);
+    this.addEnergy(UI.energy.item);
     this.saveProgress();
-    if (this.exitOpen) {
-      this.updateExit(true);
-      this.time.delayedCall(250, () => this.say('출구가 열렸어! 어서 가자!'));
-    }
+    this.checkExitOpened();
+  }
+
+  checkExitOpened() {
+    if (!this.exitOpen || this.exitShown) return;
+    this.exitShown = true;
+    this.updateExit(true);
+    this.time.delayedCall(250, () => this.say('출구가 열렸어! 어서 가자!'));
   }
 
   reachCheckpoint() {
     this.checkpoint = [...this.pos];
+    if (this.energy < UI.energy.checkpoint) this.addEnergy(UI.energy.checkpoint - this.energy);
     this.sparkle(this.blue.x, this.blue.y, 0xff9fb8);
     this.saveProgress();
   }
@@ -525,7 +649,7 @@ export class MazeScene extends Phaser.Scene {
       const sp = this.add.image(this.cx(path[0][0]), this.cy(path[0][1]), this.textures.exists(key) ? key : 'enemy_vacuum')
         .setDisplaySize(this.cell * 0.92, this.cell * 0.92).setDepth(4);
       const p = { path, i: 0, d: 1, sp };
-      this.time.addEvent({ delay: this.patrolMs, loop: true, callback: () => this.patrolStep(p) });
+      p.timer = this.time.addEvent({ delay: this.patrolMs, loop: true, callback: () => this.patrolStep(p) });
       return p;
     });
   }
@@ -560,7 +684,7 @@ export class MazeScene extends Phaser.Scene {
         this.tweens.add({ targets: c, angle: 8, duration: 900 + i * 90, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
       }
       const o = { ...d, i: d.start, dir: d.start === 2 ? -1 : 1, sp: c, phase: (i * 977) % 3100, cool: 0 };
-      this.time.addEvent({ delay: stepMs, loop: true, startAt: (i * 311) % stepMs, callback: () => this.driftStep(o, stepMs) });
+      o.timer = this.time.addEvent({ delay: stepMs, loop: true, startAt: (i * 311) % stepMs, callback: () => this.driftStep(o, stepMs) });
       return o;
     });
   }
@@ -580,6 +704,7 @@ export class MazeScene extends Phaser.Scene {
     const period = wet + dry;
     const safe = this.invulnerable || this.shineUntil > now;
     for (const o of this.drifters) {
+      if (o.gone) continue;
       const near = Phaser.Math.Distance.Between(o.sp.x, o.sp.y, this.blue.x, this.blue.y) < this.cell * 0.55;
       if (o.type === 'puddle') {
         const t = (now - this.t0 + o.phase) % period;
@@ -630,6 +755,7 @@ export class MazeScene extends Phaser.Scene {
     this.rolling = true;
     this.locked = true;
     this.rolls++;
+    this.clearPath();
     this.moveTween?.stop();
     this.moving = false;
     this.queued = null;
@@ -697,22 +823,173 @@ export class MazeScene extends Phaser.Scene {
     });
   }
 
+  // ── 숨바꼭질 친구 (17절) ───────────────────────────
+  // 친구는 숨는 곳 3군데를 차례로 옮겨 다닌다. 쿠션 뒤로 머리끝이 빼꼼 보이고 들썩들썩.
+  // 닿으면 "찾았다!" → 하트 한 칸 → 다음 숨는 곳(세 번째면 출구 앞에서 기다림). 방해물이 아니라서 닿아도 퐁! 하지 않는다.
+  makeFriends() {
+    const placed = placeFriends(this.maze, this.chapter, stageNo(this.chapter.id), this.form.canHop);
+    this.friends = placed.filter((f) => f.spots.length).map((f, i) => {
+      const o = { ...f, i, found: Math.min(3, this.savedFound[i] ?? 0), busy: false, name: BOSSES[f.key]?.name ?? '' };
+      o.c = this.add.container(0, 0).setDepth(4.6);
+      o.sp = this.add.image(0, 0, `boss_${f.key}`, 0);
+      o.mound = this.add.graphics();
+      o.hearts = this.add.graphics();
+      o.c.add([o.sp, o.mound, o.hearts]);
+      if (o.found >= 3) this.waitAtExit(o, false); else this.hideAt(o, false);
+      return o;
+    });
+  }
+
+  hideAt(o, animate) {
+    const { cell } = this;
+    const [x, y] = o.spots[o.found];
+    this.tweens.killTweensOf([o.c, o.sp]);
+    o.c.setPosition(this.cx(x), this.cy(y)).setAngle(0);
+    o.sp.setFrame(0).setDisplaySize(cell * 1.05, cell * 1.05).setCrop(0, 0, 480, 330).setPosition(0, -cell * 0.04);
+    // 숨는 쿠션 (수집품·방해물과 헷갈리지 않는 크림색 + 남색 테두리)
+    const g = o.mound.clear();
+    g.fillStyle(0x2b2d5a, 0.18).fillEllipse(0, cell * 0.36, cell * 1.0, cell * 0.36);
+    g.fillStyle(0x2b2d5a, 1).fillRoundedRect(-cell * 0.47, cell * 0.04, cell * 0.94, cell * 0.38, cell * 0.17);
+    g.fillStyle(0xfffaf0, 1).fillRoundedRect(-cell * 0.43, cell * 0.07, cell * 0.86, cell * 0.32, cell * 0.14);
+    g.fillStyle(0xe8dcc0, 1).fillRoundedRect(-cell * 0.43, cell * 0.25, cell * 0.86, cell * 0.14, { tl: 0, tr: 0, bl: cell * 0.14, br: cell * 0.14 });
+    g.fillStyle(0xff9fb8, 1).fillCircle(-cell * 0.22, cell * 0.2, cell * 0.04).fillCircle(0, cell * 0.2, cell * 0.04).fillCircle(cell * 0.22, cell * 0.2, cell * 0.04);
+    this.drawHearts(o, -cell * 0.62);
+    // 들썩들썩 빼꼼 (바스락)
+    this.tweens.add({ targets: o.sp, y: cell * 0.14, duration: 260, yoyo: true, hold: 700, repeat: -1, repeatDelay: 1100 + o.i * 230, ease: 'Sine.easeInOut' });
+    this.tweens.add({ targets: o.sp, angle: { from: -5, to: 5 }, duration: 380, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    if (animate) {
+      o.c.setScale(0.2).setAlpha(0);
+      this.tweens.add({ targets: o.c, scale: 1, alpha: 1, duration: 260, ease: 'Back.easeOut' });
+    } else o.c.setScale(1).setAlpha(1);
+  }
+
+  // 세 번 찾으면 출구 앞에서 웃으며 기다린다
+  waitAtExit(o, animate) {
+    const { cell } = this;
+    const [ex, ey] = this.exitCell;
+    const offs = [[-0.72, -0.2], [0.72, -0.2], [0, -0.75]];
+    const [dx, dy] = offs[o.i % 3];
+    this.tweens.killTweensOf([o.c, o.sp]);
+    o.c.setPosition(this.cx(ex) + dx * cell, this.cy(ey) + dy * cell).setAngle(0).setDepth(5.5);
+    o.sp.setCrop().setFrame(3).setDisplaySize(cell * 0.9, cell * 0.9).setPosition(0, 0).setAngle(0);
+    o.mound.clear();
+    this.drawHearts(o, -cell * 0.56);
+    this.tweens.add({ targets: o.sp, y: -cell * 0.08, duration: 420, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    if (animate) {
+      o.c.setScale(0.2).setAlpha(0);
+      this.tweens.add({ targets: o.c, scale: 1, alpha: 1, duration: 300, ease: 'Back.easeOut' });
+    } else o.c.setScale(1).setAlpha(1);
+  }
+
+  drawHearts(o, y) {
+    const g = o.hearts.clear();
+    const r = Math.max(5, this.cell * 0.1);
+    for (let k = 0; k < 3; k++) heart(g, (k - 1) * r * 2.4, y, r, k < o.found ? 0xff6b8a : 0xffffff, k < o.found ? 1 : 0.75);
+  }
+
+  // 지금 칸에 숨은 친구가 있으면 찾았다!
+  checkFind() {
+    const f = this.friends.find((o) => o.found < 3 && !o.busy && o.spots[o.found][0] === this.pos[0] && o.spots[o.found][1] === this.pos[1]);
+    if (!f) return false;
+    f.busy = true;
+    f.found++;
+    sfx('ding');
+    vibrate('collect');
+    const line = DIALOGUE[`seek_${f.key}`]?.[f.found - 1]?.text ?? (f.found < 3 ? '앗, 들켰다!' : '인정! 출구에서 기다릴게!');
+    this.say(line, 2000, { tex: `face_${f.key}`, frame: 0 });
+    this.addEnergy(UI.energy.find);
+    this.tweens.killTweensOf([f.c, f.sp]);
+    f.sp.setCrop().setFrame(3).setPosition(0, 0).setAngle(0);
+    f.mound.clear();
+    this.drawHearts(f, -this.cell * 0.56);
+    this.updateHudFriends(f);
+    this.tweens.add({ targets: f.c, y: f.c.y - this.cell * 0.45, duration: 200, yoyo: true, ease: 'Quad.easeOut' });
+    this.time.delayedCall(700, () => {
+      this.sparkle(f.c.x, f.c.y, 0xff9fb8);
+      this.tweens.add({
+        targets: f.c, scale: 0.2, alpha: 0, duration: 220, onComplete: () => {
+          if (f.found < 3) this.hideAt(f, true); else this.waitAtExit(f, true);
+          f.busy = false;
+          if (f.found >= 3) this.checkExitOpened();
+        },
+      });
+    });
+    this.saveProgress();
+    return true;
+  }
+
+  // 친구와 처음 마주칠 때 짧은 대사 (한국은 그 구역에 들어설 때, 다른 나라는 미로를 시작할 때)
+  meetFriends() {
+    if (this.duo || this.finished) return false;
+    const y = this.pos[1];
+    const due = this.friends.filter((f) => !this.met.has(f.key) && (!this.chapter.hideZones?.[f.i] || (y >= this.chapter.hideZones[f.i][0] && y <= this.chapter.hideZones[f.i][1])));
+    if (!due.length) return false;
+    due.forEach((f) => this.met.add(f.key));
+    const keys = due.map((f) => (f.i === 0 ? `${this.chapter.id}_boss` : `${this.chapter.id}_boss${f.i + 1}`)).filter((k) => DIALOGUE[k]);
+    if (!keys.length) return false;
+    this.locked = true;
+    this.heldDir = null;
+    // 숨은 친구 쪽을 잠깐 반짝 비춰 준다
+    due.forEach((f) => { const ring = this.add.circle(f.c.x, f.c.y, this.cell * 0.7, 0xffe9a8, 0.6).setDepth(4.5); this.tweens.add({ targets: ring, scale: 1.6, alpha: 0, duration: 700, repeat: 2, onComplete: () => ring.destroy() }); });
+    const play = () => {
+      const k = keys.shift();
+      if (!k) { this.locked = false; this.saveProgress(); return; }
+      afterDialogue(this, play);
+      this.scene.launch('Dialogue', { key: k, frame: this.chapter.frame, form: this.chapter.form });
+    };
+    this.time.delayedCall(300, play);
+    return true;
+  }
+
+  // ── 달리기 에너지 (15절) ───────────────────────────
+  useEnergy() {
+    if (this.bikeUntil > this.time.now) return;
+    this.setEnergy(this.energy - UI.energy.step);
+  }
+
+  addEnergy(n) { this.setEnergy(this.energy + n, true); }
+
+  setEnergy(v, up = false) {
+    const was = this.energy;
+    this.energy = Phaser.Math.Clamp(v, 0, UI.energy.max);
+    if (this.energy <= 0 && was > 0 && !this.tiredTold) {
+      this.tiredTold = true;
+      const item = COLLECTIBLES[this.chapter.item];
+      this.say(SERIES.n === 2 ? `멍… 지쳤어, ${josa(item, '을', '를')} 먹으면 힘이 날 거야!` : `헥헥, 힘이 없어… ${josa(item, '을', '를')} 먹으면 힘이 날 거야!`, 2600, { tex: `face_blue_${this.chapter.form}`, frame: 0 });
+    }
+    if (this.energy > UI.energy.max * 0.2) this.tiredTold = false;
+    this.updateEnergyBar(up);
+  }
+
+  updateEnergyBar(up) {
+    if (!this.energyBar) return;
+    const { x, y, w, h } = this.energyBox;
+    const k = this.energy / UI.energy.max;
+    const color = k > 0.5 ? 0x6cc35a : k > 0.2 ? 0xffd84a : 0xff8a3d;
+    const g = this.energyBar.clear();
+    g.fillStyle(0x2b2d5a, 0.55).fillRoundedRect(x, y, w, h, h / 2);
+    if (k > 0) g.fillStyle(color, 1).fillRoundedRect(x + 3, y + 3, Math.max(h - 6, (w - 6) * k), h - 6, (h - 6) / 2);
+    g.fillStyle(0xffffff, 0.35).fillRoundedRect(x + 8, y + 5, Math.max(0, (w - 16) * k), 4, 2);
+    this.energyText.setText(String(Math.round(this.energy)));
+    if (up) this.tweens.add({ targets: this.energyText, scale: 1.3, duration: 120, yoyo: true });
+  }
+
   // ── 상태 줄 ────────────────────────────────────
   makeHud() {
     const top = this.insets.top;
     const g = this.add.graphics();
-    // 그 장의 창틀 색으로 된 선반
+    // 그 장의 창틀 색으로 된 선반 (3줄: 단계·시간 / 수집품 / 에너지·숨은 친구)
     const [h0, h1, h2] = this.look.hud;
-    g.fillStyle(h0, 1).fillRoundedRect(8, 8 + top, UI.width - 16, 100, 26);
-    g.fillStyle(h1, 1).fillRoundedRect(12, 10 + top, UI.width - 24, 90, 24);
+    g.fillStyle(h0, 1).fillRoundedRect(8, 8 + top, UI.width - 16, 140, 26);
+    g.fillStyle(h1, 1).fillRoundedRect(12, 10 + top, UI.width - 24, 130, 24);
     g.fillStyle(h2, 1).fillRoundedRect(28, 14 + top, UI.width - 56, 6, 3);
 
     // 일시정지 (왼쪽 위)
-    const pb = this.add.container(64, 58 + top);
+    const pb = this.add.container(64, 54 + top);
     const pg = this.add.graphics();
-    pg.fillStyle(0xfffaf0, 1).fillCircle(0, 0, 34);
+    pg.fillStyle(0xfffaf0, 1).fillCircle(0, 0, 32);
     pg.fillStyle(0x2b2d5a, 1).fillRoundedRect(-12, -14, 8, 28, 3).fillRoundedRect(4, -14, 8, 28, 3);
-    pb.add(pg).setSize(96, 96).setInteractive({ useHandCursor: true }).on('pointerup', () => this.openPause());
+    pb.add(pg).setSize(96, 88).setInteractive({ useHandCursor: true }).on('pointerup', () => this.openPause());
 
     this.add.text(UI.width / 2, 40 + top, stageLabel(this.chapter), {
       fontFamily: UI.fontTitle, fontSize: '30px', color: '#fffaf0',
@@ -728,6 +1005,25 @@ export class MazeScene extends Phaser.Scene {
     }
     this.updateHudItems(false);
 
+    // 에너지 (번개 + 막대 + 숫자: 색만으로 말하지 않게)
+    const ey = 122 + top;
+    const bolt = this.add.graphics();
+    bolt.fillStyle(0x2b2d5a, 1).fillPoints([{ x: 44, y: ey - 17 }, { x: 30, y: ey + 3 }, { x: 40, y: ey + 3 }, { x: 34, y: ey + 18 }, { x: 52, y: ey - 4 }, { x: 42, y: ey - 4 }, { x: 50, y: ey - 17 }], true);
+    bolt.fillStyle(0xffd84a, 1).fillPoints([{ x: 44, y: ey - 14 }, { x: 33, y: ey + 1 }, { x: 42, y: ey + 1 }, { x: 37, y: ey + 13 }, { x: 49, y: ey - 2 }, { x: 40, y: ey - 2 }, { x: 47, y: ey - 14 }], true);
+    this.energyBox = { x: 60, y: ey - 12, w: 170, h: 24 };
+    this.energyBar = this.add.graphics();
+    this.energyText = this.add.text(240, ey, '', { fontFamily: UI.fontTitle, fontSize: '26px', color: '#fffaf0' }).setOrigin(0, 0.5);
+    this.updateEnergyBar(false);
+
+    // 숨은 친구: 얼굴 + 하트 3칸
+    this.hudFriends = this.friends.map((f, i) => {
+      const x = UI.width - 30 - (this.friends.length - i) * 128;
+      const face = this.add.image(x + 24, ey, `face_${f.key}`, 0).setDisplaySize(44, 44);
+      const hg = this.add.graphics();
+      return { f, x, face, hg };
+    });
+    this.hudFriends.forEach((h) => this.drawHudHearts(h));
+
     this.timerText = this.add.text(UI.width - 40, 46 + top, '0:00', {
       fontFamily: UI.fontTitle, fontSize: '34px', color: '#fffaf0',
     }).setOrigin(1, 0.5);
@@ -741,6 +1037,19 @@ export class MazeScene extends Phaser.Scene {
     this.targetText = this.add.text(UI.width - 40, 82 + top, duoName || (rivalSec ? `${rival.nick} ${fmtShort(rivalSec)}` : goalText), {
       fontFamily: UI.font, fontSize: '22px', color: '#ffe9a8',
     }).setOrigin(1, 0.5);
+  }
+
+  drawHudHearts(h) {
+    const g = h.hg.clear();
+    const y = h.face.y;
+    for (let k = 0; k < 3; k++) heart(g, h.x + 62 + k * 22, y, 9, k < h.f.found ? 0xff6b8a : 0xfffaf0, k < h.f.found ? 1 : 0.5);
+  }
+
+  updateHudFriends(f) {
+    const h = this.hudFriends?.find((o) => o.f === f);
+    if (!h) return;
+    this.drawHudHearts(h);
+    this.tweens.add({ targets: h.face, scale: h.face.scale * 1.3, duration: 140, yoyo: true });
   }
 
   updateHudItems(pop) {
@@ -789,42 +1098,82 @@ export class MazeScene extends Phaser.Scene {
     }
   }
 
-  // 오른쪽 아래 둥근 아이템 버튼 (미로마다 1번씩): 반짝가루 = UI.sparkleMs 동안 무엇에 닿아도 괜찮음,
-  // 대나무 피리 = 가장 가까운 수집품 쪽 길 안내 (피리를 받은 중국 미로는 빼고)
+  // 오른쪽 아래 둥근 아이템 버튼 (미로마다 아이템마다 1번씩, 15절 아이템 줄): 반짝가루 = 8초 무엇에 닿아도 괜찮음,
+  // 대나무 피리 = 가장 가까운 수집품 쪽 길 안내 (피리를 받은 중국 미로는 빼고), 씽씽 자전거 = 10초 2배 빠르게(에너지 안 줄어듦),
+  // 비눗방울 막대 = 둘레 3칸 방해물이 비눗방울에 싸여 날아감, 꿀 도시락 = 에너지 가득.
   makeItemButton(bottom) {
-    const list = [];
-    if (this.hasItem('sparkle')) list.push({ key: 'sparkle', label: ITEMS.sparkle?.name ?? '반짝가루', color: 0xffd84a });
-    if (this.hasItem('flute') && this.chapter.id !== 'ch4') list.push({ key: 'flute', label: '대나무 피리', color: 0x7cc56a });
-    const y = (this.dpad ? 1036 : 1185) - (this.dpad ? 0 : bottom);
-    list.forEach((item, n) => {
-      const c = this.add.container(UI.width - 86 - n * 150, y).setDepth(9);
+    const COLORS = { sparkle: 0xffd84a, flute: 0x7cc56a, bike: 0x7ec8ff, bubble: 0xc9b6ff, honey: 0xffb347 };
+    const list = ['sparkle', 'flute', 'bike', 'bubble', 'honey']
+      .filter((k) => this.hasItem(k) && ITEMS[k] && !(k === 'flute' && this.chapter.id === 'ch4'));
+    const y = (this.dpad ? 1036 : 1180) - (this.dpad ? 0 : bottom);
+    list.forEach((key, n) => {
+      const c = this.add.container(UI.width - 62 - n * 114, y).setDepth(9);
       const g = this.add.graphics();
-      g.fillStyle(0x2b2d5a, 0.2).fillCircle(0, 6, 60);
-      g.fillStyle(item.color, 1).fillCircle(0, 0, 60);
-      g.fillStyle(0xffffff, 0.35).fillEllipse(-16, -24, 40, 18);
-      if (item.key === 'sparkle') {
-        for (const [dx, dy, r] of [[0, -6, 16], [-22, 14, 9], [20, 16, 8]]) {
-          const pts = [];
-          for (let i = 0; i < 8; i++) { const a = (i * Math.PI) / 4; const rr = i % 2 ? r * 0.4 : r; pts.push({ x: dx + Math.cos(a) * rr, y: dy + Math.sin(a) * rr }); }
-          g.fillStyle(0xffffff, 1).fillPoints(pts, true);
-        }
-      } else {
-        g.fillStyle(0x3a7a38, 1).fillRoundedRect(-36, -8, 72, 16, 8);
-        g.fillStyle(0x2b2d5a, 1).fillCircle(-14, 0, 3).fillCircle(0, 0, 3).fillCircle(14, 0, 3);
-      }
-      const t = this.add.text(0, 78, item.label, { fontFamily: UI.fontTitle, fontSize: '22px', color: '#2b2d5a', backgroundColor: '#ffffffcc', padding: { x: 8, y: 2 } }).setOrigin(0.5);
-      c.add([g, t]).setSize(130, 130).setInteractive({ useHandCursor: true });
+      g.fillStyle(0x2b2d5a, 0.2).fillCircle(0, 5, 48);
+      g.fillStyle(COLORS[key], 1).fillCircle(0, 0, 48);
+      g.fillStyle(0xffffff, 0.35).fillEllipse(-13, -20, 32, 14);
+      drawItemIcon(g, key);
+      const t = this.add.text(0, 64, ITEMS[key].short ?? ITEMS[key].name, { fontFamily: UI.fontTitle, fontSize: '22px', color: '#2b2d5a', backgroundColor: '#ffffffcc', padding: { x: 6, y: 1 } }).setOrigin(0.5);
+      c.add([g, t]).setSize(108, 120).setInteractive({ useHandCursor: true });
+      c.itemKey = key;
       this.itemBtns.push(c);
-      c.on('pointerup', () => {
-        if (c.used || this.locked) return;
-        c.used = true;
-        sfx('open');
-        vibrate('collect');
-        c.setAlpha(0.35);
-        if (item.key === 'sparkle') this.shine();
-        else this.showHelp();
-      });
+      c.on('pointerup', () => this.useItem(c));
     });
+  }
+
+  useItem(c) {
+    if (c.used || this.locked || this.finished) return;
+    const key = c.itemKey;
+    let ok = true;
+    if (key === 'sparkle') this.shine();
+    else if (key === 'flute') this.showHelp();
+    else if (key === 'bike') this.ride();
+    else if (key === 'bubble') ok = this.blowBubbles();
+    else if (key === 'honey') { this.setEnergy(UI.energy.max, true); this.say(`${ITEMS.honey.name} 냠냠! 에너지가 가득 찼어!`, 2000); }
+    if (!ok) return;
+    c.used = true;
+    sfx('open');
+    vibrate('collect');
+    c.setAlpha(0.35);
+  }
+
+  // 씽씽 자전거(킥보드): UI.bikeMs 동안 2배 빠르게, 그동안 에너지가 줄지 않는다
+  ride() {
+    this.bikeUntil = this.time.now + UI.bikeMs;
+    this.say(`${ITEMS.bike.name}! ${UI.bikeMs / 1000}초 동안 쌩쌩!`, 2000);
+    this.bikeFx?.destroy();
+    const g = this.add.graphics().setDepth(4.9);
+    const r = this.cell * 0.17;
+    g.lineStyle(4, 0x2b2d5a, 1).strokeCircle(-this.cell * 0.28, 0, r).strokeCircle(this.cell * 0.28, 0, r);
+    g.lineStyle(4, 0x2f7bff, 1).lineBetween(-this.cell * 0.28, 0, 0, -r).lineBetween(0, -r, this.cell * 0.28, 0).lineBetween(0, -r, -this.cell * 0.1, 0);
+    this.bikeFx = g;
+    this.time.delayedCall(UI.bikeMs, () => { if (this.bikeFx === g) { g.destroy(); this.bikeFx = null; } });
+  }
+
+  // 비눗방울 막대: 둘레 3칸 안의 방해물(순찰·움직이는 웅덩이·거미줄)이 비눗방울에 싸여 둥실 날아가 이 판에서 사라진다
+  blowBubbles() {
+    const [bx, by] = this.pos;
+    const near = ([x, y]) => Math.max(Math.abs(x - bx), Math.abs(y - by)) <= 3;
+    const hits = [
+      ...this.patrols.filter((p) => !p.gone && near(p.path[p.i])),
+      ...this.drifters.filter((o) => !o.gone && near(o.cells[o.i])),
+    ];
+    if (!hits.length) { this.say('근처에 방해물이 없어! 가까이 가서 후~ 불어 봐', 2000); return false; }
+    for (const h of hits) {
+      h.gone = true;
+      h.timer?.remove();
+      this.tweens.killTweensOf(h.sp);
+      const b = this.add.circle(h.sp.x, h.sp.y, this.cell * 0.62, 0xc9e8ff, 0.35).setStrokeStyle(3, 0xffffff, 0.95).setDepth(6);
+      const shine = this.add.ellipse(h.sp.x - this.cell * 0.2, h.sp.y - this.cell * 0.24, this.cell * 0.22, this.cell * 0.1, 0xffffff, 0.9).setDepth(6);
+      b.setScale(0.3);
+      this.tweens.add({ targets: b, scale: 1, duration: 220, ease: 'Back.easeOut' });
+      this.tweens.add({
+        targets: [h.sp, b, shine], y: '-=260', x: `+=${(Math.random() - 0.5) * 80}`, alpha: 0, delay: 300, duration: 1500, ease: 'Sine.easeIn',
+        onComplete: () => { h.sp.setVisible(false); b.destroy(); shine.destroy(); },
+      });
+    }
+    this.say(`비눗방울~ 방해물 ${hits.length}개가 둥실 날아갔어!`, 2000);
+    return true;
   }
 
   // 반짝가루: 블루나비가 반짝반짝 빛나는 동안 방해물·웅덩이·거미줄·물방울에 닿아도 괜찮다
@@ -837,7 +1186,8 @@ export class MazeScene extends Phaser.Scene {
     this.time.delayedCall(UI.sparkleMs, () => { this.shineGlow?.destroy(); this.shineGlow = null; });
   }
 
-  say(text, ms = 2400) {
+  // face = 말하는 얼굴 { tex, frame } (없으면 도우미: 1탄 도트, 2탄 블루나비)
+  say(text, ms = 2400, face = null) {
     const g = this.bubbleG.clear();
     this.bubbleText.setText(text);
     const w = Math.min(560, this.bubbleText.width + 48);
@@ -845,6 +1195,8 @@ export class MazeScene extends Phaser.Scene {
     g.fillStyle(0x2b2d5a, 0.12).fillRoundedRect(118, y - 36 + 5, w, 72, 30);
     g.fillStyle(0xffffff, 1).fillRoundedRect(118, y - 36, w, 72, 30);
     g.fillTriangle(118, y - 6, 118, y + 14, 100, y + 6);
+    const tex = face && this.textures.exists(face.tex) ? face : { tex: SERIES.meta.helperTex, frame: SERIES.meta.helperFrame };
+    this.dot.setTexture(tex.tex, tex.frame).setDisplaySize(84, 84);
     this.tweens.killTweensOf([this.bubble, this.dot]);
     this.bubble.setAlpha(0);
     this.dot.setAlpha(0);
@@ -852,7 +1204,7 @@ export class MazeScene extends Phaser.Scene {
     this.tweens.add({ targets: [this.bubble, this.dot], alpha: 0, duration: 260, delay: ms });
   }
 
-  // ── 입력: 화면 어디서나 스와이프, 톡 = 멈춤, 키보드 ──
+  // ── 입력: 화면 어디서나 스와이프, 칸을 톡 = 그 칸까지 길 찾아 가기, 블루나비를 톡 = 멈춤, 키보드 ──
   setupInput() {
     this.input.on('pointerdown', (p) => { this.swipeFrom = { x: p.x, y: p.y, used: false }; });
     this.input.on('pointermove', (p) => {
@@ -868,7 +1220,7 @@ export class MazeScene extends Phaser.Scene {
       const s = this.swipeFrom;
       this.swipeFrom = null;
       if (!s || s.used || over.length) return;
-      if (this.moving) this.stop();
+      this.onTap(p.x, p.y);
     });
 
     const kb = this.input.keyboard;
@@ -885,6 +1237,18 @@ export class MazeScene extends Phaser.Scene {
     kb.on('keydown-ESC', () => this.openPause());
     kb.on('keydown-SPACE', () => { if (this.restartBtn) this.restartBtn.trigger(); else if (this.moving) this.stop(); });
     kb.on('keydown-ENTER', () => this.restartBtn?.trigger());
+  }
+
+  onTap(px, py) {
+    if (this.finished || this.locked || this.rolling) return;
+    if (Phaser.Math.Distance.Between(px, py, this.blue.x, this.blue.y) < this.cell * 0.7) {
+      if (this.moving || this.path) this.stop();
+      return;
+    }
+    const x = Math.floor((px - this.ox) / this.cell);
+    const y = Math.floor((py - this.oy) / this.cell);
+    if (x < 0 || y < 0 || x >= this.cols || y >= this.rows) { if (this.moving) this.stop(); return; }
+    this.goTo(x, y);
   }
 
   // ── 매 프레임 ───────────────────────────────────
@@ -904,9 +1268,11 @@ export class MazeScene extends Phaser.Scene {
     this.updateDrifters();
     if (this.popped) return;
     this.shineGlow?.setPosition(this.blue.x, this.blue.y);
+    this.bikeFx?.setPosition(this.blue.x, this.blue.y + this.cell * 0.32);
 
     if (!this.invulnerable && !(this.shineUntil > this.time.now)) {
       for (const p of this.patrols) {
+        if (p.gone) continue;
         if (Phaser.Math.Distance.Between(p.sp.x, p.sp.y, this.blue.x, this.blue.y) < this.cell * 0.6) { this.pop(); break; }
       }
     }
@@ -961,8 +1327,9 @@ export class MazeScene extends Phaser.Scene {
     }
   }
 
-  // 30초 동안 못 찾으면 도트가 가장 가까운 수집품 쪽으로 반짝 화살표
+  // 30초 동안 못 찾으면 도트가 가장 가까운 수집품(또는 숨은 친구) 쪽으로 반짝 화살표
   showHelp() {
+    const hideSpots = new Set(this.friends.filter((f) => f.found < 3).map((f) => f.spots[f.found].join()));
     const startKey = this.pos.join();
     const prev = new Map([[startKey, null]]);
     const q = [this.pos];
@@ -973,7 +1340,7 @@ export class MazeScene extends Phaser.Scene {
         const k = `${x + dx},${y + dy}`;
         if (prev.has(k) || !this.passable(x + dx, y + dy)) continue;
         prev.set(k, `${x},${y}`);
-        if (this.items.has(k)) { goal = k; break; }
+        if (this.items.has(k) || hideSpots.has(k)) { goal = k; break; }
         q.push([x + dx, y + dy]);
       }
     }
@@ -1004,22 +1371,70 @@ export class MazeScene extends Phaser.Scene {
   finish() {
     this.finished = true;
     this.moving = false;
+    this.clearPath();
     this.playAnim('idle');
     const sec = Math.floor(this.sec);
     if (this.duo) { this.finishDuo(sec); return; }
-    const id = this.chapter.id;
+    const ch = this.chapter;
+    const id = ch.id;
     const prevBest = state.records[id]?.mazeSec;
     const newRecord = prevBest == null || sec < prevBest;
     state.records[id] = { ...(state.records[id] || {}), mazeSec: newRecord ? sec : prevBest, rolls: this.rolls };
     state.mazeTimeStar = state.mazeTimeStar || {};
-    if (sec <= this.chapter.starSec) state.mazeTimeStar[id] = true;
-    state.step = `${id}_boss`;
+    if (sec <= ch.starSec) state.mazeTimeStar[id] = true;
+    // 별: 통과 + 기준 시간 안 + 에너지 절반 이상 남기고 출구 (17절)
+    const energyStar = this.energy >= UI.energy.max / 2;
+    const stars = 1 + (sec <= ch.starSec ? 1 : 0) + (energyStar ? 1 : 0);
+    state.stars[id] = Math.max(state.stars[id] ?? 0, stars);
+    // 출구에서 친구가 되고 선물을 받는다
+    const gifts = [];
+    this.friends.forEach((f) => {
+      if (!state.friends.includes(f.key)) state.friends.push(f.key);
+      for (const gk of giftsOf(ch, f.i)) if (!state.items.includes(gk)) { state.items.push(gk); gifts.push([f.i, gk]); }
+    });
+    state.step = `${id}_done`;
     state.mazeState = null;
     save();
     sfx('open');
     vibrate('special');
     this.tweens.add({ targets: this.blue, y: this.blue.y - this.cell * 0.4, scale: this.blueScale * 1.3, duration: 300, yoyo: true });
-    this.time.delayedCall(700, () => this.showResult(sec, newRecord && prevBest != null));
+    this.result = { sec, newRecord: newRecord && prevBest != null, stars, energyStar, gifts };
+    this.time.delayedCall(700, () => this.befriend(0));
+  }
+
+  // 기다리던 친구가 하나씩 다가와 대사 → "○○와 친구가 됐어!" + 선물
+  befriend(i) {
+    const f = this.friends[i];
+    if (!f) { this.showResult(); return; }
+    const id = this.chapter.id;
+    this.tweens.killTweensOf([f.c, f.sp]);
+    f.c.setDepth(6);
+    this.tweens.add({ targets: f.c, x: this.blue.x + (this.blue.x > UI.width / 2 ? -1 : 1) * this.cell * 0.9, y: this.blue.y, duration: 380, ease: 'Quad.easeOut' });
+    const key = f.i === 0 ? `${id}_friend` : `${id}_friend${f.i + 1}`;
+    const next = () => {
+      const gifts = this.result.gifts.filter(([fi]) => fi === f.i).map(([, gk]) => ITEMS[gk]?.name).filter(Boolean);
+      this.band(`${josa(f.name, '과', '와')} 친구가 됐어!`, gifts.length ? `선물: ${gifts.join(' · ')}` : '');
+      this.sparkle(f.c.x, f.c.y, 0xff9fb8);
+      sfx('stamp');
+      vibrate('special');
+      this.tweens.add({ targets: f.c, y: f.c.y - this.cell * 0.4, duration: 220, yoyo: true, repeat: 1 });
+      this.time.delayedCall(1700, () => this.befriend(i + 1));
+    };
+    if (DIALOGUE[key]) {
+      afterDialogue(this, next);
+      this.time.delayedCall(420, () => this.scene.launch('Dialogue', { key, frame: this.chapter.frame, form: this.chapter.form }));
+    } else this.time.delayedCall(420, next);
+  }
+
+  band(title, sub) {
+    const c = this.add.container(UI.width / 2, 520).setDepth(20);
+    const g = this.add.graphics();
+    drawPanel(g, -300, -80, 600, sub ? 170 : 130, this.chapter.frame);
+    c.add([g, this.add.text(0, sub ? -24 : -16, title, { fontFamily: UI.fontTitle, fontSize: '40px', color: '#2f7bff' }).setOrigin(0.5)]);
+    if (sub) c.add(this.add.text(0, 34, sub, { fontFamily: UI.font, fontSize: '26px', color: '#2b2d5a' }).setOrigin(0.5));
+    c.setScale(0.6).setAlpha(0);
+    this.tweens.add({ targets: c, scale: 1, alpha: 1, duration: 240, ease: 'Back.easeOut' });
+    this.tweens.add({ targets: c, alpha: 0, delay: 1400, duration: 260, onComplete: () => c.destroy() });
   }
 
   finishDuo(sec) {
@@ -1045,36 +1460,86 @@ export class MazeScene extends Phaser.Scene {
     this.time.delayedCall(1800, () => this.scene.start('Duo', { ...next, names, chapter: this.chapter.id, results }));
   }
 
-  // 짧게 기록을 보여 주고 바로 대결로 (systems.md 4절: 출구에 닿으면 바로 대결 화면)
-  showResult(sec, newRecord) {
-    const c = this.add.container(UI.width / 2, 600).setDepth(20);
-    const g = this.add.graphics();
-    drawPanel(g, -280, -110, 560, 220, this.chapter.frame);
-    const star = sec <= this.chapter.starSec;
-    c.add([
-      g,
-      this.add.text(0, -36, `미로 기록 ${fmtTime(sec)}${newRecord ? '  새 기록!' : ''}`, { fontFamily: UI.fontTitle, fontSize: '38px', color: '#2f7bff' }).setOrigin(0.5),
-      this.add.text(0, 24, !SERIES.meta.stars ? `${this.chapter.name} 미로 통과!` : star ? `별 기준 ${fmtTime(this.chapter.starSec)} 안에 성공!` : `별 기준 ${fmtTime(this.chapter.starSec)} — 다음엔 더 빨리!`, { fontFamily: UI.font, fontSize: '26px', color: '#2b2d5a' }).setOrigin(0.5),
-      this.add.text(0, 62, `퐁 ${this.rolls}번`, { fontFamily: UI.font, fontSize: '22px', color: '#5a5c88' }).setOrigin(0.5),
-    ]);
+  // 단계 결과: 별(1탄)·미로 기록·퐁·에너지·새 친구, [여행 계속] [미로 다시]
+  showResult() {
+    this.resultShown = true;
+    const { sec, newRecord, stars, energyStar } = this.result;
+    const ch = this.chapter;
+    const id = ch.id;
+    const lines = [
+      `미로 기록 ${fmtTime(sec)}${newRecord ? '  새 기록!' : ''}`,
+      `퐁 ${this.rolls}번 · 에너지 ${Math.round(this.energy)} 남음`,
+      `새 친구: ${this.friends.map((f) => f.name).join(' · ')}`,
+    ];
+    if (SERIES.meta.stars) lines.push(sec <= ch.starSec ? (energyStar ? '빠르고 힘차게 통과!' : '다음엔 에너지를 절반 넘게 남겨 봐!') : `별 기준 ${fmtTime(ch.starSec)} — 다음엔 더 빨리!`);
     // 친구 도전 결과: 이기면 축하, 져도 "아깝다! 다시 도전?" (놀리는 말 없이)
-    const ch = challengeResult(this.chapter.id, sec);
-    let wait = 1900;
-    if (ch) {
-      wait = 3200;
-      const cg = this.add.graphics();
-      drawPanel(cg, -280, 124, 560, 120, 'cloud');
-      const txt = ch.win
-        ? `${josa(ch.nick, '을', '를')} 이겼어요! (${fmtShort(ch.theirs)})\n여권 → 자랑하기에서 결과를 보내 봐요`
-        : `아깝다! ${ch.nick} ${fmtShort(ch.theirs)}\n여권에서 이 단계를 다시 도전할 수 있어요`;
-      c.add([cg, this.add.text(0, 184, txt, { fontFamily: UI.font, fontSize: '24px', color: ch.win ? '#c0563a' : '#2b2d5a', align: 'center', lineSpacing: 6 }).setOrigin(0.5)]);
-      if (ch.win) vibrate('special');
+    const chal = challengeResult(id, sec);
+    if (chal) lines.push(chal.win ? `${josa(chal.nick, '을', '를')} 이겼어요! (${fmtShort(chal.theirs)})` : `아깝다! ${chal.nick} ${fmtShort(chal.theirs)} — 다시 도전?`);
+    if (chal?.win) vibrate('special');
+    const layer = this.add.container(0, 0).setDepth(30);
+    const dim = this.add.rectangle(0, 0, UI.width, UI.height, 0x2b2d5a, 0.45).setOrigin(0).setInteractive();
+    const g = this.add.graphics();
+    const showStars = SERIES.meta.stars;
+    const h = 330 + lines.length * 50 + (showStars ? 90 : 0);
+    const y = Math.round((UI.height - h) / 2);
+    drawPanel(g, 50, y, 620, h, ch.frame);
+    layer.add([dim, g]);
+    layer.add(this.add.text(UI.width / 2, y + 80, `${ch.name} 미로 통과!`, { fontFamily: UI.fontTitle, fontSize: '42px', color: '#2b2d5a' }).setOrigin(0.5));
+    let ly = y + 160;
+    if (showStars) {
+      for (let k = 0; k < 3; k++) {
+        const sg = this.add.graphics();
+        iconStar(sg, UI.width / 2 + (k - 1) * 90, ly + 10, 70, k < stars ? 0xffd84a : 0xd8c8a8);
+        layer.add(sg);
+      }
+      ly += 90;
     }
-    c.setScale(0.7).setAlpha(0);
-    this.tweens.add({ targets: c, scale: 1, alpha: 1, duration: 260, ease: 'Back.easeOut' });
-    this.time.delayedCall(wait, () => {
-      this.cameras.main.fadeOut(280, 233, 216, 180);
-      this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('Battle', { chapter: this.chapter.id, bossIndex: 0 }));
+    for (const l of lines) {
+      layer.add(this.add.text(UI.width / 2, ly, l, { fontFamily: UI.font, fontSize: '27px', color: '#2b2d5a', align: 'center' }).setOrigin(0.5));
+      ly += 50;
+    }
+    const by = y + h - 90;
+    const btns = [['여행 계속', () => afterChapter(this, id)], ['미로 다시', () => startChapter(this, id, { replay: true })]];
+    btns.forEach(([label, fn], i) => {
+      const blue = i === 0;
+      layer.add(new Button(this, UI.width / 2 + (i === 0 ? -140 : 140), by, { width: 250, height: 100, fontSize: 30, label, color: blue ? 0x2f7bff : 0xffb347, shade: blue ? 0x1f5fd6 : 0xd98a2b, textColor: blue ? '#ffffff' : '#2b2d5a', onPress: () => { sfx('tap'); fn(); } }));
     });
+    layer.alpha = 0;
+    this.tweens.add({ targets: layer, alpha: 1, duration: 240 });
+  }
+}
+
+// 작은 하트 (원 두 개 + 아래 뾰족)
+function heart(g, x, y, r, color, alpha = 1) {
+  g.fillStyle(0x2b2d5a, alpha * 0.9).fillCircle(x - r * 0.5, y - r * 0.2, r * 0.66).fillCircle(x + r * 0.5, y - r * 0.2, r * 0.66)
+    .fillTriangle(x - r * 1.12, y, x + r * 1.12, y, x, y + r * 1.2);
+  g.fillStyle(color, alpha).fillCircle(x - r * 0.5, y - r * 0.2, r * 0.5).fillCircle(x + r * 0.5, y - r * 0.2, r * 0.5)
+    .fillTriangle(x - r * 0.95, y - r * 0.05, x + r * 0.95, y - r * 0.05, x, y + r * 0.95);
+}
+
+// 아이템 버튼 그림 (반지름 48 버튼 안)
+function drawItemIcon(g, key) {
+  const star = (dx, dy, r) => {
+    const pts = [];
+    for (let i = 0; i < 8; i++) { const a = (i * Math.PI) / 4; const rr = i % 2 ? r * 0.4 : r; pts.push({ x: dx + Math.cos(a) * rr, y: dy + Math.sin(a) * rr }); }
+    g.fillStyle(0xffffff, 1).fillPoints(pts, true);
+  };
+  if (key === 'sparkle') { star(0, -5, 14); star(-18, 12, 8); star(17, 13, 7); }
+  else if (key === 'flute') {
+    g.fillStyle(0x3a7a38, 1).fillRoundedRect(-30, -7, 60, 14, 7);
+    g.fillStyle(0x2b2d5a, 1).fillCircle(-12, 0, 3).fillCircle(0, 0, 3).fillCircle(12, 0, 3);
+  } else if (key === 'bike') {
+    g.lineStyle(5, 0x2b2d5a, 1).strokeCircle(-16, 8, 11).strokeCircle(16, 8, 11);
+    g.lineStyle(5, 0xfffaf0, 1).lineBetween(-16, 8, -2, -8).lineBetween(-2, -8, 16, 8).lineBetween(-2, -8, 10, -8).lineBetween(-4, 8, -2, -8);
+    g.fillStyle(0x2b2d5a, 1).fillRoundedRect(-9, -15, 14, 5, 2);
+  } else if (key === 'bubble') {
+    g.lineStyle(5, 0x8f6440, 1).lineBetween(-18, 22, 2, 0);
+    g.lineStyle(4, 0xffffff, 1).strokeCircle(8, -8, 11);
+    g.lineStyle(3, 0xffffff, 0.9).strokeCircle(-14, -14, 7).strokeCircle(22, 14, 6);
+  } else if (key === 'honey') {
+    g.fillStyle(0x2b2d5a, 1).fillRoundedRect(-24, -8, 48, 30, 8);
+    g.fillStyle(0xfffaf0, 1).fillRoundedRect(-21, -5, 42, 24, 6);
+    g.fillStyle(0xffd84a, 1).fillRoundedRect(-21, -5, 42, 10, { tl: 6, tr: 6, bl: 0, br: 0 });
+    g.fillStyle(0xffd84a, 1).fillCircle(0, -18, 7).fillTriangle(-6, -16, 6, -16, 0, -28);
   }
 }

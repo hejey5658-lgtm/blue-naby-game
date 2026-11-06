@@ -1,4 +1,4 @@
-// 단계 흐름: 미로 → 대결 → 친구 → (진화) → 여권(여행 지도) → 다음 장 미로 (systems.md 1절, tech-spec 4절)
+// 단계 흐름: 미로(숨바꼭질) → 출구에서 친구 → (진화) → 여권(여행 지도) → 다음 장 미로 (systems.md 1절, design-brief 17절)
 import { CHAPTERS, stageNo } from './data/chapters.js';
 import { state, save } from './state.js';
 import { platform } from './platform.js';
@@ -44,4 +44,19 @@ export function startChapter(scene, id, { replay = false } = {}) {
   state.mazeState = null;
   save();
   scene.scene.start('Maze', { chapter: id, fresh: true, intro: id !== CHAPTERS[0].id });
+}
+
+// 친구가 주는 선물 (rewards 칸이 하나면 그것, 배열이면 여럿)
+export const giftsOf = (ch, i) => [].concat(ch.rewards?.[i] ?? []).filter(Boolean);
+
+// 이미 사귄 친구의 선물이 빠져 있으면 넣는다 (15절: 새 아이템이 생기기 전에 친구가 된 저장)
+export function syncGifts() {
+  let changed = false;
+  for (const ch of CHAPTERS) {
+    ch.bosses.forEach((key, i) => {
+      if (!state.friends.includes(key)) return;
+      for (const g of giftsOf(ch, i)) if (!state.items.includes(g)) { state.items.push(g); changed = true; }
+    });
+  }
+  if (changed) save();
 }

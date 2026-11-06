@@ -138,3 +138,15 @@ let wanted = null;
 export function wantMusic(key) { wanted = key; playMusic(key); }
 export function refreshMusic() { if (state.settings.sound) { const k = wanted; cur = null; if (k) playMusic(k); } else stopMusic(); }
 export const nowPlaying = () => cur?.key ?? null;
+
+// 해설 음성을 읽는 동안 배경음을 잠깐 작게 (on = 작게, off = 원래대로)
+export function duckMusic(on) {
+  const ctx = audioContext();
+  if (!cur || !ctx) return;
+  try {
+    const to = MASTER * (cur.song.level ?? 0.8) * (on ? 0.25 : 1);
+    cur.out.gain.cancelScheduledValues(ctx.currentTime);
+    cur.out.gain.setValueAtTime(Math.max(0.0001, cur.out.gain.value), ctx.currentTime);
+    cur.out.gain.exponentialRampToValueAtTime(Math.max(0.0001, to), ctx.currentTime + 0.3);
+  } catch { /* 무시 */ }
+}

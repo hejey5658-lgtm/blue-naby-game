@@ -5,29 +5,30 @@
 // lead/bass 파형: sine 부드럽게 · triangle 말랑하게 · square 통통 튀게. level = 그 곡 전체 크기(0~1).
 const bars = (...b) => b.join(' ');
 
+// 미로 곡(ch1·ch4~ch7·s1~s4)은 2026-11-07 미로가 2.5배 빨라지면서 빠르기 약 1.3배 + 북 촘촘하게
 export const SONGS = {
   // ── 1탄 ─────────────────────────────────────────
   title: { bpm: 112, lead: 'triangle', bass: 'sine', level: 0.8, drums: 'khshkksh',
     melody: bars('E5 - G5 - A5 G5 E5 -', 'D5 - E5 - C5 - - .', 'E5 - G5 - A5 - C6 -', 'B5 A5 G5 - E5 - - .', 'F5 - A5 - G5 F5 E5 -', 'D5 - E5 F5 G5 - - .', 'A5 G5 E5 D5 C5 - E5 -', 'D5 - - . C5 - - .'),
     bassline: bars('C3 . G3 . C3 . G3 .', 'A2 . E3 . A2 . E3 .', 'F2 . C3 . F2 . C3 .', 'G2 . D3 . G2 . B2 .') },
   // 한국: 통통 튀는 다섯 음(솔라시레미)
-  ch1: { bpm: 120, lead: 'triangle', bass: 'triangle', level: 0.75, drums: 'khshkhsh',
+  ch1: { bpm: 156, lead: 'triangle', bass: 'triangle', level: 0.75, drums: 'khshkhsh',
     melody: bars('G5 . A5 B5 D6 - B5 .', 'A5 . G5 E5 G5 - - .', 'D5 . E5 G5 A5 - G5 A5', 'B5 - A5 . G5 - - .', 'E5 . G5 . A5 B5 A5 G5', 'E5 - D5 . E5 - - .', 'G5 A5 B5 D6 B5 A5 G5 E5', 'D5 - E5 - G5 - - .'),
     bassline: bars('G2 . D3 . G2 . D3 .', 'E2 . B2 . E2 . B2 .', 'C3 . G3 . C3 . G3 .', 'D3 . A2 . D3 . F#3 .') },
   // 중국: 대나무 숲의 느긋한 다섯 음
-  ch4: { bpm: 104, lead: 'sine', bass: 'triangle', level: 0.8, drums: 'k.h.kshh',
+  ch4: { bpm: 136, lead: 'sine', bass: 'triangle', level: 0.8, drums: 'khshkhsh',
     melody: bars('D5 - E5 - F#5 - A5 -', 'B5 - A5 F#5 E5 - - .', 'A5 - B5 - D6 - B5 A5', 'F#5 - E5 - D5 - - .', 'F#5 . A5 . B5 A5 F#5 E5', 'D5 - E5 - F#5 - - .', 'A5 B5 A5 F#5 E5 D5 E5 -', 'D5 - - - . . . .'),
     bassline: bars('D3 . A3 . D3 . A3 .', 'B2 . F#3 . B2 . F#3 .', 'G2 . D3 . G2 . D3 .', 'A2 . E3 . A2 . C#3 .') },
   // 일본: 꽃잎 날리는 정원, 살랑살랑
-  ch5: { bpm: 100, lead: 'triangle', bass: 'sine', level: 0.8, drums: 'k.hsk.hs',
+  ch5: { bpm: 132, lead: 'triangle', bass: 'sine', level: 0.8, drums: 'khshkhsh',
     melody: bars('A5 - C6 - D6 - E6 -', 'D6 C6 A5 - G5 - - .', 'E5 - G5 - A5 - C6 D6', 'C6 - A5 - - . . .', 'A5 . G5 . E5 - G5 A5', 'C6 - D6 - E6 - - .', 'D6 C6 A5 G5 A5 - C6 -', 'A5 - - - . . . .'),
     bassline: bars('A2 . E3 . A2 . E3 .', 'F2 . C3 . F2 . C3 .', 'D3 . A3 . D3 . A3 .', 'E2 . B2 . E2 . G#2 .') },
   // 미국: 공원 스케이트보드, 통통 신나게
-  ch6: { bpm: 128, lead: 'square', bass: 'triangle', level: 0.6, drums: 'xhshxxsh',
+  ch6: { bpm: 160, lead: 'square', bass: 'triangle', level: 0.6, drums: 'xhshxxsh',
     melody: bars('C5 . E5 G5 . A5 G5 E5', 'G5 - - . E5 D5 C5 .', 'D5 . F5 A5 . C6 A5 F5', 'G5 - - . . . . .', 'C5 . E5 G5 . A5 G5 E5', 'A5 - G5 . E5 . G5 .', 'F5 E5 D5 . E5 D5 C5 .', 'C5 - - . . . . .'),
     bassline: bars('C3 C3 . C3 E3 . G3 .', 'A2 A2 . A2 C3 . E3 .', 'F2 F2 . F2 A2 . C3 .', 'G2 G2 . G2 B2 . D3 .') },
   // 캐나다: 단풍 숲 오솔길, 포근한 걸음
-  ch7: { bpm: 116, lead: 'triangle', bass: 'triangle', level: 0.75, drums: 'khshkhsh',
+  ch7: { bpm: 150, lead: 'triangle', bass: 'triangle', level: 0.75, drums: 'khshkhsh',
     melody: bars('F5 - A5 - C6 - A5 -', 'Bb5 - A5 - G5 - - .', 'F5 - G5 - A5 C6 A5 G5', 'F5 - - . . . . .', 'D5 - F5 - A5 - G5 F5', 'E5 - G5 - C6 - - .', 'Bb5 A5 G5 F5 G5 - A5 -', 'F5 - - - . . . .'),
     bassline: bars('F2 . C3 . F2 . C3 .', 'Bb2 . F3 . Bb2 . F3 .', 'D3 . A3 . D3 . A3 .', 'C3 . G3 . C3 . E3 .') },
   // 대결: 빠르고 힘차게 (무섭지 않게, 놀이 느낌)
@@ -48,19 +49,19 @@ export const SONGS = {
     melody: bars('G5 - B5 - D6 - B5 .', 'C6 - B5 - A5 - - .', 'G5 - A5 - B5 D6 B5 A5', 'G5 - - . . . . .', 'E5 - G5 - C6 - B5 A5', 'B5 - A5 - G5 - - .', 'A5 B5 C6 B5 A5 G5 A5 -', 'G5 - - . . . . .'),
     bassline: bars('G2 . D3 . G2 . D3 .', 'C3 . G3 . C3 . G3 .', 'E2 . B2 . E2 . B2 .', 'D3 . A2 . D3 . F#3 .') },
   // 봄: 벚꽃길 산책, 콩콩 가볍게
-  s1: { bpm: 118, lead: 'triangle', bass: 'triangle', level: 0.75, drums: 'khshkhsh',
+  s1: { bpm: 152, lead: 'triangle', bass: 'triangle', level: 0.75, drums: 'khshkhsh',
     melody: bars('D5 . F#5 . A5 - B5 A5', 'F#5 - E5 . D5 - - .', 'E5 . G5 . B5 - A5 G5', 'F#5 - - . . . . .', 'D5 . F#5 . A5 - D6 -', 'C#6 B5 A5 . F#5 - - .', 'G5 F#5 E5 . A5 G5 F#5 .', 'E5 - D5 - - . . .'),
     bassline: bars('D3 . A3 . D3 . A3 .', 'B2 . F#3 . B2 . F#3 .', 'G2 . D3 . G2 . D3 .', 'A2 . E3 . A2 . C#3 .') },
   // 여름: 물놀이, 첨벙첨벙 통통
-  s2: { bpm: 132, lead: 'square', bass: 'triangle', level: 0.6, drums: 'xhshxhsh',
+  s2: { bpm: 164, lead: 'square', bass: 'triangle', level: 0.6, drums: 'xhshxhsh',
     melody: bars('E5 G#5 B5 . E6 . B5 .', 'C#6 . B5 . G#5 - - .', 'F#5 A5 C#6 . F#6 . C#6 .', 'B5 - - . . . . .', 'E5 G#5 B5 . E6 . D#6 .', 'C#6 . B5 . A5 . G#5 .', 'F#5 . G#5 . A5 . B5 .', 'E5 - - . . . . .'),
     bassline: bars('E2 E3 . E2 E3 . B2 .', 'C#3 C#3 . C#3 G#2 . C#3 .', 'A2 A3 . A2 A3 . E3 .', 'B2 B2 . B2 F#2 . B2 .') },
   // 가을: 은행나무길, 바스락 느긋하게
-  s3: { bpm: 100, lead: 'sine', bass: 'triangle', level: 0.8, drums: 'k.hsk.hs',
+  s3: { bpm: 132, lead: 'sine', bass: 'triangle', level: 0.8, drums: 'khshkhsh',
     melody: bars('A4 - C5 - E5 - D5 C5', 'D5 - - . A4 - - .', 'G4 - A4 - C5 - D5 E5', 'E5 - - . . . . .', 'A4 - C5 - E5 - G5 -', 'E5 D5 C5 . D5 - - .', 'C5 - D5 - E5 D5 C5 A4', 'A4 - - - . . . .'),
     bassline: bars('A2 . E3 . A2 . E3 .', 'F2 . C3 . F2 . C3 .', 'C3 . G3 . C3 . G3 .', 'G2 . D3 . E2 . B2 .') },
   // 겨울: 눈 오는 광장, 방울 소리
-  s4: { bpm: 96, lead: 'sine', bass: 'sine', level: 0.85, drums: 'kh.hkh.h',
+  s4: { bpm: 126, lead: 'sine', bass: 'sine', level: 0.85, drums: 'khshkhsh',
     melody: bars('F5 - A5 - C6 - A5 -', 'G5 - - . C5 - - .', 'D5 - F5 - A5 - G5 F5', 'E5 - - . . . . .', 'F5 - A5 - C6 - F6 -', 'E6 - D6 - C6 - - .', 'Bb5 - A5 - G5 - E5 -', 'F5 - - - . . . .'),
     bassline: bars('F2 . C3 . F2 . C3 .', 'C3 . G2 . C3 . G2 .', 'D3 . A2 . D3 . A2 .', 'Bb2 . F2 . C3 . E2 .') },
   battle2: { bpm: 150, lead: 'square', bass: 'triangle', level: 0.55, drums: 'xhsxxhsh',

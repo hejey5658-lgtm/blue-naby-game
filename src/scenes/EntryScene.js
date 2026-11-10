@@ -43,8 +43,8 @@ export class EntryScene extends Phaser.Scene {
     this.dy = land ? 0 : UI.offY;
     this.titleY = land ? Math.max(48, this.insets.top + 40) : Math.max(92, this.insets.top + 56);
     this.lay = land
-      ? { gx: Math.round(W / 2), gy: 372, gs: 0.98, fs: 0.8, fx: 142, fy: 150, mapDX: Math.round(W / 2 - 360), mapDY: -110 }
-      : { gx: GLOBE.x, gy: GLOBE.y + 40 + this.dy, gs: 1.22, fs: 1, fx: 160, fy: 196, mapDX: 0, mapDY: this.dy };
+      ? { gx: Math.round(W / 2), gy: 372, gs: 0.98, fs: 0.62, fx: 84, fy: 14, mapDX: Math.round(W / 2 - 360), mapDY: -110 }
+      : { gx: GLOBE.x, gy: GLOBE.y + 40 + this.dy, gs: 1.22, fs: 0.76, fx: 104, fy: 18, mapDX: 0, mapDY: this.dy };
     this.drawMap();
     this.globe = this.add.container(this.lay.gx, this.lay.gy).setScale(this.lay.gs);
     this.drawStand();
@@ -170,7 +170,7 @@ export class EntryScene extends Phaser.Scene {
   // 지도 종이의 빈 곳(지구본·블루나비·포포·제목을 피해서)에 물품을 흩어 놓는다 — 세로·가로·길쭉한 폰 모두 채워지게.
   // 자리는 고른 격자 + 조금씩 어긋나게(시드 고정), 크기·기울기도 조금씩 달리해 책상 위에 놓인 듯 자연스럽게.
   makeItems() {
-    const P = this.paper, { gx, gy, gs, fs, fx, fy } = this.lay, land = UI.landscape;
+    const P = this.paper, { gx, gy, gs } = this.lay, land = UI.landscape;
     const R = GLOBE.r * gs;
     const step = land ? 150 : 172;
     const KINDS = ['backpack', 'camera', 'bottle', 'ticket', 'compass', 'hat', 'suitcase', 'passport'];
@@ -178,8 +178,7 @@ export class EntryScene extends Phaser.Scene {
     const rnd = (k) => { const v = Math.sin(k * 12.9898 + 78.233) * 43758.5453; return v - Math.floor(v); };
     const blocked = (x, y, r) => {
       if (Math.hypot(x - gx, y - gy) < R + 40 + r) return true;                                   // 지구본
-      if (Math.abs(x - gx) < 180 * gs + r && y > gy && y < gy + R + 130 * gs + r) return true;     // 받침
-      for (const side of [-1, 1]) if (Math.hypot(x - (gx + side * fx), y - (gy + fy + 40)) < 175 * fs + r) return true; // 블루나비·포포·이름
+      if (Math.abs(x - gx) < 160 * gs + r * 0.7 && y > gy && y < gy + R + 130 * gs + r) return true; // 받침
       return false;
     };
     const spots = [];
@@ -196,9 +195,19 @@ export class EntryScene extends Phaser.Scene {
         spots.push([jx, jy, sc, k]);
       }
     }
+    // 골고루 섞기: 가까운(약 1.7칸 안) 물품과 겹치지 않는 종류 중 지금까지 덜 쓴 것부터
+    const placed = [], used = Object.fromEntries(KINDS.map((kd) => [kd, 0]));
+    const pick = (x, y, kk) => {
+      const near = new Set(placed.filter((q) => Math.hypot(q.x - x, q.y - y) < step * 1.7).map((q) => q.kind));
+      const order = KINDS.map((kd, n) => ({ kd, w: used[kd] + rnd(kk + n * 31) * 0.9 })).sort((a, b) => a.w - b.w);
+      const kind = (order.find((o) => !near.has(o.kd)) ?? order[0]).kd;
+      used[kind]++;
+      placed.push({ x, y, kind });
+      return kind;
+    };
     this.items = spots.slice(0, 22).map(([x, y, sc, kk], i) => {
       const g = this.add.graphics({ x, y }).setScale(sc).setAngle((rnd(kk + 3) - 0.5) * 22);
-      DRAW[KINDS[(i * 5 + Math.floor(i / KINDS.length)) % KINDS.length]](g);
+      DRAW[pick(x, y, kk)](g);
       if (!platform.reducedMotion) this.tweens.add({ targets: g, angle: g.angle + (i % 2 ? 4 : -4), duration: 1400 + (i % 5) * 260, yoyo: true, repeat: -1, ease: 'Sine.easeInOut', delay: (i % 4) * 300 });
       return g;
     });
@@ -211,7 +220,7 @@ export class EntryScene extends Phaser.Scene {
     const last = state.series === 2 ? 2 : 1;
     this.pins = {};
     [[1, 'home_bluenabi', -1, 0], [2, 'home_popo', 1, 12]].forEach(([n, key, side, dyy]) => {
-      // 지구본 아래쪽 양옆에 걸치게 (2026-11-10 "조금 키워서 지구본에 걸치게")
+      // 지구본 가운데에 둘이 나란히 (2026-11-10 "블루나비·포포를 지구본 가운데 배치")
       const size = 300 * fs;
       const x = gx + side * fx, y = gy + fy + dyy * fs;
       const c = this.add.container(x, y);

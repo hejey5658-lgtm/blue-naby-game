@@ -1,0 +1,69 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+@font-face{font-family:Jua;src:url(../../public/fonts/Jua-subset.woff2)}
+@font-face{font-family:Gowun;src:url(../../public/fonts/GowunDodum-subset.woff2)}
+*{margin:0;box-sizing:border-box}
+body{--dy:0px;width:1280px;height:720px;overflow:hidden;position:relative;background:linear-gradient(#7cc2ff,#cfeaff 62%,#eaf6ff)}
+.abs{position:absolute}
+.cloud{position:absolute;background:#fff;border-radius:999px;opacity:.95}
+.title{position:absolute;left:0;right:0;top:46px;text-align:center;font-family:Jua;color:#2b2d5a;paint-order:stroke fill;-webkit-text-stroke:16px #fff;line-height:1}
+.t1{font-size:70px;color:#2f7bff}
+.t2{font-size:168px;margin-top:4px;letter-spacing:2px}
+.pill{position:absolute;left:50%;transform:translateX(-50%);top:302px;font-family:Jua;font-size:34px;color:#fff;background:#2f7bff;border:5px solid #2b2d5a;border-radius:999px;padding:8px 30px 10px;white-space:nowrap;box-shadow:0 6px 0 #2b2d5a}
+.pill b{color:#ffd84a;font-weight:normal}
+img{position:absolute}
+.f{height:96px;bottom:20px;filter:drop-shadow(0 4px 0 rgba(43,45,90,.18))}
+body.og{--dy:48px;height:672px}
+body.og .qr{display:none}
+.title{top:calc(46px - var(--dy) * .45)}
+.pill{top:calc(302px - var(--dy) * .6)}
+.dy{transform:translateY(calc(-1 * var(--dy)))}
+.link{position:absolute;left:28px;top:24px;display:flex;align-items:center;gap:10px;font-family:Jua;font-size:30px;color:#2b2d5a;background:#fff;border:5px solid #2b2d5a;border-radius:999px;padding:6px 22px 8px 10px;box-shadow:0 5px 0 #2b2d5a}
+.link i{display:block;width:40px;height:40px;border-radius:50%;background:#ff6b5b;position:relative}
+.link i:after{content:'';position:absolute;left:15px;top:11px;border-left:15px solid #fff;border-top:9px solid transparent;border-bottom:9px solid transparent}
+.qr{position:absolute;right:26px;top:22px;background:#fff;border:5px solid #2b2d5a;border-radius:18px;padding:8px 8px 4px;text-align:center;font-family:Jua;font-size:20px;color:#2b2d5a;box-shadow:0 5px 0 #2b2d5a}
+.qr img{position:static;display:block;width:132px;height:132px}
+</style></head><body class="">
+<script>if(location.hash==='#og')document.body.className='og'</script>
+<!-- 구름 -->
+<div class="cloud" style="left:40px;top:60px;width:170px;height:54px"></div><div class="cloud" style="left:90px;top:34px;width:80px;height:70px"></div>
+<div class="cloud" style="left:1060px;top:80px;width:180px;height:56px"></div><div class="cloud" style="left:1110px;top:52px;width:86px;height:72px"></div>
+<div class="cloud" style="left:880px;top:250px;width:120px;height:38px;opacity:.7"></div><div class="cloud" style="left:250px;top:250px;width:110px;height:36px;opacity:.7"></div>
+<!-- 날아온 길 (점선) -->
+<svg class="abs dy" style="left:0;top:0" width="1280" height="720"><path d="M120 560 C 200 300, 330 210, 420 380" fill="none" stroke="#fff" stroke-width="7" stroke-dasharray="4 18" stroke-linecap="round"/></svg>
+<!-- 오른쪽: 서울 빌딩 숲 + 남산 타워 -->
+<svg class="abs dy" style="left:640px;top:360px" width="460" height="300">
+ <g fill="#b5dbf7"><rect x="10" y="120" width="60" height="180"/><rect x="66" y="80" width="54" height="220"/><rect x="380" y="100" width="70" height="200"/></g>
+ <ellipse cx="300" cy="300" rx="160" ry="110" fill="#8fd07a"/>
+ <rect x="296" y="40" width="8" height="160" fill="#2b2d5a"/><rect x="282" y="70" width="36" height="22" rx="10" fill="#fff" stroke="#2b2d5a" stroke-width="4"/><circle cx="300" cy="36" r="6" fill="#ff6b5b"/>
+ <g stroke="#2b2d5a" stroke-width="5">
+  <rect x="120" y="130" width="70" height="170" rx="6" fill="#e6f4ff"/><rect x="196" y="170" width="60" height="130" rx="6" fill="#fff1e0"/><rect x="380" y="160" width="76" height="140" rx="6" fill="#d6f0e6"/>
+ </g>
+ <g fill="#fff6c8"><rect x="132" y="146" width="14" height="14"/><rect x="160" y="146" width="14" height="14"/><rect x="132" y="176" width="14" height="14"/><rect x="160" y="176" width="14" height="14"/><rect x="132" y="206" width="14" height="14"/><rect x="160" y="206" width="14" height="14"/><rect x="208" y="186" width="14" height="14"/><rect x="230" y="186" width="14" height="14"/><rect x="208" y="214" width="14" height="14"/><rect x="230" y="214" width="14" height="14"/><rect x="394" y="176" width="14" height="14"/><rect x="424" y="176" width="14" height="14"/><rect x="394" y="206" width="14" height="14"/><rect x="424" y="206" width="14" height="14"/></g>
+</svg>
+<svg class="abs dy" style="left:1130px;top:380px" width="150" height="260"><g stroke="#2b2d5a" stroke-width="5"><rect x="10" y="40" width="70" height="230" rx="6" fill="#dcd0ec"/><rect x="84" y="90" width="66" height="180" rx="6" fill="#e6f4ff"/></g><g fill="#9fc4e8"><rect x="24" y="56" width="8" height="190"/><rect x="42" y="56" width="8" height="190"/><rect x="60" y="56" width="8" height="190"/></g><g fill="#fff6c8"><rect x="98" y="106" width="14" height="14"/><rect x="122" y="106" width="14" height="14"/><rect x="98" y="134" width="14" height="14"/><rect x="122" y="134" width="14" height="14"/></g></svg>
+<!-- 왼쪽: 튤립 꽃밭 언덕 -->
+<svg class="abs dy" style="left:0;top:0" width="1280" height="720">
+ <ellipse cx="200" cy="720" rx="420" ry="190" fill="#7fcf6a"/>
+ <ellipse cx="1080" cy="730" rx="420" ry="150" fill="#9ad97e"/>
+ <rect x="0" y="600" width="1280" height="120" fill="#6cc35a"/>
+ <path d="M0 600 Q 320 570 640 600 T 1280 600 V 720 H 0Z" fill="#5fb84e"/>
+</svg>
+<!-- 주인공 -->
+<img class="dy" src="blue_moth.png" style="height:110px;left:60px;top:470px;rotate:-8deg">
+<img class="dy" src="blue_caterpillar.png" style="height:84px;left:20px;top:560px">
+<img class="dy" src="blue_butterfly.png" style="height:300px;left:140px;top:330px;rotate:-6deg;filter:drop-shadow(0 10px 0 rgba(43,45,90,.15))">
+<img class="dy" src="blue_popoSpring.png" style="height:290px;right:90px;top:340px;filter:drop-shadow(0 10px 0 rgba(43,45,90,.15))">
+<!-- 제목 -->
+<div class="title"><div class="t1">블루나비의</div><div class="t2">세계여행</div></div>
+<div class="pill">미로 모험 · 기념품 퐁퐁 · <b>2탄 포포의 사계절 서울</b></div>
+<!-- 게임 주소 (톡 하면 게임으로: 카카오 카드·thumbnail.html) -->
+<div class="link"><i></i>blue-naby-game.web.app</div>
+<div class="qr"><img src="qr.svg">찍으면 바로!</div>
+<!-- 친구들 -->
+<div id="friends"></div>
+<script>
+const fr=['dustmong','silsili','jjakjjak','bbangbbang','sappuni','dotori','damdam','buzzboss','kkakkak','gaegul','bamtol','mungchi','gomsil'];
+const w=1280, n=fr.length, gap=(780)/(n-1);
+fr.forEach((k,i)=>{const im=document.createElement('img');im.src='boss_'+k+'.png';im.className='f';im.style.left=(250+i*gap-40)+'px';im.style.bottom=(14+(i%2)*14)+'px';document.body.appendChild(im)});
+</script>
+</body></html>

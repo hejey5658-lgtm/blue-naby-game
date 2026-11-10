@@ -49,5 +49,6 @@ const og = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" vi
     <text x="465" y="340" font-size="30" fill="#2b2d5a" stroke="#ffffff" stroke-width="10" paint-order="stroke">설치 없이 링크로 바로!</text>
   </g>
 </svg>`;
-fs.writeFileSync('public/og-image.png', new Resvg(og, { font: { fontFiles: ['art/fonts/Jua-og.ttf'], loadSystemFonts: false, defaultFontFamily: 'Jua' } }).render().asPng());
-console.log('아이콘: public/icons/*, 공유 그림: public/og-image.png');
+// (2026-11-10~) 공유 그림은 썸네일과 같은 그림 public/og-image-v2.png 를 scripts/build-thumbnail.cjs 가 만든다. 옛 그림은 아래 파일로만.
+fs.writeFileSync('art/og-image-old.png', new Resvg(og, { font: { fontFiles: ['art/fonts/Jua-og.ttf'], loadSystemFonts: false, defaultFontFamily: 'Jua' } }).render().asPng());
+console.log('아이콘: public/icons/*, 옛 공유 그림: art/og-image-old.png');

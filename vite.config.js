@@ -31,7 +31,7 @@ export default defineConfig(({ mode }) => mode === 'single' ? single : {
     VitePWA({
       registerType: 'prompt', // 새 버전을 바로 적용하지 않고, 타이틀·여권에서 안내 후 새로고침
       injectRegister: false,
-      includeAssets: ['icons/favicon.svg', 'icons/favicon-32.png', 'icons/apple-touch-icon-180.png', 'og-image.png'],
+      includeAssets: ['icons/favicon.svg', 'icons/favicon-32.png', 'icons/apple-touch-icon-180.png'],
       manifest: {
         id: '/',
         name: '블루나비의 세계여행',

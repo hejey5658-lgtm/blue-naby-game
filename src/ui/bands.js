@@ -7,7 +7,8 @@ import { state, save } from '../state.js';
 import { activeChallenge, challengeHeadline } from '../social/social.js';
 
 function band(scene, y, color, text, actionLabel, onAction, onClose) {
-  const c = scene.add.container(UI.width / 2, y).setDepth(30);
+  // 가운데: 보통 화면은 기준 폭(720)의 가운데, 캔버스 전체를 쓰는 화면(지구본 입구)은 scene.bandX
+  const c = scene.add.container(scene.bandX ?? UI.width / 2, y).setDepth(30);
   const g = scene.add.graphics();
   g.fillStyle(0x2b2d5a, 0.18).fillRoundedRect(-344, -38, 692, 84, 28);
   g.fillStyle(color, 1).fillRoundedRect(-346, -42, 692, 84, 28);

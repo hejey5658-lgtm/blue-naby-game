@@ -1406,6 +1406,8 @@ export class MazeScene extends Phaser.Scene {
 
   // ── 매 프레임 ───────────────────────────────────
   update() {
+    // 그림을 아직 받는 중이면(waitForAssets: 탄을 바꿔 바로 들어온 경우) 화면이 없으니 쉰다
+    if (!this.timerText?.scene) return;
     // 1P·2P 표시는 멈춰 있을 때(퐁·대사)도 블루나비를 따라 숨거나 보인다
     if (this.duoTag) this.duoTag.setPosition(this.blue.x, this.blue.y - this.cell * 0.42).setVisible(this.blue.visible);
     if (this.finished || this.locked) return;

@@ -29,6 +29,7 @@ export class PopScene extends Phaser.Scene {
 
   init(data) {
     this.initData = data;
+    this.stage = null; // 그림을 받는 동안(waitForAssets)에는 update가 쉬도록
     this.step = data.step ?? 'menu';
     this.stageIdx = Math.max(0, Math.min(STAGES.length - 1, data.stage ?? 0));
     this.boards = [];
@@ -526,6 +527,7 @@ export class PopScene extends Phaser.Scene {
   }
 
   update(time, delta) {
+    if (!this.stage) return;
     if (this.step === 'menu' || this.ended) return;
     if (this.step === 'remote') {
       if (!this.running) return;

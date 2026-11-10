@@ -153,7 +153,7 @@ export class AlbumScene extends Phaser.Scene {
     this.continueBtn = new Button(this, this.land ? 1060 : UI.width / 2 + 100, y, next
       ? { width: 420, height: 110, fontSize: 32, label: `여행 계속하기 · ${chapterById(next).name}`, color: 0xffd84a, shade: 0xd9a92b, textColor: '#2b2d5a', onPress: () => { sfx('tap'); startChapter(this, next); } }
       : { width: 420, height: 110, fontSize: 32, label: '엔딩 다시 보기', color: 0xffd84a, shade: 0xd9a92b, textColor: '#2b2d5a', onPress: () => { sfx('tap'); this.scene.start(SERIES.meta.endingScene); } });
-    new Button(this, this.land ? 1060 : 170, this.land ? 900 : y, { width: 180, height: this.land ? 96 : 110, fontSize: 26, label: '홈', color: 0xfdf7ea, shade: 0xc9c0ae, textColor: '#2b2d5a', onPress: () => { sfx('tap'); this.scene.start('Title'); } });
+    new Button(this, this.land ? 1060 : 170, this.land ? 900 : y, { width: 180, height: this.land ? 96 : 110, fontSize: 26, label: '처음 화면', color: 0xfdf7ea, shade: 0xc9c0ae, textColor: '#2b2d5a', onPress: () => { sfx('tap'); this.scene.start('Title'); } });
     this.input.keyboard?.on('keydown-ENTER', () => this.continueBtn.trigger());
   }
 

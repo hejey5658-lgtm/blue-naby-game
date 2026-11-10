@@ -2,7 +2,7 @@
 import { CHAPTERS, stageNo } from './data/chapters.js';
 import { state, save } from './state.js';
 import { platform } from './platform.js';
-import { SERIES } from './series.js';
+import { SERIES, useSeries } from './series.js';
 
 export const chapterById = (id) => CHAPTERS.find((c) => c.id === id);
 export const isCleared = (id) => (state.stars?.[id] ?? 0) > 0;
@@ -44,6 +44,20 @@ export function startChapter(scene, id, { replay = false } = {}) {
   state.mazeState = null;
   save();
   scene.scene.start('Maze', { chapter: id, fresh: true, intro: id !== CHAPTERS[0].id });
+}
+
+// 1탄·2탄 여행 들어가기 (지구본에서 블루나비·포포를 톡, 2026-11-10~): 그 탄으로 바꾸고
+// 미로 중이면 그 미로, 여권·앨범에 있으면 여권·앨범, 처음이면 바로 1단계 미로. → [화면 이름, 데이터]
+export function journeyTarget(n) {
+  useSeries(n);
+  const playing = state.playing ?? CHAPTERS[state.chapter - 1]?.id ?? CHAPTERS[0].id;
+  if (state.step.endsWith('_maze')) return ['Maze', { chapter: playing }];
+  // 예전 대결 화면 중이던 저장은 그 단계 미로부터 다시 (17절, 친구·선물은 그대로)
+  if (state.step.endsWith('_boss')) return ['Maze', { chapter: playing, fresh: true }];
+  if (state.step !== 'new') return [SERIES.meta.mapScene, {}];
+  Object.assign(state, { step: `${CHAPTERS[0].id}_maze`, chapter: 1, playing: CHAPTERS[0].id, mazeState: null });
+  save();
+  return ['Maze', { chapter: CHAPTERS[0].id, fresh: true }];
 }
 
 // 친구가 주는 선물 (rewards 칸이 하나면 그것, 배열이면 여럿)

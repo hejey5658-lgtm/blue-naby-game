@@ -201,12 +201,16 @@ export class TitleScene extends Phaser.Scene {
     // 유리창에 붙인 스티커 같은 제목
     const c = this.add.container(UI.width / 2 - 70, 250).setAngle(-4);
     const g = this.add.graphics();
-    g.fillStyle(C.ink, 0.18).fillRoundedRect(-180, -88, 372, 192, 34);
-    g.fillStyle(0xffffff, 1).fillRoundedRect(-186, -96, 372, 192, 34);
-    g.lineStyle(4, C.ink, 1).strokeRoundedRect(-186, -96, 372, 192, 34);
-    const small = this.add.text(0, -44, '블루나비와 포포의 여행 1탄', { fontFamily: UI.fontTitle, fontSize: '28px', color: '#2f7bff' }).setOrigin(0.5);
-    const big = this.add.text(0, 30, '세계여행', { fontFamily: UI.fontTitle, fontSize: `${UI.fontSize.title + 12}px`, color: '#2b2d5a' }).setOrigin(0.5);
-    c.add([g, small, big]);
+    // 게임 이름 「블루나비와 포포의 여행」(2026-11-10~) + 1탄 이름
+    g.fillStyle(C.ink, 0.18).fillRoundedRect(-200, -118, 412, 236, 34);
+    g.fillStyle(0xffffff, 1).fillRoundedRect(-206, -126, 412, 236, 34);
+    g.lineStyle(4, C.ink, 1).strokeRoundedRect(-206, -126, 412, 236, 34);
+    const big1 = this.add.text(0, -62, '블루나비와', { fontFamily: UI.fontTitle, fontSize: '62px', color: '#2f7bff' }).setOrigin(0.5);
+    const big2 = this.add.text(0, 6, '포포의 여행', { fontFamily: UI.fontTitle, fontSize: '62px', color: '#2b2d5a' }).setOrigin(0.5);
+    const chip = this.add.graphics();
+    chip.fillStyle(0x2f7bff, 1).fillRoundedRect(-118, 50, 236, 44, 22);
+    const sub = this.add.text(0, 72, '1탄 · 세계여행', { fontFamily: UI.fontTitle, fontSize: '28px', color: '#ffffff' }).setOrigin(0.5);
+    c.add([g, big1, big2, chip, sub]);
     this.logo = c;
   }
 

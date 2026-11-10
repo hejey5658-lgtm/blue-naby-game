@@ -39,8 +39,12 @@ export class Title2Scene extends Phaser.Scene {
     this.tweens.add({ targets: this.bn, x: 600, y: 380, duration: 2200, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
 
     // 로고
-    this.add.text(UI.width / 2, 170 + top, '포포의 사계절 서울', { fontFamily: UI.fontTitle, fontSize: '70px', color: '#ffffff', stroke: '#2b2d5a', strokeThickness: 12 }).setOrigin(0.5);
-    this.add.text(UI.width / 2, 248 + top, '블루나비와 포포의 여행 2탄', { fontFamily: UI.fontTitle, fontSize: '30px', color: '#2b2d5a' }).setOrigin(0.5);
+    // 게임 이름 「블루나비와 포포의 여행」(2026-11-10~) + 2탄 이름
+    this.add.text(UI.width / 2, 170 + top, '블루나비와 포포의 여행', { fontFamily: UI.fontTitle, fontSize: '62px', color: '#ffffff', stroke: '#2b2d5a', strokeThickness: 12 }).setOrigin(0.5);
+    const chip = this.add.graphics();
+    chip.fillStyle(0xff7fa3, 1).fillRoundedRect(UI.width / 2 - 140, 226 + top, 280, 46, 23);
+    chip.lineStyle(4, 0x2b2d5a, 1).strokeRoundedRect(UI.width / 2 - 140, 226 + top, 280, 46, 23);
+    this.add.text(UI.width / 2, 249 + top, '2탄 · 사계절 서울', { fontFamily: UI.fontTitle, fontSize: '30px', color: '#ffffff' }).setOrigin(0.5);
 
     this.startBtn = new Button(this, UI.width / 2, 960, { label: hasProgress() ? '여행 이어하기' : '여행 시작하기', onPress: () => this.onStart() });
     this.popBtn = new Button(this, UI.width / 2 - 165, 1110, {

@@ -35,7 +35,7 @@ export default defineConfig(({ mode }) => mode === 'single' ? single : {
       manifest: {
         id: '/',
         name: '블루나비와 포포의 여행',
-        short_name: '블루나비',
+        short_name: '블루나비와 포포의 여행',
         description: '1탄 세계여행 · 2탄 사계절 서울 — 블루나비와 포포가 떠나는 귀여운 미로 모험',
         lang: 'ko',
         start_url: '/',

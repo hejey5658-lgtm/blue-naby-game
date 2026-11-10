@@ -153,8 +153,8 @@ export class MazeScene extends Phaser.Scene {
         this.time.delayedCall(500, () => this.say(`${josa(COLLECTIBLES[this.chapter.item], '을', '를')} 모으고 숨은 친구를 찾으면 출구가 열려!`));
       }
     };
-    // 장 도입 대사 (2장부터). 대사가 끝날 때까지 미로와 시간은 멈춰 있다.
-    if (this.intro) {
+    // 장 도입 대사 (있을 때만 — 2026-11-10 해설·안내를 없애 지금은 처음 이야기만). 대사가 끝날 때까지 미로와 시간은 멈춰 있다.
+    if (this.intro && DIALOGUE[this.chapter.intro]?.length) {
       this.locked = true;
       afterDialogue(this, () => { this.locked = false; hint(); });
       this.time.delayedCall(350, () => this.scene.launch('Dialogue', { key: this.chapter.intro, frame: this.chapter.frame, form: this.chapter.form }));

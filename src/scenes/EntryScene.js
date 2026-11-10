@@ -43,8 +43,8 @@ export class EntryScene extends Phaser.Scene {
     this.dy = land ? 0 : UI.offY;
     this.titleY = land ? Math.max(48, this.insets.top + 40) : Math.max(92, this.insets.top + 56);
     this.lay = land
-      ? { gx: Math.round(W / 2), gy: 372, gs: 0.98, fs: 0.8, fx: 188, fy: 172, items: [['backpack', Math.round(W / 2) - 520, 470, 0.85], ['bottle', Math.round(W / 2) - 370, 590, 0.8], ['compass', Math.round(W / 2) + 470, 470, 0.85], ['bottle', Math.round(W / 2) + 590, 610, 0.72]], mapDX: Math.round(W / 2 - 360), mapDY: -110 }
-      : { gx: GLOBE.x, gy: GLOBE.y + 40 + this.dy, gs: 1.22, fs: 1, fx: 206, fy: 236, items: [['backpack', 150, 1120 + this.dy, 0.9], ['bottle', 360, 1132 + this.dy, 0.85], ['compass', 570, 1118 + this.dy, 0.9]], mapDX: 0, mapDY: this.dy };
+      ? { gx: Math.round(W / 2), gy: 372, gs: 0.98, fs: 0.8, fx: 142, fy: 150, mapDX: Math.round(W / 2 - 360), mapDY: -110 }
+      : { gx: GLOBE.x, gy: GLOBE.y + 40 + this.dy, gs: 1.22, fs: 1, fx: 160, fy: 196, mapDX: 0, mapDY: this.dy };
     this.drawMap();
     this.globe = this.add.container(this.lay.gx, this.lay.gy).setScale(this.lay.gs);
     this.drawStand();
@@ -69,6 +69,7 @@ export class EntryScene extends Phaser.Scene {
     const py = this.titleY + (UI.landscape ? 44 : 58);
     const px = 22 + this.insets.left;
     const P = { x: px, y: py, w: FW - px - 22 - this.insets.right, h: FH - (UI.landscape ? 20 : 70) - this.insets.bottom * 0.5 - py };
+    this.paper = P; // 여행 물품을 흩어 놓을 자리 (makeItems)
     g.fillStyle(0x000000, 0.18).fillRoundedRect(P.x + 6, P.y + 10, P.w, P.h, 20);
     g.fillStyle(C.paperEdge, 1).fillRoundedRect(P.x, P.y, P.w, P.h, 20);
     g.fillStyle(C.paper, 1).fillRoundedRect(P.x + 8, P.y + 8, P.w - 16, P.h - 16, 16);
@@ -166,14 +167,43 @@ export class EntryScene extends Phaser.Scene {
   }
 
   // ── 주변 빈 곳을 채우는 귀여운 여행 물품 (배낭·물병·나침반, 파일 없이 그림, 2026-11-10) ──
+  // 지도 종이의 빈 곳(지구본·블루나비·포포·제목을 피해서)에 물품을 흩어 놓는다 — 세로·가로·길쭉한 폰 모두 채워지게.
+  // 자리는 고른 격자 + 조금씩 어긋나게(시드 고정), 크기·기울기도 조금씩 달리해 책상 위에 놓인 듯 자연스럽게.
   makeItems() {
-    this.items = this.lay.items.map(([kind, x, y, s], i) => {
-      const g = this.add.graphics({ x, y }).setScale(s);
-      ({ backpack: drawBackpack, bottle: drawBottle, compass: drawCompass })[kind](g);
-      if (!platform.reducedMotion) this.tweens.add({ targets: g, angle: i % 2 ? 4 : -4, y: y - 6, duration: 1300 + i * 220, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    const P = this.paper, { gx, gy, gs, fs, fx, fy } = this.lay, land = UI.landscape;
+    const R = GLOBE.r * gs;
+    const step = land ? 150 : 172;
+    const KINDS = ['backpack', 'camera', 'bottle', 'ticket', 'compass', 'hat', 'suitcase', 'passport'];
+    const DRAW = { backpack: drawBackpack, bottle: drawBottle, compass: drawCompass, suitcase: drawSuitcase, camera: drawCamera, hat: drawHat, passport: drawPassport, ticket: drawTicket };
+    const rnd = (k) => { const v = Math.sin(k * 12.9898 + 78.233) * 43758.5453; return v - Math.floor(v); };
+    const blocked = (x, y, r) => {
+      if (Math.hypot(x - gx, y - gy) < R + 40 + r) return true;                                   // 지구본
+      if (Math.abs(x - gx) < 180 * gs + r && y > gy && y < gy + R + 130 * gs + r) return true;     // 받침
+      for (const side of [-1, 1]) if (Math.hypot(x - (gx + side * fx), y - (gy + fy + 40)) < 175 * fs + r) return true; // 블루나비·포포·이름
+      return false;
+    };
+    const spots = [];
+    let k = 0;
+    for (let y = P.y + 80; y < P.y + P.h - 60; y += step * 0.86) {
+      const row = Math.round((y - P.y) / step);
+      for (let x = P.x + 78 + (row % 2) * step * 0.5; x < P.x + P.w - 60; x += step) {
+        k++;
+        const jx = x + (rnd(k) - 0.5) * 34, jy = y + (rnd(k + 99) - 0.5) * 30;
+        const sc = (land ? 0.52 : 0.6) + rnd(k + 7) * 0.14;
+        const r = 72 * sc;
+        if (jx - r < P.x + 26 || jx + r > P.x + P.w - 26 || jy - r < P.y + 24 || jy + r > P.y + P.h - 22) continue;
+        if (blocked(jx, jy, r)) continue;
+        spots.push([jx, jy, sc, k]);
+      }
+    }
+    this.items = spots.slice(0, 22).map(([x, y, sc, kk], i) => {
+      const g = this.add.graphics({ x, y }).setScale(sc).setAngle((rnd(kk + 3) - 0.5) * 22);
+      DRAW[KINDS[(i * 5 + Math.floor(i / KINDS.length)) % KINDS.length]](g);
+      if (!platform.reducedMotion) this.tweens.add({ targets: g, angle: g.angle + (i % 2 ? 4 : -4), duration: 1400 + (i % 5) * 260, yoyo: true, repeat: -1, ease: 'Sine.easeInOut', delay: (i % 4) * 300 });
       return g;
     });
   }
+
 
   // ── 블루나비(1탄)·포포(2탄) = 입구: 지구본 양옆에 서서 통통, 톡 하면 그 탄 게임으로 ──
   makeFriends() {
@@ -325,5 +355,67 @@ function drawCompass(g) {
   g.fillStyle(0xffd84a, 1).fillCircle(0, 0, 7);
   g.lineStyle(3, INKC, 1).strokeCircle(0, 0, 7);
   g.fillStyle(CHEEK, 0.8).fillEllipse(-30, 18, 12, 7).fillEllipse(30, 18, 12, 7);
+}
+
+// 여행 가방(캐리어): 민트 몸통 + 손잡이 + 줄무늬 + 바퀴
+function drawSuitcase(g) {
+  g.fillStyle(0x000000, 0.16).fillEllipse(4, 90, 130, 20);
+  g.lineStyle(8, INKC, 1).strokeRoundedRect(-22, -96, 44, 34, 12);
+  g.fillStyle(INKC, 1).fillRoundedRect(-62, -70, 124, 154, 26).fillCircle(-38, 86, 11).fillCircle(38, 86, 11);
+  g.fillStyle(0x9edcc8, 1).fillRoundedRect(-56, -64, 112, 142, 21);
+  g.fillStyle(0xffffff, 0.3).fillRoundedRect(-48, -56, 20, 80, 10);
+  g.fillStyle(0x6cbfa7, 1).fillRect(-56, -26, 112, 12).fillRect(-56, 40, 112, 12);
+  g.fillStyle(0xffd84a, 1).fillCircle(-38, 86, 5).fillCircle(38, 86, 5);
+  face(g, 0, 10, 0.85);
+}
+
+// 카메라: 노란 몸통 + 큰 렌즈 + 셔터
+function drawCamera(g) {
+  g.fillStyle(0x000000, 0.16).fillEllipse(4, 62, 150, 20);
+  g.fillStyle(INKC, 1).fillRoundedRect(-44, -66, 40, 26, 8).fillRoundedRect(-74, -48, 148, 100, 24);
+  g.fillStyle(0xffd27a, 1).fillRoundedRect(-68, -42, 136, 88, 19).fillRoundedRect(-39, -61, 30, 18, 5);
+  g.fillStyle(0xe8584a, 1).fillCircle(48, -30, 8);
+  g.fillStyle(INKC, 1).fillCircle(0, 4, 40);
+  g.fillStyle(0x7ec8ff, 1).fillCircle(0, 4, 32);
+  g.fillStyle(0x2f7bff, 1).fillCircle(0, 4, 20);
+  g.fillStyle(0xffffff, 0.85).fillCircle(-9, -6, 8);
+  g.fillStyle(CHEEK, 0.8).fillEllipse(-52, 26, 12, 7).fillEllipse(52, 26, 12, 7);
+}
+
+// 밀짚모자: 넓은 챙 + 둥근 머리 + 파란 리본
+function drawHat(g) {
+  g.fillStyle(0x000000, 0.14).fillEllipse(4, 40, 170, 30);
+  g.fillStyle(INKC, 1).fillEllipse(0, 20, 178, 64);
+  g.fillStyle(0xf3d38a, 1).fillEllipse(0, 18, 166, 52);
+  g.fillStyle(INKC, 1).fillEllipse(0, -8, 104, 92);
+  g.fillStyle(0xf6dd9c, 1).fillEllipse(0, -10, 92, 80);
+  g.fillStyle(0x2f7bff, 1).fillRect(-46, 6, 92, 14);
+  g.fillStyle(0xffffff, 0.35).fillEllipse(-18, -26, 34, 16);
+  g.fillStyle(0xff9fb8, 1).fillCircle(30, 12, 9);
+}
+
+// 여권: 남색 수첩 + 금빛 지구 무늬 (글자 없이)
+function drawPassport(g) {
+  g.fillStyle(0x000000, 0.16).fillEllipse(6, 72, 110, 18);
+  g.fillStyle(INKC, 1).fillRoundedRect(-50, -70, 100, 140, 14);
+  g.fillStyle(0x3d4f9f, 1).fillRoundedRect(-44, -64, 88, 128, 10);
+  g.fillStyle(0xfffaf0, 1).fillRect(36, -60, 6, 120);
+  g.lineStyle(4, 0xffd84a, 1).strokeCircle(-4, -8, 22);
+  g.lineStyle(3, 0xffd84a, 1).lineBetween(-26, -8, 18, -8).lineBetween(-4, -30, -4, 14);
+  g.beginPath(); g.arc(-4, -8, 22, -Math.PI / 2, Math.PI / 2); g.strokePath();
+  g.fillStyle(0xffd84a, 1).fillRoundedRect(-26, 32, 44, 6, 3).fillRoundedRect(-20, 44, 32, 5, 3);
+}
+
+// 비행기표: 크림 표 + 양쪽 홈 + 작은 비행기 + 점선
+function drawTicket(g) {
+  g.fillStyle(0x000000, 0.14).fillEllipse(4, 46, 160, 18);
+  g.fillStyle(INKC, 1).fillRoundedRect(-80, -42, 160, 84, 14);
+  g.fillStyle(0xfffaf0, 1).fillRoundedRect(-74, -36, 148, 72, 10);
+  g.fillStyle(0xff9fb8, 1).fillRoundedRect(-74, -36, 148, 18, { tl: 10, tr: 10, bl: 0, br: 0 });
+  g.fillStyle(0xdcebe2, 1).fillCircle(-80, 6, 10).fillCircle(80, 6, 10);
+  g.fillStyle(INKC, 0.5);
+  for (let y = -12; y < 32; y += 9) g.fillRect(30, y, 3, 5);
+  g.fillStyle(0x2f7bff, 1).fillEllipse(-22, 6, 54, 12).fillTriangle(-30, 6, -8, 6, -18, -14).fillTriangle(-30, 6, -8, 6, -18, 26).fillTriangle(-50, 6, -40, 6, -50, -6);
+  g.fillStyle(INKC, 0.35).fillRoundedRect(42, -6, 22, 6, 3).fillRoundedRect(42, 6, 16, 6, 3);
 }
 

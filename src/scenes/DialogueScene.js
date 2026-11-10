@@ -44,6 +44,15 @@ export class DialogueScene extends Phaser.Scene {
   }
 
   create() {
+    // 대사창을 쓰지 않으면(ui.js dialogues: false) 아무것도 그리지 않고 바로 끝낸다 — 기다리던 씬은 그대로 다음으로
+    if (!UI.dialogues) {
+      this.finished = true;
+      this.time.delayedCall(0, () => {
+        this.game.events.emit('dialogue-done', this.key);
+        this.scene.stop();
+      });
+      return;
+    }
     // 가로 (18절): 화면 폭에 맞춰 낮고 넓은 대사창
     this.box = UI.landscape
       ? { x: UI.view.left + 40 + Math.max(0, (UI.view.w - 1240) / 2), w: Math.min(1160, UI.view.w - 80), h: 240, bottom: BOX.bottom }

@@ -43,8 +43,8 @@ export class EntryScene extends Phaser.Scene {
     this.dy = land ? 0 : UI.offY;
     this.titleY = land ? Math.max(48, this.insets.top + 40) : Math.max(92, this.insets.top + 56);
     this.lay = land
-      ? { gx: Math.round(W / 2), gy: 372, gs: 0.98, fs: 0.9, compass: [W - 90 - this.insets.right, 640], mapDX: Math.round(W / 2 - 360), mapDY: -110 }
-      : { gx: GLOBE.x, gy: GLOBE.y + 40 + this.dy, gs: 1.22, fs: 1, compass: [624, 1150 + this.dy], mapDX: 0, mapDY: this.dy };
+      ? { gx: Math.round(W / 2), gy: 372, gs: 0.98, fs: 0.8, fx: 188, fy: 172, items: [['backpack', Math.round(W / 2) - 520, 470, 0.85], ['bottle', Math.round(W / 2) - 370, 590, 0.8], ['compass', Math.round(W / 2) + 470, 470, 0.85], ['bottle', Math.round(W / 2) + 590, 610, 0.72]], mapDX: Math.round(W / 2 - 360), mapDY: -110 }
+      : { gx: GLOBE.x, gy: GLOBE.y + 40 + this.dy, gs: 1.22, fs: 1, fx: 206, fy: 236, items: [['backpack', 150, 1120 + this.dy, 0.9], ['bottle', 360, 1132 + this.dy, 0.85], ['compass', 570, 1118 + this.dy, 0.9]], mapDX: 0, mapDY: this.dy };
     this.drawMap();
     this.globe = this.add.container(this.lay.gx, this.lay.gy).setScale(this.lay.gs);
     this.drawStand();
@@ -53,6 +53,7 @@ export class EntryScene extends Phaser.Scene {
     this.globe.add([this.surface, this.shine]);
     this.drawRing();
     this.drawShine();
+    this.makeItems();
     this.makeFriends();
     this.makeChrome();
     this.drawSurface();
@@ -103,18 +104,10 @@ export class EntryScene extends Phaser.Scene {
     g.translateCanvas(-this.lay.mapDX, -this.lay.mapDY);
     // 접힌 자국
     g.fillStyle(C.fold, 0.5).fillRect(P.x + P.w / 3, P.y + 12, 3, P.h - 24).fillRect(P.x + (P.w * 2) / 3, P.y + 12, 3, P.h - 24).fillRect(P.x + 12, P.y + P.h / 2, P.w - 24, 3);
-    // 나침반 (오른쪽 아래)
-    const [cx, cy] = this.lay.compass;
-    g.fillStyle(C.paper, 1).fillCircle(cx, cy, 46);
-    g.lineStyle(3, C.ink, 0.6).strokeCircle(cx, cy, 46);
-    g.fillStyle(0xe8584a, 1).fillTriangle(cx, cy - 40, cx - 10, cy, cx + 10, cy);
-    g.fillStyle(C.ink, 0.8).fillTriangle(cx, cy + 40, cx - 10, cy, cx + 10, cy);
-    g.fillStyle(C.ink, 0.5).fillTriangle(cx - 40, cy, cx, cy - 8, cx, cy + 8).fillTriangle(cx + 40, cy, cx, cy - 8, cx, cy + 8);
     if (this.textures.exists('entry_map')) this.textures.remove('entry_map');
     g.generateTexture('entry_map', FW, FH);
     g.destroy();
     this.add.image(0, 0, 'entry_map').setOrigin(0);
-    this.add.text(this.lay.compass[0], this.lay.compass[1] - 62, 'N', { fontFamily: UI.fontTitle, fontSize: '22px', color: '#2b2d5a' }).setOrigin(0.5);
   }
 
   // ── 지구본 모형 ────────────────────────────────
@@ -172,15 +165,25 @@ export class EntryScene extends Phaser.Scene {
     }
   }
 
+  // ── 주변 빈 곳을 채우는 귀여운 여행 물품 (배낭·물병·나침반, 파일 없이 그림, 2026-11-10) ──
+  makeItems() {
+    this.items = this.lay.items.map(([kind, x, y, s], i) => {
+      const g = this.add.graphics({ x, y }).setScale(s);
+      ({ backpack: drawBackpack, bottle: drawBottle, compass: drawCompass })[kind](g);
+      if (!platform.reducedMotion) this.tweens.add({ targets: g, angle: i % 2 ? 4 : -4, y: y - 6, duration: 1300 + i * 220, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+      return g;
+    });
+  }
+
   // ── 블루나비(1탄)·포포(2탄) = 입구: 지구본 양옆에 서서 통통, 톡 하면 그 탄 게임으로 ──
   makeFriends() {
-    const { gx, gy, gs, fs } = this.lay;
+    const { gx, gy, fs, fx, fy } = this.lay;
     const last = state.series === 2 ? 2 : 1;
     this.pins = {};
-    const land = UI.landscape;
     [[1, 'home_bluenabi', -1, 0], [2, 'home_popo', 1, 12]].forEach(([n, key, side, dyy]) => {
-      const size = 240 * fs;
-      const x = gx + side * (land ? 330 : 232), y = gy + (land ? 190 : 300) + dyy * fs;
+      // 지구본 아래쪽 양옆에 걸치게 (2026-11-10 "조금 키워서 지구본에 걸치게")
+      const size = 300 * fs;
+      const x = gx + side * fx, y = gy + fy + dyy * fs;
       const c = this.add.container(x, y);
       c.add(this.add.ellipse(0, size * 0.42, size * 0.7, size * 0.16, 0x000000, 0.18));
       if (this.textures.exists(key)) c.add(this.add.image(0, 0, key).setDisplaySize(size, size));
@@ -262,3 +265,65 @@ function drawPaw(g, x, y, s) {
   g.fillCircle(x - 12 * s, y - 7 * s, 5.5 * s).fillCircle(x - 4 * s, y - 13 * s, 5.5 * s).fillCircle(x + 5 * s, y - 13 * s, 5.5 * s).fillCircle(x + 13 * s, y - 7 * s, 5.5 * s);
   g.fillStyle(C.pink, 1).fillEllipse(x, y + 6 * s, 12 * s, 9 * s);
 }
+
+// ── 귀여운 여행 물품 (가운데가 0,0, 크기 약 170). 남색 외곽선 + 볼터치 얼굴 — 캐릭터들과 같은 그림체 ──
+const INKC = 0x2b2d5a, CHEEK = 0xff9fb8;
+function face(g, x, y, s = 1) {
+  g.fillStyle(INKC, 1).fillCircle(x - 14 * s, y, 4.5 * s).fillCircle(x + 14 * s, y, 4.5 * s);
+  g.fillStyle(0xffffff, 1).fillCircle(x - 12.5 * s, y - 1.5 * s, 1.6 * s).fillCircle(x + 15.5 * s, y - 1.5 * s, 1.6 * s);
+  g.lineStyle(3 * s, INKC, 1);
+  g.beginPath(); g.arc(x, y + 5 * s, 6 * s, 0.2, Math.PI - 0.2); g.strokePath();
+  g.fillStyle(CHEEK, 0.85).fillEllipse(x - 24 * s, y + 9 * s, 12 * s, 7 * s).fillEllipse(x + 24 * s, y + 9 * s, 12 * s, 7 * s);
+}
+
+// 배낭: 주황 몸통 + 덮개 + 앞주머니 + 손잡이
+function drawBackpack(g) {
+  g.fillStyle(0x000000, 0.16).fillEllipse(6, 84, 140, 22);
+  g.lineStyle(9, INKC, 1); g.beginPath(); g.arc(0, -66, 26, Math.PI, 0); g.strokePath();         // 손잡이
+  g.lineStyle(5, 0xc56b2c, 1); g.beginPath(); g.arc(0, -66, 26, Math.PI, 0); g.strokePath();
+  g.fillStyle(INKC, 1).fillRoundedRect(-66, -70, 132, 156, 38);
+  g.fillStyle(0xf0a04b, 1).fillRoundedRect(-60, -64, 120, 144, 33);
+  g.fillStyle(0xffffff, 0.3).fillRoundedRect(-50, -56, 30, 70, 14);                                 // 반짝
+  g.fillStyle(INKC, 1).fillRoundedRect(-62, -66, 124, 52, { tl: 34, tr: 34, bl: 18, br: 18 });      // 덮개
+  g.fillStyle(0xd9792e, 1).fillRoundedRect(-56, -60, 112, 42, { tl: 30, tr: 30, bl: 14, br: 14 });
+  g.fillStyle(0xffd84a, 1).fillRoundedRect(-9, -24, 18, 20, 5);                                     // 버클
+  g.lineStyle(3, INKC, 1).strokeRoundedRect(-9, -24, 18, 20, 5);
+  g.fillStyle(INKC, 1).fillRoundedRect(-42, 26, 84, 50, 18);                                        // 앞주머니
+  g.fillStyle(0xffc27a, 1).fillRoundedRect(-37, 31, 74, 40, 14);
+  face(g, 0, 8, 0.85);
+}
+
+// 물병: 하늘색 병 + 물결 + 분홍 뚜껑 + 끈
+function drawBottle(g) {
+  g.fillStyle(0x000000, 0.16).fillEllipse(4, 86, 96, 18);
+  g.lineStyle(6, INKC, 1); g.beginPath(); g.arc(-34, -40, 30, Math.PI * 0.6, Math.PI * 1.45); g.strokePath(); // 끈
+  g.fillStyle(INKC, 1).fillRoundedRect(-44, -54, 88, 140, 34);
+  g.fillStyle(0xe8f6ff, 1).fillRoundedRect(-38, -48, 76, 128, 29);
+  g.fillStyle(0x7ec8ff, 1).fillRoundedRect(-38, 0, 76, 80, { tl: 6, tr: 6, bl: 29, br: 29 });       // 물
+  g.fillStyle(0xbfe6ff, 1).fillEllipse(-14, 2, 30, 8).fillEllipse(16, 2, 26, 8);
+  g.fillStyle(0xffffff, 0.6).fillRoundedRect(-28, -38, 12, 60, 6);
+  g.fillStyle(INKC, 1).fillRoundedRect(-30, -86, 60, 40, 14);                                       // 뚜껑
+  g.fillStyle(0xff9fb8, 1).fillRoundedRect(-25, -81, 50, 30, 11);
+  g.fillStyle(0xffffff, 0.45).fillRoundedRect(-19, -77, 16, 8, 4);
+  face(g, 0, 34, 0.7);
+}
+
+// 나침반: 금빛 테두리 + 크림 판 + 빨강·남색 바늘 + 위 고리
+function drawCompass(g) {
+  g.fillStyle(0x000000, 0.16).fillEllipse(6, 80, 130, 20);
+  g.lineStyle(7, INKC, 1).strokeCircle(0, -80, 13);
+  g.lineStyle(4, 0xe0a93a, 1).strokeCircle(0, -80, 13);
+  g.fillStyle(INKC, 1).fillCircle(0, 0, 74);
+  g.fillStyle(0xe0a93a, 1).fillCircle(0, 0, 68);
+  g.fillStyle(0xffd84a, 1).fillCircle(-6, -6, 60);
+  g.fillStyle(INKC, 1).fillCircle(0, 0, 54);
+  g.fillStyle(0xfffaf0, 1).fillCircle(0, 0, 49);
+  g.fillStyle(INKC, 0.35);
+  for (let k = 0; k < 8; k++) { const a = (k / 8) * Math.PI * 2; g.fillCircle(Math.cos(a) * 40, Math.sin(a) * 40, k % 2 ? 2.5 : 4); }
+  g.fillStyle(0xe8584a, 1).fillTriangle(0, -38, -11, 0, 11, 0);
+  g.fillStyle(INKC, 1).fillTriangle(0, 38, -11, 0, 11, 0);
+  g.fillStyle(0xffd84a, 1).fillCircle(0, 0, 7);
+  g.lineStyle(3, INKC, 1).strokeCircle(0, 0, 7);
+  g.fillStyle(CHEEK, 0.8).fillEllipse(-30, 18, 12, 7).fillEllipse(30, 18, 12, 7);
+}
+

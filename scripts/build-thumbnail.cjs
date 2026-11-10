@@ -1,5 +1,7 @@
 // 게임 썸네일·카카오톡 미리보기 그림 만들기 (2026-11-10): art/thumbnail/thumbnail.html 을 브라우저로 찍는다.
 //   docs/presentation/thumbnail.png (1920×1080) · thumbnail-1280.png (1280×720) — 게임 주소 + QR
+//   docs/presentation/thumbnail-tall.png·.jpg (1080×2340, 9:19.5 세로, 약 1MB) — 실제 게임 입구 화면 + 게임 이름·주소·만든 사람
+//     (바탕 art/thumbnail/entry_clean.png = 게임 입구 화면을 글자·버튼 숨기고 찍은 것)
 //   public/og-image-v2.png (1200×630) — 카카오톡·SNS 링크 미리보기 (QR 없음, 카드를 톡 하면 게임으로)
 // 실행: node scripts/build-thumbnail.cjs  (Playwright 크로미움 필요)
 const path = require('path');
@@ -20,12 +22,22 @@ const page = 'file://' + path.join(root, 'art/thumbnail/thumbnail.html');
   await shot('', 1280, 720, 1.5, 'docs/presentation/thumbnail.png');
   await shot('', 1280, 720, 1, 'docs/presentation/thumbnail-1280.png');
   await shot('#og', 1280, 672, 1, 'public/og-image-v2.png');
+  const shotTall = async () => {
+    const p = await b.newPage({ viewport: { width: 1080, height: 2340 } });
+    await p.goto('file://' + path.join(root, 'art/thumbnail/thumbnail-tall.html'));
+    await p.evaluate(() => document.fonts.ready);
+    await p.waitForTimeout(400);
+    await p.screenshot({ path: path.join(root, 'docs/presentation/thumbnail-tall.png') });
+    await p.close();
+  };
+  await shotTall();
   await b.close();
   // og 는 1200×630 으로 줄이고, 모두 용량 줄이기
   execFileSync('python3', ['-c', `
 from PIL import Image
 im=Image.open('public/og-image-v2.png').convert('RGB').resize((1200,630),Image.LANCZOS); im.save('public/og-image-v2.png',optimize=True)
-for f in ['docs/presentation/thumbnail.png','docs/presentation/thumbnail-1280.png']:
+t=Image.open('docs/presentation/thumbnail-tall.png').convert('RGB'); t.save('docs/presentation/thumbnail-tall.jpg',quality=92,optimize=True)
+for f in ['docs/presentation/thumbnail.png','docs/presentation/thumbnail-1280.png','docs/presentation/thumbnail-tall.png']:
   Image.open(f).convert('RGB').save(f,optimize=True)
 `], { cwd: root, stdio: 'inherit' });
   console.log('썸네일: docs/presentation/thumbnail*.png, 공유 그림: public/og-image-v2.png');

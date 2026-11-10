@@ -12,7 +12,7 @@ import { sfx, vibrate, unlockAudio } from '../ui/feedback.js';
 import { platform, requestFullscreen } from '../platform.js';
 
 // 게임 입구 = 처음 화면 (design-brief 16절, 2026-11-10 바뀜): 책상 위에 펼친 옛 세계지도 + 가운데 지구본 모형.
-// 지구본 옆 블루나비(1탄)·강아지 포포(2탄)나 아래 이름표 카드를 톡 → 그 탄 게임으로 바로 (이어하기면 이어서).
+// 지구본 옆 블루나비(1탄)·강아지 포포(2탄)를 톡 → 그 탄 게임으로 바로 (이어하기면 이어서).
 // 아래 [같이 하기] → 같이 하기 화면(19절). 대결장·도전장·새 버전·인앱 안내 띠도 여기에.
 // 그림은 파일 없이 모두 Graphics로 그린다(첫 화면이라 가볍게). 지도는 한 장으로 구워 둔다(entry_map).
 // 나라 경계선·국기는 그리지 않는다(6절 나라 표현 규칙). 대륙은 둥근 덩어리.
@@ -45,8 +45,8 @@ export class EntryScene extends Phaser.Scene {
     this.dy = land ? 0 : UI.offY;
     this.titleY = land ? Math.max(48, this.insets.top + 40) : Math.max(92, this.insets.top + 56);
     this.lay = land
-      ? { gx: Math.round(W * 0.34), gy: 380, gs: 0.82, cards: [[Math.round(W * 0.74), 220], [Math.round(W * 0.74), 410]], together: [Math.round(W * 0.74), 576], compass: [W - 90 - this.insets.right, 640], mapDX: Math.round(W / 2 - 360), mapDY: -110 }
-      : { gx: GLOBE.x, gy: GLOBE.y + this.dy, gs: 1, cards: [[190, 960 + this.dy], [530, 960 + this.dy]], together: [340, 1118 + this.dy], compass: [624, 1128 + this.dy], mapDX: 0, mapDY: this.dy };
+      ? { gx: Math.round(W * 0.4), gy: 360, gs: 0.82, together: [Math.round(W * 0.8), 400], compass: [W - 90 - this.insets.right, 640], mapDX: Math.round(W / 2 - 360), mapDY: -110 }
+      : { gx: GLOBE.x, gy: GLOBE.y + this.dy, gs: 1, together: [360, 1010 + this.dy], compass: [624, 1128 + this.dy], mapDX: 0, mapDY: this.dy };
     this.drawMap();
     this.globe = this.add.container(this.lay.gx, this.lay.gy).setScale(this.lay.gs);
     this.drawStand();
@@ -56,7 +56,7 @@ export class EntryScene extends Phaser.Scene {
     this.drawRing();
     this.drawShine();
     this.makeFriends();
-    this.makeCards();
+    this.makeTogether();
     this.makeChrome();
     this.drawSurface();
     // 대결장·도전장·새 버전·인앱 안내 띠 (예전 타이틀이 하던 일)
@@ -186,13 +186,15 @@ export class EntryScene extends Phaser.Scene {
     const { gx, gy, gs } = this.lay;
     const last = state.series === 2 ? 2 : 1;
     this.pins = {};
-    [[1, 'home_bluenabi', -218, 175], [2, 'home_popo', 218, 190]].forEach(([n, key, dx, dyy]) => {
-      const x = gx + dx * gs, y = gy + dyy * gs, size = 210 * gs;
+    [[1, 'home_bluenabi', -212, 200], [2, 'home_popo', 212, 212]].forEach(([n, key, dx, dyy]) => {
+      const x = gx + dx * gs, y = gy + dyy * gs, size = 250 * gs;
       const c = this.add.container(x, y);
       c.add(this.add.ellipse(0, size * 0.42, size * 0.7, size * 0.16, 0x000000, 0.18));
       if (this.textures.exists(key)) c.add(this.add.image(0, 0, key).setDisplaySize(size, size));
       else { const g = this.add.graphics(); if (n === 1) drawButterfly(g, 0, 0, 3); else drawPaw(g, 0, 0, 3); c.add(g); }
-      c.setSize(size, size).setInteractive({ useHandCursor: true }).on('pointerup', () => this.enter(n));
+      // 누구인지 작은 이름 (상자 없이)
+      c.add(this.add.text(0, size * 0.56, n === 1 ? '1탄 세계여행' : '2탄 사계절 서울', { fontFamily: UI.fontTitle, fontSize: `${Math.round(30 * gs)}px`, color: n === 1 ? '#2f7bff' : '#d0537a', stroke: '#fffaf0', strokeThickness: 8 }).setOrigin(0.5));
+      c.setSize(size, size * 1.3).setInteractive({ useHandCursor: true }).on('pointerup', () => this.enter(n));
       c.on('pointerdown', () => c.setScale(0.94));
       c.on('pointerout', () => c.setScale(1));
       // 마지막에 하던 탄이 더 크게 통통
@@ -201,29 +203,8 @@ export class EntryScene extends Phaser.Scene {
     });
   }
 
-  // ── 이름표 카드 (핀이 작아도 여기를 눌러 들어갈 수 있게) ──
-  makeCards() {
-    [1, 2].forEach((n) => {
-      const [x, y] = this.lay.cards[n - 1];
-      const c = this.add.container(x, y);
-      const g = this.add.graphics();
-      const col = n === 1 ? C.blue : C.pink;
-      g.fillStyle(0x000000, 0.2).fillRoundedRect(-156, -76, 316, 168, 28);
-      g.fillStyle(C.ink, 1).fillRoundedRect(-160, -84, 320, 168, 28);
-      g.fillStyle(C.cream, 1).fillRoundedRect(-154, -78, 308, 156, 24);
-      g.fillStyle(col, 1).fillRoundedRect(-154, -78, 308, 40, { tl: 24, tr: 24, bl: 0, br: 0 });
-      g.fillStyle(C.cream, 1).fillCircle(-98, 18, 44);
-      g.lineStyle(4, col, 1).strokeCircle(-98, 18, 44);
-      if (n === 1) drawButterfly(g, -98, 18, 1.5); else drawPaw(g, -98, 20, 1.5);
-      c.add(g);
-      c.add(this.add.text(0, -58, n === 1 ? '1탄' : '2탄', { fontFamily: UI.fontTitle, fontSize: '26px', color: '#ffffff' }).setOrigin(0.5));
-      const [a, b] = n === 1 ? ['블루나비의', '세계여행'] : ['포포의', '사계절 서울'];
-      c.add(this.add.text(50, 0, a, { fontFamily: UI.fontTitle, fontSize: '30px', color: '#2b2d5a' }).setOrigin(0.5));
-      c.add(this.add.text(50, 40, b, { fontFamily: UI.fontTitle, fontSize: '32px', color: n === 1 ? '#2f7bff' : '#d0537a' }).setOrigin(0.5));
-      c.setSize(320, 168).setInteractive({ useHandCursor: true }).on('pointerup', () => this.enter(n));
-      c.on('pointerdown', () => c.setScale(0.96));
-      c.on('pointerout', () => c.setScale(1));
-    });
+  // ── 같이 하기 버튼 (19절: 2~3명 · 미로 / 기념품 퐁퐁). 1탄·2탄 이름표 카드는 2026-11-10 사용자 요청으로 없앰 ──
+  makeTogether() {
     // 같이 하기 (19절: 2~3명 · 미로 / 기념품 퐁퐁)
     const [tx, ty] = this.lay.together;
     this.togetherBtn = new Button(this, tx, ty, {

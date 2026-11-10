@@ -25,8 +25,6 @@ function guessMood(text) {
   return 'joy';
 }
 
-// 해설 음성으로 읽는 대사 (프롤로그의 해설 줄만, design-brief 15절)
-const NARRATED = new Set(['prologue', 'prologue2']);
 
 export class DialogueScene extends Phaser.Scene {
   constructor() { super('Dialogue'); }
@@ -121,14 +119,13 @@ export class DialogueScene extends Phaser.Scene {
     this.typePage();
   }
 
-  // 해설 줄이면 소리 내어 읽고, 읽는 동안 대사창 오른쪽 위에 작은 스피커가 움직인다
+  // 모든 대사를 소리 내어 읽고(말하는 이마다 다른 목소리), 읽는 동안 대사창 오른쪽 위에 작은 스피커가 움직인다
   readAloud(line) {
     stopSpeaking();
     this.speaker?.destroy();
     this.speaker = null;
-    if (!NARRATED.has(this.key) || line.speaker !== 'narrator') return;
     const icon = this.add.graphics();
-    const on = speak(line.text, () => { if (this.speaker === icon) { icon.destroy(); this.speaker = null; } });
+    const on = speak(line.text, () => { if (this.speaker === icon) { icon.destroy(); this.speaker = null; } }, line.speaker);
     if (!on) { icon.destroy(); return; }
     const x = this.box.x + this.box.w - 60, y = this.boxY + 40;
     icon.fillStyle(0x2f7bff, 1).fillRect(x - 18, y - 7, 10, 14).fillTriangle(x - 10, y - 7, x + 2, y - 16, x + 2, y + 16).fillTriangle(x - 10, y + 7, x + 2, y - 16, x + 2, y + 16);

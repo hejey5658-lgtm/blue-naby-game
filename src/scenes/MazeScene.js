@@ -23,6 +23,7 @@ import { SERIES } from '../series.js';
 import { BOSSES } from '../data/bosses.js';
 import { DIALOGUE } from '../data/dialogue.js';
 import { placeFriends } from '../maze/hide.js';
+import { speak } from '../ui/narrator.js';
 import { afterChapter, startChapter, giftsOf, syncGifts } from '../flow.js';
 import { iconStar } from '../ui/icons.js';
 
@@ -968,6 +969,7 @@ export class MazeScene extends Phaser.Scene {
     vibrate('collect');
     const line = DIALOGUE[`seek_${f.key}`]?.[f.found - 1]?.text ?? (f.found < 3 ? '앗, 들켰다!' : '인정! 출구에서 기다릴게!');
     this.say(line, 2000, { tex: `face_${f.key}`, frame: 0 });
+    if (!this.duo) speak(line, null, f.key);
     this.addEnergy(UI.energy.find);
     this.tweens.killTweensOf([f.c, f.sp]);
     f.sp.setCrop().setFrame(3).setPosition(0, 0).setAngle(0);

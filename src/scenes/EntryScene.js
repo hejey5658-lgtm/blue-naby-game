@@ -2,18 +2,16 @@ import Phaser from 'phaser';
 import { UI } from '../data/ui.js';
 import { VERSION, IS_TEST_BUILD } from '../data/version.js';
 import { state } from '../state.js';
-import { journeyTarget } from '../flow.js';
-import { Button } from '../ui/Button.js';
-import { updateBand, inAppBand, challengeBand } from '../ui/bands.js';
+import { useSeries } from '../series.js';
 import { setTheme } from '../ui/theme.js';
 import { getSafeInsets } from '../ui/safeArea.js';
 import { iconGear } from '../ui/icons.js';
 import { sfx, vibrate, unlockAudio } from '../ui/feedback.js';
-import { platform, requestFullscreen } from '../platform.js';
+import { platform } from '../platform.js';
 
-// 게임 입구 = 처음 화면 (design-brief 16절, 2026-11-10 바뀜): 책상 위에 펼친 옛 세계지도 + 가운데 지구본 모형.
-// 지구본 옆 블루나비(1탄)·강아지 포포(2탄)를 톡 → 그 탄 게임으로 바로 (이어하기면 이어서).
-// 아래 [같이 하기] → 같이 하기 화면(19절). 대결장·도전장·새 버전·인앱 안내 띠도 여기에.
+// 게임 입구 (design-brief 16절, 2026-11-10 바뀜): 책상 위에 펼친 옛 세계지도 + 가운데 큰 지구본 모형.
+// 지구본 양옆의 블루나비(1탄)·강아지 포포(2탄)를 톡 → 지구본이 커지며 홈(19절, 'Title')으로 — 누른 탄 버튼이 반짝.
+// (핀·이름표 카드는 2026-11-10 사용자 요청으로 블루나비·포포 그림으로 바꾸고 없앰)
 // 그림은 파일 없이 모두 Graphics로 그린다(첫 화면이라 가볍게). 지도는 한 장으로 구워 둔다(entry_map).
 // 나라 경계선·국기는 그리지 않는다(6절 나라 표현 규칙). 대륙은 둥근 덩어리.
 const C = {
@@ -45,8 +43,8 @@ export class EntryScene extends Phaser.Scene {
     this.dy = land ? 0 : UI.offY;
     this.titleY = land ? Math.max(48, this.insets.top + 40) : Math.max(92, this.insets.top + 56);
     this.lay = land
-      ? { gx: Math.round(W * 0.4), gy: 360, gs: 0.82, together: [Math.round(W * 0.8), 400], compass: [W - 90 - this.insets.right, 640], mapDX: Math.round(W / 2 - 360), mapDY: -110 }
-      : { gx: GLOBE.x, gy: GLOBE.y + this.dy, gs: 1, together: [360, 1010 + this.dy], compass: [624, 1128 + this.dy], mapDX: 0, mapDY: this.dy };
+      ? { gx: Math.round(W / 2), gy: 372, gs: 0.98, fs: 0.9, compass: [W - 90 - this.insets.right, 640], mapDX: Math.round(W / 2 - 360), mapDY: -110 }
+      : { gx: GLOBE.x, gy: GLOBE.y + 40 + this.dy, gs: 1.22, fs: 1, compass: [624, 1150 + this.dy], mapDX: 0, mapDY: this.dy };
     this.drawMap();
     this.globe = this.add.container(this.lay.gx, this.lay.gy).setScale(this.lay.gs);
     this.drawStand();
@@ -56,15 +54,8 @@ export class EntryScene extends Phaser.Scene {
     this.drawRing();
     this.drawShine();
     this.makeFriends();
-    this.makeTogether();
     this.makeChrome();
     this.drawSurface();
-    // 대결장·도전장·새 버전·인앱 안내 띠 (예전 타이틀이 하던 일)
-    this.bandX = UI.fullWidth / 2;
-    const { top, bottom } = this.insets;
-    inAppBand(this, UI.fullHeight - 70 - bottom);
-    challengeBand(this, this.titleY + 90, () => this.enter(state.series === 2 ? 2 : 1));
-    updateBand(this, this.titleY + 90 + (state.newChallenge ? 96 : 0));
     this.cameras.main.fadeIn(260, 143, 100, 64);
   }
 
@@ -183,33 +174,25 @@ export class EntryScene extends Phaser.Scene {
 
   // ── 블루나비(1탄)·포포(2탄) = 입구: 지구본 양옆에 서서 통통, 톡 하면 그 탄 게임으로 ──
   makeFriends() {
-    const { gx, gy, gs } = this.lay;
+    const { gx, gy, gs, fs } = this.lay;
     const last = state.series === 2 ? 2 : 1;
     this.pins = {};
-    [[1, 'home_bluenabi', -212, 200], [2, 'home_popo', 212, 212]].forEach(([n, key, dx, dyy]) => {
-      const x = gx + dx * gs, y = gy + dyy * gs, size = 250 * gs;
+    const land = UI.landscape;
+    [[1, 'home_bluenabi', -1, 0], [2, 'home_popo', 1, 12]].forEach(([n, key, side, dyy]) => {
+      const size = 240 * fs;
+      const x = gx + side * (land ? 330 : 232), y = gy + (land ? 190 : 300) + dyy * fs;
       const c = this.add.container(x, y);
       c.add(this.add.ellipse(0, size * 0.42, size * 0.7, size * 0.16, 0x000000, 0.18));
       if (this.textures.exists(key)) c.add(this.add.image(0, 0, key).setDisplaySize(size, size));
       else { const g = this.add.graphics(); if (n === 1) drawButterfly(g, 0, 0, 3); else drawPaw(g, 0, 0, 3); c.add(g); }
       // 누구인지 작은 이름 (상자 없이)
-      c.add(this.add.text(0, size * 0.56, n === 1 ? '1탄 세계여행' : '2탄 사계절 서울', { fontFamily: UI.fontTitle, fontSize: `${Math.round(30 * gs)}px`, color: n === 1 ? '#2f7bff' : '#d0537a', stroke: '#fffaf0', strokeThickness: 8 }).setOrigin(0.5));
+      c.add(this.add.text(0, size * 0.56, n === 1 ? '1탄 세계여행' : '2탄 사계절 서울', { fontFamily: UI.fontTitle, fontSize: `${Math.round(30 * fs)}px`, color: n === 1 ? '#2f7bff' : '#d0537a', stroke: '#fffaf0', strokeThickness: 8 }).setOrigin(0.5));
       c.setSize(size, size * 1.3).setInteractive({ useHandCursor: true }).on('pointerup', () => this.enter(n));
       c.on('pointerdown', () => c.setScale(0.94));
       c.on('pointerout', () => c.setScale(1));
       // 마지막에 하던 탄이 더 크게 통통
       this.tweens.add({ targets: c, y: y - (n === last ? 22 : 10), duration: n === last ? 420 : 620, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
       this.pins[n] = c;
-    });
-  }
-
-  // ── 같이 하기 버튼 (19절: 2~3명 · 미로 / 기념품 퐁퐁). 1탄·2탄 이름표 카드는 2026-11-10 사용자 요청으로 없앰 ──
-  makeTogether() {
-    // 같이 하기 (19절: 2~3명 · 미로 / 기념품 퐁퐁)
-    const [tx, ty] = this.lay.together;
-    this.togetherBtn = new Button(this, tx, ty, {
-      width: 400, height: 104, fontSize: 36, label: '같이 하기', color: 0xffb347, shade: 0xd98a2b, textColor: '#2b2d5a',
-      onPress: () => { if (this.leaving) return; sfx('tap'); unlockAudio(); this.scene.start('Together'); },
     });
   }
 
@@ -246,23 +229,20 @@ export class EntryScene extends Phaser.Scene {
     this.drawSurface();
   }
 
-  // 들어가기: 누른 친구가 폴짝, 지구본이 커지며 그 탄 게임으로 바로 (이어하기면 이어서)
+  // 들어가기: 누른 친구가 폴짝, 지구본이 커지며 홈으로 (누른 탄 버튼이 반짝, 19절)
   enter(n) {
     if (this.leaving) return;
     this.leaving = true;
     unlockAudio();
-    requestFullscreen();
     sfx('open');
     vibrate('collect');
+    useSeries(n);
     const pin = this.pins[n];
     this.tweens.killTweensOf(pin);
     this.tweens.add({ targets: pin, y: pin.y - 40, scale: 1.15, duration: 220, yoyo: true });
     this.tweens.add({ targets: this.globe, scale: this.lay.gs * 1.6, duration: 800, ease: 'Cubic.easeIn' });
     this.time.delayedCall(480, () => this.cameras.main.fadeOut(320, 255, 250, 240));
-    this.cameras.main.once('camerafadeoutcomplete', () => {
-      const [key, data] = journeyTarget(n);
-      this.scene.start(key, data);
-    });
+    this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('Title', { highlight: n }));
   }
 }
 

@@ -8,7 +8,7 @@ import { state } from '../state.js';
 import { DATA, useSeries } from '../series.js';
 import { createMatch, sendInvite } from '../social/match.js';
 
-// [같이 하기] (design-brief 19절): 예전 타이틀의 [기념품 퐁퐁]·[둘이서 하기]를 한 화면으로. 지구본 입구의 [같이 하기]에서 온다.
+// [같이 하기] (design-brief 19절): 홈의 [기념품 퐁퐁]·[둘이서 하기]를 한 화면으로.
 // 위에서 아래로 고른다: 1 몇 명? (혼자·2명·3명) → 2 무엇을? (미로 여행·기념품 퐁퐁) → 3 어디서? (1탄 나라·2탄 계절)
 // → 4 어떻게? (한 폰으로·각자 폰) → [시작하기] / [대결장 보내기]. 혼자는 퐁퐁만, 3명은 각자 폰(대결장 링크)만.
 // 고른 것은 scene.restart 로 다시 그린다 (data = { players, game, pick: 'n:i', how }).
@@ -64,10 +64,10 @@ export class TogetherScene extends Phaser.Scene {
 
     title(L ? 140 : 100, '같이 하기');
     // ◀ 홈 (왼쪽 위)
-    const back = this.add.container(130, 64 + top);
+    const back = this.add.container(110, 64 + top);
     const bg = this.add.graphics();
-    bg.fillStyle(0xffffff, 0.95).fillRoundedRect(-106, -30, 212, 60, 30).lineStyle(3, INK, 0.2).strokeRoundedRect(-106, -30, 212, 60, 30);
-    back.add([bg, this.add.text(0, 0, '◀ 지구본', { fontFamily: UI.fontTitle, fontSize: '26px', color: '#2b2d5a' }).setOrigin(0.5)]);
+    bg.fillStyle(0xffffff, 0.95).fillRoundedRect(-86, -30, 172, 60, 30).lineStyle(3, INK, 0.2).strokeRoundedRect(-86, -30, 172, 60, 30);
+    back.add([bg, this.add.text(0, 0, '◀ 홈', { fontFamily: UI.fontTitle, fontSize: '26px', color: '#2b2d5a' }).setOrigin(0.5)]);
     back.setSize(180, 96).setInteractive({ useHandCursor: true }).on('pointerup', () => { sfx('tap'); this.scene.start('Title'); });
     this.backChip = back;
 
@@ -80,7 +80,7 @@ export class TogetherScene extends Phaser.Scene {
     const y2 = y1 + 150;
     q(y2, '2. 무엇을?');
     this.chips(y2 + 65, [['maze', '미로 여행'], ['pop', '기념품 퐁퐁']], this.game_, (v) => this.redraw({ game: v }), (v) => this.players === 1 && v === 'maze');
-    if (this.players === 1) this.note(y2 + 120, '혼자 하는 미로는 지구본에서 블루나비·포포를 톡!');
+    if (this.players === 1) this.note(y2 + 120, '혼자 하는 미로는 홈의 1탄·2탄 여행으로!');
 
     // 3. 어디서? (1탄 파랑 · 2탄 분홍, 열린 곳만)
     const y3 = this.players === 1 ? 500 : 470; // 혼자면 아래 안내 줄 자리만큼
@@ -122,12 +122,12 @@ export class TogetherScene extends Phaser.Scene {
     this.startBtn = new Button(this, UI.width / 2 + R.dx, yStart, { label, onPress: () => this.start() });
     const yb = L ? 650 : 1188;
     new Button(this, UI.width / 2 - 160, yb, { ...SUB, label: '대결함', onPress: () => this.scene.start('Match', { step: 'box' }) });
-    new Button(this, UI.width / 2 + 160, yb, { ...SUB, label: '처음 화면', onPress: () => this.scene.start('Title') });
+    new Button(this, UI.width / 2 + 160, yb, { ...SUB, label: '홈으로', onPress: () => this.scene.start('Title') });
     this.toastText = this.add.text(UI.width / 2 + R.dx, yStart - 92, '', { fontFamily: UI.font, fontSize: '24px', color: '#c0563a' }).setOrigin(0.5);
     if (L) {
       const v = this.landscapeView();
       const ins = getSafeInsets(this.game);
-      back.setPosition(v.left + 126 + ins.left / v.zoom, v.top + 56 + ins.top / v.zoom);
+      back.setPosition(v.left + 106 + ins.left / v.zoom, v.top + 56 + ins.top / v.zoom);
     }
   }
 

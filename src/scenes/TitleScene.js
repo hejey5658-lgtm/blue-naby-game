@@ -34,7 +34,8 @@ export function progressLabel(n) {
   if (!p || !p.step || p.step === 'new') return '처음부터';
   if (p.cleared && p.step === 'map') return n === 1 ? '여행 끝! 여권 보기' : '여행 끝! 앨범 보기';
   const ch = DATA[n].CHAPTERS;
-  let i = ch.findIndex((c) => c.id === p.playing);
+  // 미로 중이면 그 단계, 여권·앨범(map)에 있으면 다음에 할 단계(열린 가장 먼 단계)
+  let i = p.step === 'map' ? -1 : ch.findIndex((c) => c.id === p.playing);
   if (i < 0) i = Math.min(ch.length - 1, Math.max(0, (p.chapter ?? 1) - 1));
   return `이어하기 · ${n === 1 ? `${i + 1}단계 ` : ''}${ch[i].name}`;
 }

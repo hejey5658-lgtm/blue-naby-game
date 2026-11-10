@@ -34,9 +34,9 @@ export default defineConfig(({ mode }) => mode === 'single' ? single : {
       includeAssets: ['icons/favicon.svg', 'icons/favicon-32.png', 'icons/apple-touch-icon-180.png'],
       manifest: {
         id: '/',
-        name: '블루나비의 세계여행',
+        name: '블루나비와 포포의 여행',
         short_name: '블루나비',
-        description: '파란 애벌레 블루나비가 한국에서 캐나다까지 여행하며 나비가 되는 귀여운 모험',
+        description: '1탄 세계여행 · 2탄 사계절 서울 — 블루나비와 포포가 떠나는 귀여운 미로 모험',
         lang: 'ko',
         start_url: '/',
         scope: '/',

@@ -77,7 +77,7 @@ export class SettingsScene extends Phaser.Scene {
     y += 98;
     if (hasProgress() && !entry) this.makeLinkRow(root, y, '처음부터 다시 하기', () => this.confirmReset(), '#a4523a');
 
-    root.add(this.add.text(land ? this.P.x + this.P.w / 2 : UI.width / 2, B.y + B.h - 40, `블루나비의 세계여행 · ${VERSION}`, {
+    root.add(this.add.text(land ? this.P.x + this.P.w / 2 : UI.width / 2, B.y + B.h - 40, `블루나비와 포포의 여행 · ${VERSION}`, {
       fontFamily: UI.font, fontSize: '22px', color: '#8a8cae',
     }).setOrigin(0.5));
 

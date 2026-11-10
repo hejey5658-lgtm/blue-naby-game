@@ -1,7 +1,7 @@
 // 한 파일 버전 만들기 (web-release 12절). 사용법: npm run build:single
 //   release/blue_butterfly_game.html  — 게임 전체(코드·그림·글꼴)가 든 HTML 한 장. 인터넷 없이 파일로 열어도 된다.
 //   release/eunyoug_3st_index.html    — 게임장 첫 화면. 게임 HTML을 base64 글자로 품고 있다가
-//                                       [블루나비의 세계여행 이동하기]를 누르면 iframe(srcdoc)으로 띄운다(옆 파일을 찾지 않아 404가 안 남).
+//                                       [블루나비와 포포의 여행 이동하기]를 누르면 iframe(srcdoc)으로 띄운다(옆 파일을 찾지 않아 404가 안 남).
 // 먼저 `vite build --mode single`이 dist-single/ 에 코드 한 덩어리를 만들어 둔다(package.json 의 build:single).
 import fs from 'node:fs';
 import path from 'node:path';
@@ -88,9 +88,9 @@ const hub = `<!doctype html>
   <h1>게임장</h1>
   <div class="card">
     <img src="${icon}" alt="">
-    <strong style="font-size:26px">블루나비의 세계여행</strong>
+    <strong style="font-size:26px">블루나비와 포포의 여행</strong>
     <p>파란 애벌레 블루나비가 한국에서 캐나다까지 여행하며 나비가 되는 모험</p>
-    <button id="go" type="button">블루나비의 세계여행 이동하기</button>
+    <button id="go" type="button">블루나비와 포포의 여행 이동하기</button>
     <p id="wait">여는 중이에요…</p>
   </div>
   <p class="ver">v${VERSION} · 인터넷 없이도 돼요</p>
@@ -113,7 +113,7 @@ const hub = `<!doctype html>
     setTimeout(function () {
       frame = document.createElement('iframe');
       frame.id = 'frame';
-      frame.title = '블루나비의 세계여행';
+      frame.title = '블루나비와 포포의 여행';
       frame.setAttribute('allow', 'fullscreen; clipboard-read; clipboard-write; autoplay');
       frame.srcdoc = decode();
       document.body.appendChild(frame);

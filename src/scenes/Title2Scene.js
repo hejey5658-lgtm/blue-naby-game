@@ -40,7 +40,7 @@ export class Title2Scene extends Phaser.Scene {
 
     // 로고
     this.add.text(UI.width / 2, 170 + top, '포포의 사계절 서울', { fontFamily: UI.fontTitle, fontSize: '70px', color: '#ffffff', stroke: '#2b2d5a', strokeThickness: 12 }).setOrigin(0.5);
-    this.add.text(UI.width / 2, 248 + top, '블루나비의 세계여행 2탄', { fontFamily: UI.fontTitle, fontSize: '30px', color: '#2b2d5a' }).setOrigin(0.5);
+    this.add.text(UI.width / 2, 248 + top, '블루나비와 포포의 여행 2탄', { fontFamily: UI.fontTitle, fontSize: '30px', color: '#2b2d5a' }).setOrigin(0.5);
 
     this.startBtn = new Button(this, UI.width / 2, 960, { label: hasProgress() ? '여행 이어하기' : '여행 시작하기', onPress: () => this.onStart() });
     this.popBtn = new Button(this, UI.width / 2 - 165, 1110, {

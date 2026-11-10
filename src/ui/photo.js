@@ -24,7 +24,7 @@ export function shareCanvas(c, filename, text = '') {
           const file = new File([blob], filename, { type: 'image/png' });
           try {
             if (platform.can.share && navigator.canShare?.({ files: [file] })) {
-              await navigator.share({ files: [file], title: '블루나비의 세계여행', text });
+              await navigator.share({ files: [file], title: '블루나비와 포포의 여행', text });
               resolve('shared');
               return;
             }

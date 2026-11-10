@@ -216,7 +216,7 @@ export async function makeRecordCard(game) {
 export async function sendRecordCard(game) {
   await askNickname();
   const card = await makeRecordCard(game);
-  return shareCanvas(card, 'bluenabi-record.png', `${nickname()}의 블루나비 세계여행 기록! ${PUBLIC_URL}`);
+  return shareCanvas(card, 'bluenabi-record.png', `${nickname()}의 블루나비와 포포의 여행 기록! ${PUBLIC_URL}`);
 }
 
 // ── 도전장함: 받은 도전장 최근 5개, 하나를 골라 '지금 도전 중'으로 ──

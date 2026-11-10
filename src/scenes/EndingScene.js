@@ -14,7 +14,7 @@ import { sendRecordCard } from '../social/social.js';
 
 // 엔딩 (scenario 9절, concept-v2 3절): 캐나다 튤립 꽃밭 한가운데 가장 큰 파란 꽃(꽃님).
 // 블루나비가 날아와 꽃 위에 앉고, 대사가 이어질 때마다 친구들이 하나씩 꽃 주위에 나타난다.
-// "창문이 넓어진다"의 끝 — 화면 틀이 없다. 마지막 화면: "블루나비의 세계여행 — 끝", 장별 기록, 사진 남기기.
+// "창문이 넓어진다"의 끝 — 화면 틀이 없다. 마지막 화면: "블루나비와 포포의 여행 — 1탄 세계여행 끝", 장별 기록, 사진 남기기.
 const FRIEND_SPOTS = {
   dustmong: [92, 610], silsili: [628, 610], jjakjjak: [560, 720], bbangbbang: [160, 720],
   sappuni: [628, 830], dotori: [92, 830], damdam: [200, 900], buzzboss: [520, 900],
@@ -142,8 +142,8 @@ export class EndingScene extends Phaser.Scene {
     vibrate('special');
     this.blue.anims.stop();
     this.blue.setFrame(6);
-    const t = this.add.text(UI.width / 2, 120, '블루나비의 세계여행', { fontFamily: UI.fontTitle, fontSize: '56px', color: '#ffffff', stroke: '#2b2d5a', strokeThickness: 10 }).setOrigin(0.5).setDepth(10).setAlpha(0);
-    const t2 = this.add.text(UI.width / 2, 192, '— 끝 —', { fontFamily: UI.fontTitle, fontSize: '40px', color: '#ffe9a8', stroke: '#2b2d5a', strokeThickness: 8 }).setOrigin(0.5).setDepth(10).setAlpha(0);
+    const t = this.add.text(UI.width / 2, 120, '블루나비와 포포의 여행', { fontFamily: UI.fontTitle, fontSize: '56px', color: '#ffffff', stroke: '#2b2d5a', strokeThickness: 10 }).setOrigin(0.5).setDepth(10).setAlpha(0);
+    const t2 = this.add.text(UI.width / 2, 192, '— 1탄 세계여행 끝 —', { fontFamily: UI.fontTitle, fontSize: '40px', color: '#ffe9a8', stroke: '#2b2d5a', strokeThickness: 8 }).setOrigin(0.5).setDepth(10).setAlpha(0);
     const land = UI.landscape;
     // 가로: 가운데 꽃밭은 그대로, 제목은 왼쪽 칸, 기록 카드·버튼은 오른쪽 칸
     if (land) { t.setPosition(-230, 560).setFontSize(44); t2.setPosition(-230, 640); }

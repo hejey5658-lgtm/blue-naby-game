@@ -204,7 +204,7 @@ export class TitleScene extends Phaser.Scene {
     g.fillStyle(C.ink, 0.18).fillRoundedRect(-180, -88, 372, 192, 34);
     g.fillStyle(0xffffff, 1).fillRoundedRect(-186, -96, 372, 192, 34);
     g.lineStyle(4, C.ink, 1).strokeRoundedRect(-186, -96, 372, 192, 34);
-    const small = this.add.text(0, -40, '블루나비의', { fontFamily: UI.fontTitle, fontSize: '46px', color: '#2f7bff' }).setOrigin(0.5);
+    const small = this.add.text(0, -44, '블루나비와 포포의 여행 1탄', { fontFamily: UI.fontTitle, fontSize: '28px', color: '#2f7bff' }).setOrigin(0.5);
     const big = this.add.text(0, 30, '세계여행', { fontFamily: UI.fontTitle, fontSize: `${UI.fontSize.title + 12}px`, color: '#2b2d5a' }).setOrigin(0.5);
     c.add([g, small, big]);
     this.logo = c;

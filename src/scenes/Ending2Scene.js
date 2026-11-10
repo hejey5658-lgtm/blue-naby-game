@@ -12,7 +12,7 @@ import { takePhoto } from '../ui/photo.js';
 import { sendRecordCard } from '../social/social.js';
 import { waitForAssets } from './PreloadScene.js';
 
-// 2탄 엔딩: 다시 돌아온 봄, 포포네 마당. 친구 5명 + 블루나비가 모이고 "포포의 사계절 서울 — 끝". 별 없음, 계절별 미로 시간만.
+// 2탄 엔딩: 다시 돌아온 봄, 포포네 마당. 친구 5명 + 블루나비가 모이고 "블루나비와 포포의 여행 — 2탄 사계절 서울 끝". 별 없음, 계절별 미로 시간만.
 const fmt = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 const FRIENDS = ['kkakkak', 'gaegul', 'bamtol', 'mungchi', 'gomsil'];
 
@@ -62,8 +62,8 @@ export class Ending2Scene extends Phaser.Scene {
   finale() {
     sfx('win');
     vibrate('special');
-    const t = this.add.text(UI.width / 2, 130, '포포의 사계절 서울', { fontFamily: UI.fontTitle, fontSize: '60px', color: '#ffffff', stroke: '#2b2d5a', strokeThickness: 10 }).setOrigin(0.5).setAlpha(0);
-    const t2 = this.add.text(UI.width / 2, 206, '— 끝 —', { fontFamily: UI.fontTitle, fontSize: '40px', color: '#2b2d5a' }).setOrigin(0.5).setAlpha(0);
+    const t = this.add.text(UI.width / 2, 130, '블루나비와 포포의 여행', { fontFamily: UI.fontTitle, fontSize: '60px', color: '#ffffff', stroke: '#2b2d5a', strokeThickness: 10 }).setOrigin(0.5).setAlpha(0);
+    const t2 = this.add.text(UI.width / 2, 206, '— 2탄 사계절 서울 끝 —', { fontFamily: UI.fontTitle, fontSize: '40px', color: '#2b2d5a', stroke: '#ffffff', strokeThickness: 8 }).setOrigin(0.5).setAlpha(0);
     const land = UI.landscape;
     // 가로: 가운데 마당은 그대로, 제목은 왼쪽 칸, 기록 카드·버튼은 오른쪽 칸
     if (land) { t.setPosition(-230, 520).setFontSize(46); t2.setPosition(-230, 600); }

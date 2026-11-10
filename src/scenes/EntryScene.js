@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { UI } from '../data/ui.js';
 import { VERSION, IS_TEST_BUILD } from '../data/version.js';
 import { state } from '../state.js';
-import { useSeries, META } from '../series.js';
+import { useSeries } from '../series.js';
 import { setTheme } from '../ui/theme.js';
 import { getSafeInsets } from '../ui/safeArea.js';
 import { iconGear } from '../ui/icons.js';
@@ -259,7 +259,7 @@ export class EntryScene extends Phaser.Scene {
     this.drawSurface();
   }
 
-  // 들어가기: 지구본이 그 핀 쪽으로 빙글 돌며 커진 뒤 그 탄의 타이틀로
+  // 들어가기: 지구본이 그 핀 쪽으로 빙글 돌며 커진 뒤 홈으로 (누른 탄 버튼이 반짝, 19절)
   enter(n) {
     if (this.leaving) return;
     this.leaving = true;
@@ -275,7 +275,7 @@ export class EntryScene extends Phaser.Scene {
       duration: 900, ease: 'Cubic.easeIn',
     });
     this.time.delayedCall(560, () => this.cameras.main.fadeOut(340, 255, 250, 240));
-    this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start(META[n].titleScene));
+    this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('Title', { highlight: n })); // 홈 한 화면 (19절)
   }
 }
 

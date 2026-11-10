@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { waitForAssets } from './PreloadScene.js';
 import { UI, landView } from '../data/ui.js';
 import { CHAPTERS, stageLabel } from '../data/chapters.js';
 import { BOSSES } from '../data/bosses.js';
@@ -21,12 +22,15 @@ export class AlbumScene extends Phaser.Scene {
   constructor() { super('Album'); }
 
   init(data) {
+    this.initData = data;
     this.justCleared = data.justCleared ?? null;
     const target = this.justCleared ?? nextChapterId() ?? CHAPTERS[CHAPTERS.length - 1].id;
     this.page = data.page ?? Math.max(0, CHAPTERS.findIndex((c) => c.id === target));
   }
 
   create() {
+    // 홈에서 탄을 바꿔 들어오면 이 탄 그림이 아직 없을 수 있다 (19절)
+    if (waitForAssets(this, ['boss_kkakkak', 'face_kkakkak', 'blue_popoSpring_battle'], this.initData)) return;
     setTheme('#fdf7ea', '#fdf7ea');
     this.top = getSafeInsets(this.game).top;
     this.add.rectangle(-2000, -2000, 4720, 5280, 0xf3e3c3).setOrigin(0);

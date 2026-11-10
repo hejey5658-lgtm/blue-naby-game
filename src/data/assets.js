@@ -35,6 +35,9 @@ export const ASSETS = [
   ...boss('dotori', 'ch6'),
   ...boss('damdam', 'ch7'),
   ...boss('buzzboss', 'ch7'),
+  // 홈 화면(19절)의 블루나비·포포 — 첫 화면이라 작은 한 장씩(약 15KB)만 처음에 받는다
+  { key: 'home_bluenabi', file: 'assets/char/home_bluenabi.webp', width: 280, height: 280, release: true, group: 'boot' },
+  { key: 'home_popo', file: 'assets/char/home_popo.webp', width: 280, height: 280, release: true, group: 'boot' },
   ...blue('caterpillar', 'boot'),
   ...blue('moth', 'ch1'),       // 한국 단계 끝에 나방으로 진화
   ...blue('butterfly', 'ch5'),  // 일본 단계 끝에 나비로 진화

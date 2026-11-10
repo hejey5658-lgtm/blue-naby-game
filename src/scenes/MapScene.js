@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { waitForAssets } from './PreloadScene.js';
 import { UI, landView } from '../data/ui.js';
 import { PASSPORT, stageNo, stageLabel } from '../data/chapters.js';
 import { BOSSES } from '../data/bosses.js';
@@ -31,6 +32,8 @@ export class MapScene extends Phaser.Scene {
   }
 
   create() {
+    // 홈에서 탄을 바꿔 들어오면 이 탄 그림이 아직 없을 수 있다 (19절)
+    if (waitForAssets(this, ['boss_dustmong', 'face_dustmong'], this.initData)) return;
     setTheme('#1f3a7a', '#1f3a7a');
     this.insets = getSafeInsets(this.game);
     const top = this.insets.top;

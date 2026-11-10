@@ -10,10 +10,10 @@ import { state } from '../state.js';
 import { POP } from '../data/popgame.js';
 import { SERIES, useSeries } from '../series.js';
 import { nickname } from '../social/social.js';
-import { matchById, createMatch, sendInvite, sendResult, stageName, amHost, opponentName, scoreText, verdict, GAME_NAME } from '../social/match.js';
+import { matchById, createMatch, sendInvite, sendResult, stageName, amHost, opponentName, scoreText, verdict, ranking, allDone, GAME_NAME } from '../social/match.js';
 
-// 각자 폰 대결 화면 (design-brief 12절). scene.start('Match', { id }) = 대결 카드, { step: 'box' } = 대결함.
-// 대결 카드: 나와 친구 기록을 나란히. 아직 안 했으면 [시작하기], 했으면 [결과 보내기].
+// 각자 폰 대결 화면 (design-brief 12절, 3명 19절). scene.start('Match', { id }) = 대결 카드, { step: 'box' } = 대결함.
+// 대결 카드: 나와 친구(1~2명) 기록을 나란히, 모두 끝나면 등수. 아직 안 했으면 [시작하기], 했으면 [결과 보내기].
 // 친구 기록이 먼저 와 있어도 내가 끝내기 전에는 가려 둔다 (공평하게).
 const CREAM = 0xf3e3c3;
 const SUB = { width: 300, height: 88, fontSize: 28, color: 0xfffaf0, shade: 0xd8c8a8, textColor: '#2b2d5a' };
@@ -49,39 +49,47 @@ export class MatchScene extends Phaser.Scene {
     const { m } = this;
     const top = this.top;
     const v = verdict(m);
-    const opp = opponentName(m);
-    const title = v === null ? `${GAME_NAME[m.game]} 대결` : v === 1 ? '내가 이겼어!' : v === -1 ? `${opp} 승리!` : '비겼어! 둘 다 멋져';
+    const done = allDone(m);
+    const rank = ranking(m);
+    const first = rank.filter((r) => r.rank === 1);
+    const title = !done ? `${GAME_NAME[m.game]} 대결` : v === 1 ? '내가 1등!' : v === 0 ? '공동 1등! 다 멋져' : `${first[0].nick} 1등!`;
     this.text(UI.width / 2, 120 + top, title, title.length > 9 ? 54 : 64);
-    this.text(UI.width / 2, 196 + top, `${stageName(m)} · ${GAME_NAME[m.game]} · 각자 폰`, 28, '#2f7bff');
+    this.text(UI.width / 2, 196 + top, `${stageName(m)} · ${GAME_NAME[m.game]} · ${m.players}명 각자 폰`, 28, '#2f7bff');
     if (!amHost(m) && !m.mine) this.text(UI.width / 2, 246 + top, `${m.host}의 대결장이 도착했어요!`, 26, '#5a5c88', UI.font);
 
-    // 두 사람 카드
-    const rows = [
-      { name: `${nickname()} (나)`, color: 0x7ec8ff, rec: m.mine, win: v === 1, hidden: false, wait: '아직 안 했어요' },
-      { name: opp, color: 0xff9fb8, rec: m.theirs, win: v === -1, hidden: !!m.theirs && !m.mine, wait: '결과를 기다리는 중' },
-    ];
+    // 사람 카드 (나 + 친구, 아직 안 온 칸은 "기다리는 중"). 모두 끝나면 등수 순서로
+    const colors = [0x7ec8ff, 0xff9fb8, 0xffd27a];
+    const me = { name: `${nickname()} (나)`, rec: m.mine, me: true };
+    const friends = (m.others ?? []).map((o) => ({ name: o.nick, rec: o, dev: o.dev }));
+    while (friends.length < m.players - 1) friends.push({ name: amHost(m) || friends.length ? '친구' : m.host, rec: null });
+    let rows = [me, ...friends].map((r, i) => ({ ...r, color: colors[i] }));
+    if (done) rows = rank.map((x) => ({ ...rows.find((r) => (x.me ? r.me : r.dev === x.dev && !r.me)), rank: x.rank }));
+    const gap = m.players === 3 ? 158 : 180;
     rows.forEach((r, i) => {
-      const y = 380 + top + i * 180;
+      const y = 370 + top + i * gap;
+      const hidden = !!r.rec && !r.me && !m.mine;
       const g = this.add.graphics();
-      g.fillStyle(0x2b2d5a, 0.1).fillRoundedRect(86, y - 66, 548, 146, 34);
-      g.fillStyle(r.color, 1).fillRoundedRect(80, y - 74, 548, 146, 34);
-      if (r.win) crown(g, 150, y - 4, 0.8);
-      this.add.text(r.win ? 210 : 120, y - 22, r.name, { fontFamily: UI.fontTitle, fontSize: '34px', color: '#2b2d5a' }).setOrigin(0, 0.5);
-      let main = r.wait, sub = '';
-      if (r.rec && r.hidden) { main = '기록 도착!'; sub = '내가 끝내면 보여요'; }
+      g.fillStyle(0x2b2d5a, 0.1).fillRoundedRect(86, y - 62, 548, 138, 34);
+      g.fillStyle(r.color, 1).fillRoundedRect(80, y - 70, 548, 138, 34);
+      let nx = 120;
+      if (r.rank === 1) { crown(g, 150, y - 4, 0.8); nx = 210; }
+      else if (r.rank) { this.add.text(150, y, `${r.rank}등`, { fontFamily: UI.fontTitle, fontSize: '34px', color: '#2b2d5a' }).setOrigin(0.5); nx = 210; }
+      this.add.text(nx, y - 22, r.name, { fontFamily: UI.fontTitle, fontSize: '34px', color: '#2b2d5a' }).setOrigin(0, 0.5);
+      let main = r.me ? '아직 안 했어요' : '결과를 기다리는 중', sub = '';
+      if (r.rec && hidden) { main = '기록 도착!'; sub = '내가 끝내면 보여요'; }
       else if (r.rec) { main = scoreText(m, r.rec); sub = m.game === 'maze' ? `퐁 ${r.rec.rolls}번` : `퐁 ${r.rec.rolls}개`; }
-      this.add.text(r.win ? 210 : 120, y + 24, sub, { fontFamily: UI.font, fontSize: '22px', color: '#2b2d5a' }).setOrigin(0, 0.5);
-      this.add.text(604, y, main, { fontFamily: UI.fontTitle, fontSize: r.rec && !r.hidden ? '50px' : '28px', color: '#2b2d5a' }).setOrigin(1, 0.5);
+      this.add.text(nx, y + 24, sub, { fontFamily: UI.font, fontSize: '22px', color: '#2b2d5a' }).setOrigin(0, 0.5);
+      this.add.text(604, y, main, { fontFamily: UI.fontTitle, fontSize: r.rec && !hidden ? '50px' : '28px', color: '#2b2d5a' }).setOrigin(1, 0.5);
     });
 
     // 다음에 할 일 안내
     let hint;
     if (!m.mine) hint = amHost(m) ? '대결장을 보냈어요! 친구도 각자 폰에서 같은 판을 해요.\n나도 지금 해 볼까요?' : '내 폰에서 같은 판을 해요.\n끝나면 결과를 친구에게 보내 주세요.';
-    else if (!m.theirs) hint = '결과 링크를 친구에게 보내 주세요.\n친구 결과 링크가 오면 열어 보세요.';
+    else if (!done) hint = m.players === 3 ? '결과 링크를 단톡방에 올려 주세요.\n두 친구의 결과 링크가 오면 열어 보세요.' : '결과 링크를 친구에게 보내 주세요.\n친구 결과 링크가 오면 열어 보세요.';
     else hint = m.game === 'maze' ? '더 빨리 나온 사람이 이겨요 (같으면 퐁이 적은 쪽)' : `${POP.remoteSec / 60}분 동안 점수가 높은 사람이 이겨요`;
-    this.text(UI.width / 2, 770 + top, hint, 25, '#5a5c88', UI.font, { lineSpacing: 8 });
+    this.text(UI.width / 2, (m.players === 3 ? 812 : 770) + top, hint, 25, '#5a5c88', UI.font, { lineSpacing: 8 });
 
-    if (v !== null) { sfx(v === 1 ? 'win' : 'respawn'); vibrate('special'); }
+    if (v !== null) { sfx(v === -1 ? 'respawn' : 'win'); vibrate('special'); }
 
     // 버튼: 위 = 지금 할 일, 가운데 = 대결장 다시/새 대결장, 아래 = 대결함 · 처음 화면 (가로: 오른쪽 칸)
     const m0 = mark(this);
@@ -92,11 +100,11 @@ export class MatchScene extends Phaser.Scene {
       this.mainBtn = new Button(this, UI.width / 2, 930, { label: '결과 보내기', onPress: () => sendResult(m) });
       new Button(this, UI.width / 2, 1062, {
         ...SUB, width: 400, label: '새 대결장 보내기',
-        onPress: async () => { const n = createMatch(m.game, m.stage); await sendInvite(n); this.scene.start('Match', { id: n.id }); },
+        onPress: async () => { const n = createMatch(m.game, m.stage, m.players); await sendInvite(n); this.scene.start('Match', { id: n.id }); },
       });
     }
     new Button(this, UI.width / 2 - 160, 1190, { ...SUB, label: '대결함', onPress: () => this.scene.start('Match', { step: 'box' }) });
-    new Button(this, UI.width / 2 + 160, 1190, { ...SUB, label: '처음 화면으로', onPress: () => this.scene.start(SERIES.meta.titleScene) });
+    new Button(this, UI.width / 2 + 160, 1190, { ...SUB, label: '처음 화면으로', onPress: () => this.scene.start('Title') });
     if (UI.landscape) shiftSince(this, m0, 700, -520);
     this.input.keyboard?.on('keydown-ENTER', () => this.mainBtn.trigger());
   }
@@ -125,12 +133,13 @@ export class MatchScene extends Phaser.Scene {
     if (!list.length) {
       const g = this.add.graphics();
       drawPanel(g, 80, 360 + top, 560, 300, 'woodWindow');
-      this.text(UI.width / 2, 510 + top, '아직 대결이 없어요.\n둘이서 하기 → 각자 폰으로,\n또는 기념품 퐁퐁 → 각자 폰 대결에서\n대결장을 보내 보세요!', 26, '#2b2d5a', UI.font, { lineSpacing: 8 });
+      this.text(UI.width / 2, 510 + top, '아직 대결이 없어요.\n홈 → 같이 하기 → 각자 폰에서\n대결장을 보내 보세요!', 26, '#2b2d5a', UI.font, { lineSpacing: 8 });
     }
     list.forEach((m, i) => {
       const y = 320 + top + i * 140;
       const v = verdict(m);
-      const status = v === null ? (m.mine ? '친구 결과 기다리는 중' : '아직 안 했어요') : v === 1 ? '내가 이김' : v === -1 ? '친구가 이김' : '비김';
+      const myRank = ranking(m).find((r) => r.me)?.rank;
+      const status = v === null ? (m.mine ? '친구 결과 기다리는 중' : '아직 안 했어요') : m.players === 3 ? (v === 0 ? '공동 1등' : `내가 ${myRank}등`) : v === 1 ? '내가 이김' : v === -1 ? '친구가 이김' : '비김';
       const c = this.add.container(UI.width / 2, y);
       const g = this.add.graphics();
       g.fillStyle(0x2b2d5a, 0.1).fillRoundedRect(-284, -52, 576, 116, 28);
@@ -146,7 +155,7 @@ export class MatchScene extends Phaser.Scene {
       c.setSize(576, 116).setInteractive({ useHandCursor: true }).on('pointerup', () => { sfx('tap'); this.scene.start('Match', { id: m.id }); });
     });
     const L = UI.landscape;
-    new Button(this, L ? 1010 : UI.width / 2 - 160, L ? 520 : 1190, { ...SUB, label: '둘이서 하기', onPress: () => this.scene.start('Duo', { step: 'setup', mode: 'remote' }) });
+    new Button(this, L ? 1010 : UI.width / 2 - 160, L ? 520 : 1190, { ...SUB, label: '같이 하기', onPress: () => this.scene.start('Together') });
     new Button(this, L ? 1010 : UI.width / 2 + 160, L ? 660 : 1190, { ...SUB, label: '처음 화면으로', onPress: () => this.scene.start('Title') });
   }
 }

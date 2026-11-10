@@ -27,7 +27,7 @@ export const META = {
     titleScene: 'Title', mapScene: 'Map', endingScene: 'Ending', dressScene: 'Evolution', stars: true,
     popDone: ['세계 일주 완성!', '중국부터 캐나다까지 다 돌았어요'], saveCode: 'BB2-', challenge: 'C2-' },
   2: { n: 2, title: '블루나비와 포포의 여행 2탄', short: '2탄 포포', hero: '포포', helperTex: 'face_bluenabi', helperFrame: 1, helperHint: '포포야, 이쪽이야!',
-    titleScene: 'Title2', mapScene: 'Album', endingScene: 'Ending2', dressScene: 'Dress', stars: false,
+    titleScene: 'Title', mapScene: 'Album', endingScene: 'Ending2', dressScene: 'Dress', stars: false,
     popDone: ['사계절 한 바퀴 완성!', '봄부터 겨울까지 다 돌았어요'], saveCode: 'PP1-', challenge: 'P1-' },
 };
 export const SERIES = { n: 1, meta: META[1], game: null };

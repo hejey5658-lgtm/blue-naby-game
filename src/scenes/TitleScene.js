@@ -1,67 +1,72 @@
 import Phaser from 'phaser';
-import { afterDialogue } from '../ui/afterDialogue.js';
 import { UI, landView } from '../data/ui.js';
-import { CHAPTERS } from '../data/chapters.js';
 import { VERSION, IS_TEST_BUILD } from '../data/version.js';
 import { Button } from '../ui/Button.js';
 import { getSafeInsets } from '../ui/safeArea.js';
 import { platform, requestFullscreen } from '../platform.js';
-import { state, save, hasProgress } from '../state.js';
+import { state, save } from '../state.js';
 import { unlockAudio, sfx, vibrate } from '../ui/feedback.js';
-import { iconGear, iconPuzzle } from '../ui/icons.js';
+import { iconGear } from '../ui/icons.js';
 import { updateBand, inAppBand, challengeBand } from '../ui/bands.js';
 import { setTheme } from '../ui/theme.js';
-import { SERIES } from '../series.js';
+import { drawSkyline } from '../maze/seoulCity.js';
+import { SERIES, DATA, useSeries } from '../series.js';
 
-// 타이틀: 화면 위쪽은 창가(나무 창틀이 화면의 틀), 유리창 너머로 바깥 세상이 보이고
-// 화분 위의 애벌레 블루나비가 창밖을 본다. 시작을 누르면 창문이 열린다.
-// (docs/design-brief.md 3·6절 "창문이 넓어진다")
-const C = {
-  wall: 0xe9d8b4,
-  floor: 0xf3e3c3,
-  wood: 0xb98a5e,
-  woodDark: 0x8f6440,
-  woodLight: 0xd2a679,
-  skyTop: 0x8fd3ff,
-  skyBottom: 0xd6efff,
-  hillFar: 0x7cc56a,
-  hillNear: 0x4f9f4c,
-  curtain: 0xff9fb8,
-  curtainShade: 0xe67f9b,
-  pot: 0xc96a4a,
-  potShade: 0xa4523a,
-  soil: 0x6b4630,
-  leaf: 0x4f9f4c,
-  ink: 0x2b2d5a,
+// 홈 「블루나비와 포포의 여행」 (design-brief 19절, 2026-11-10~): 1탄·2탄 타이틀을 한 화면으로 합쳤다.
+// 지구본 입구에서 무엇을 눌러도 여기로 온다. 버튼 [1탄 세계여행] [2탄 사계절 서울] [같이 하기].
+// 배경은 썸네일과 같은 그림(하늘·튤립 꽃밭 언덕·서울 빌딩과 남산 타워). 파일 없이 그린다(첫 화면 가볍게).
+// 씬 이름은 'Title' 그대로 — 여러 화면의 "처음 화면으로"가 모두 여기로 온다.
+const C = { ink: 0x2b2d5a, blue: 0x2f7bff, pink: 0xff7fa3, orange: 0xffb347, sky: 0x8ccbff, sky2: 0xd6efff, hill: 0x7fcf6a, grass: 0x6cc35a, grass2: 0x5fb84e };
+
+const SERIES_BTN = {
+  1: { label: '1탄 세계여행', color: C.blue, shade: 0x1f5fd6, textColor: '#ffffff' },
+  2: { label: '2탄 사계절 서울', color: C.pink, shade: 0xe0557a, textColor: '#ffffff' },
 };
 
-const WIN = { x: 70, y: 96, w: 580, h: 600, frame: 34 };
+// 탄마다의 진행 (지금 탄은 state 맨 위, 다른 탄은 state.other)
+function progressOf(n) {
+  return (state.series === 2 ? 2 : 1) === n ? state : state.other;
+}
+
+// 버튼 아래 작은 글: "처음부터" / "이어하기 · 3단계 일본" / "여행 끝! 여권 보기"
+export function progressLabel(n) {
+  const p = progressOf(n);
+  if (!p || !p.step || p.step === 'new') return '처음부터';
+  if (p.cleared && p.step === 'map') return n === 1 ? '여행 끝! 여권 보기' : '여행 끝! 앨범 보기';
+  const ch = DATA[n].CHAPTERS;
+  let i = ch.findIndex((c) => c.id === p.playing);
+  if (i < 0) i = Math.min(ch.length - 1, Math.max(0, (p.chapter ?? 1) - 1));
+  return `이어하기 · ${n === 1 ? `${i + 1}단계 ` : ''}${ch[i].name}`;
+}
 
 export class TitleScene extends Phaser.Scene {
   constructor() { super('Title'); }
 
+  init(data) {
+    this.highlight = data?.highlight ?? null;
+    this.leaving = false;
+  }
+
   create() {
-    // 2탄을 하던 중이면 2탄 타이틀로 (대결 링크로 들어온 경우는 아래에서 대결 화면으로)
-    if (SERIES.n === 2 && !state.pendingMatch) { this.scene.start('Title2'); return; }
-    this.windowOpen = false;
-    this.opening = false;
-    setTheme(CHAPTERS[0].theme, '#f3e3c3');
-    this.drawRoom();
-    this.drawOutside();
-    this.drawPanes();
-    this.drawFrame();
-    this.drawSill();
+    setTheme('#8ccbff', '#6cc35a');
+    this.drawBackdrop();
     this.drawLogo();
+    this.drawFriends();
     this.drawControls();
-    this.layoutSafeArea();
-    // 카카오톡 등 인앱 브라우저 안내 띠(아래), 새 버전 띠(위)
+    this.layout();
+    // 카카오톡 등 인앱 브라우저 안내 띠(아래), 도전장·새 버전 띠(위)
     const { top, bottom } = getSafeInsets(this.game);
     this.inApp = inAppBand(this, UI.landscape ? 830 : 1222 - bottom);
     if (this.inApp) this.version.setVisible(false);
-    challengeBand(this, 140 + top, () => this.onStart());
+    challengeBand(this, 140 + top, () => this.startSeries(SERIES.n));
     updateBand(this, 236 + top);
-    this.scale.on('resize', this.layoutSafeArea, this);
-    this.events.once('shutdown', () => this.scale.off('resize', this.layoutSafeArea, this));
+    this.scale.on('resize', this.layout, this);
+    this.events.once('shutdown', () => this.scale.off('resize', this.layout, this));
+    // 입구에서 누른 탄의 버튼이 한 번 반짝
+    if (this.highlight && this.seriesBtns[this.highlight]) {
+      const b = this.seriesBtns[this.highlight];
+      this.tweens.add({ targets: b, scale: 1.06, duration: 220, yoyo: true, repeat: 1, delay: 250, ease: 'Sine.easeInOut' });
+    }
     // 각자 폰 대결 링크로 들어왔으면 바로 그 대결 카드로 (design-brief 12절)
     if (state.pendingMatch) {
       const id = state.pendingMatch;
@@ -71,184 +76,113 @@ export class TitleScene extends Phaser.Scene {
     }
   }
 
-  drawRoom() {
+  // 하늘·해·구름, 왼쪽 튤립 꽃밭 언덕(1탄의 끝), 오른쪽 서울 빌딩·남산 타워(2탄), 잔디 — 썸네일과 같은 그림
+  drawBackdrop() {
     const g = this.add.graphics();
-    // 가로·길쭉한 화면에서도 끝까지 보이게 벽·바닥을 넉넉히 칠한다
-    g.fillStyle(C.wall, 1).fillRect(-1200, -900, UI.width + 2400, 1680);
-    // 벽지 세로 줄무늬 (아주 옅게)
-    g.fillStyle(C.wood, 0.08);
-    for (let x = 24 - 1224; x < UI.width + 1200; x += 72) g.fillRect(x, -900, 24, 1680);
-    g.fillStyle(C.floor, 1).fillRect(-1200, 780, UI.width + 2400, 1300);
-    g.fillStyle(C.wood, 0.25).fillRect(-1200, 780, UI.width + 2400, 10);
-  }
-
-  drawOutside() {
-    const { x, y, w, h } = WIN;
-    const g = this.add.graphics();
-    // 바깥 풍경은 유리창 안에만 보이게
-    const clip = this.make.graphics({}, false);
-    clip.fillStyle(0xffffff).fillRect(x, y, w, h);
-    g.setMask(clip.createGeometryMask());
-    // 하늘: 위는 진하게 아래는 옅게 (그라데이션 대신 띠 12개 — 캔버스 그리기에서도 같게)
-    const top = Phaser.Display.Color.ValueToColor(C.skyTop);
-    const bot = Phaser.Display.Color.ValueToColor(C.skyBottom);
-    for (let i = 0; i < 12; i++) {
-      const c = Phaser.Display.Color.Interpolate.ColorWithColor(top, bot, 11, i);
-      g.fillStyle(Phaser.Display.Color.GetColor(c.r, c.g, c.b), 1).fillRect(x, y + (h / 12) * i, w, h / 12 + 1);
+    const X0 = -1300, XW = UI.width + 2600;
+    // 하늘: 띠 10개 (그라데이션 대신 — 캔버스 그리기에서도 같게)
+    const top = Phaser.Display.Color.ValueToColor(C.sky), bot = Phaser.Display.Color.ValueToColor(C.sky2);
+    g.fillStyle(C.sky, 1).fillRect(X0, -1000, XW, 1000);
+    for (let i = 0; i < 10; i++) {
+      const c = Phaser.Display.Color.Interpolate.ColorWithColor(top, bot, 9, i);
+      g.fillStyle(Phaser.Display.Color.GetColor(c.r, c.g, c.b), 1).fillRect(X0, i * 100, XW, 101);
     }
-    // 해와 구름
-    g.fillStyle(0xffd84a, 1).fillCircle(x + w - 110, y + 120, 44);
+    g.fillStyle(C.sky2, 1).fillRect(X0, 1000, XW, 1400);
+    g.fillStyle(0xffe27a, 1).fillCircle(610, 120, 54);
     g.fillStyle(0xffffff, 0.95);
-    [[x + 120, y + 300, 34], [x + 160, y + 290, 44], [x + 205, y + 304, 30]].forEach(([cx, cy, r]) => g.fillCircle(cx, cy, r));
-    // 언덕과 꽃 (바깥 세상)
-    g.fillStyle(C.hillFar, 1).fillEllipse(x + w * 0.25, y + h - 40, w * 0.9, 260);
-    g.fillStyle(C.hillNear, 1).fillEllipse(x + w * 0.8, y + h - 10, w * 0.9, 240);
-    const flowers = [[x + 90, y + h - 120, 0xff6b5b], [x + 170, y + h - 150, 0xffd84a], [x + 380, y + h - 90, 0xff9fb8], [x + 470, y + h - 130, 0xff6b5b], [x + 300, y + h - 60, 0xffd84a]];
-    for (const [fx, fy, col] of flowers) {
-      g.fillStyle(col, 1);
-      for (let i = 0; i < 5; i++) {
-        const a = (i / 5) * Math.PI * 2;
-        g.fillCircle(fx + Math.cos(a) * 8, fy + Math.sin(a) * 8, 7);
+    for (const [x, y, s] of [[90, 110, 1], [470, 70, 0.8], [-240, 260, 1.1], [980, 150, 1], [1350, 90, 0.9], [1760, 230, 1]]) {
+      g.fillEllipse(x, y, 150 * s, 50 * s).fillEllipse(x - 30 * s, y - 18 * s, 80 * s, 56 * s).fillEllipse(x + 26 * s, y - 14 * s, 70 * s, 48 * s);
+    }
+    // 서울 빌딩 숲 + 남산 타워 (오른쪽)
+    const city = UI.landscape ? 760 : 1000;
+    drawSkyline(g, { x0: 330, x1: 2400, baseY: city, maxH: 220, season: 'spring', seed: 19 });
+    // 튤립 꽃밭 언덕 (왼쪽)
+    g.fillStyle(C.hill, 1).fillEllipse(80, city + 70, 980, 360);
+    const cols = [0xff6b5b, 0xffd84a, 0xff9fb8, 0xffffff];
+    for (let r = 0; r < 3; r++) {
+      for (let x = -360 + r * 18; x < 470 - r * 60; x += 40) {
+        const y = city - 40 + r * 34 + Math.abs(x - 80) * 0.12;
+        g.fillStyle(0x3f8f3c, 1).fillRect(x - 1.5, y, 3, 14);
+        g.fillStyle(cols[(r + Math.round(x / 40)) % 4], 1).fillEllipse(x, y, 16, 20);
       }
-      g.fillStyle(0xffffff, 1).fillCircle(fx, fy, 5);
     }
-    // 엔딩을 본 뒤에는 창밖을 나는 진짜 블루나비 (scenario 9절)
-    if (state.cleared && this.textures.exists('blue_butterfly')) {
-      this.dream = this.add.sprite(x + 470, y + 420, 'blue_butterfly', 2).setDisplaySize(110, 110);
-      if (this.anims.exists('blue_butterfly_move')) this.dream.play('blue_butterfly_move');
-      this.tweens.add({ targets: this.dream, x: '-=200', y: '-=30', duration: 4200, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
-      this.tweens.add({ targets: this.dream, y: '-=14', duration: 600, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
-      return;
+    // 잔디 (아래 끝까지)
+    g.fillStyle(C.grass, 1).fillRect(X0, city + 90, XW, 2400);
+    g.fillStyle(C.grass2, 1).fillRect(X0, city + 90, XW, 12);
+    for (let i = 0; i < 70; i++) {
+      const x = X0 + 400 + ((i * 113) % (XW - 800)), y = city + 130 + ((i * 61) % 900);
+      g.fillStyle(C.grass2, 1).fillTriangle(x, y, x + 6, y - 16, x + 12, y);
     }
-    // 멀리 나는 파란 나비 (블루나비가 될 꿈)
-    this.dream = this.add.graphics({ x: x + 420, y: y + 230 });
-    this.dream.fillStyle(0x2f7bff, 1).fillEllipse(-9, -4, 16, 20).fillEllipse(9, -4, 16, 20);
-    this.dream.fillStyle(0x8fc2ff, 1).fillEllipse(-7, 8, 11, 12).fillEllipse(7, 8, 11, 12);
-    this.dream.fillStyle(C.ink, 1).fillRoundedRect(-2, -10, 4, 22, 2);
-    this.tweens.add({ targets: this.dream, x: '+=60', y: '-=40', duration: 2600, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
-    this.tweens.add({ targets: this.dream, scaleX: 0.55, duration: 160, yoyo: true, repeat: -1 });
   }
 
-  // 유리창 두 짝: 왼쪽 짝은 왼쪽 경첩, 오른쪽 짝은 오른쪽 경첩을 축으로 열린다.
-  drawPanes() {
-    const { x, y, w, h } = WIN;
-    const half = w / 2;
-    const mk = (hingeX, dir) => {
-      const c = this.add.container(hingeX, y);
-      const g = this.add.graphics();
-      const left = dir > 0 ? 0 : -half;
-      g.fillStyle(0xffffff, 0.16).fillRect(left, 0, half, h);
-      g.fillStyle(0xffffff, 0.35);
-      g.fillTriangle(left + 40, 40, left + 80, 40, left + 30, 160);
-      g.fillTriangle(left + 100, 40, left + 116, 40, left + 70, 130);
-      g.fillStyle(C.wood, 1).fillRect(left, h / 2 - 8, half, 16);
-      g.fillStyle(C.wood, 1).fillRect(dir > 0 ? half - 10 : left, 0, 10, h);
-      c.add(g);
-      return c;
-    };
-    this.paneL = mk(x, 1);
-    this.paneR = mk(x + w, -1);
-  }
-
-  drawFrame() {
-    const { x, y, w, h, frame: f } = WIN;
-    // 창틀은 유리창 둘레에 굵은 선으로 그린다 (마스크 없이: 캔버스 그리기에서도 같게 보이도록)
-    const g = this.add.graphics();
-    g.lineStyle(f, C.woodDark, 1).strokeRoundedRect(x - f / 2, y - f / 2, w + f, h + f, 14);
-    g.lineStyle(f - 10, C.wood, 1).strokeRoundedRect(x - f / 2 + 1, y - f / 2 - 1, w + f - 2, h + f - 2, 12);
-    g.fillStyle(C.woodLight, 1).fillRoundedRect(x - f + 12, y - f + 8, w + f * 2 - 24, 8, 4);
-    // 커튼 자락 (양옆)
-    const curtain = this.add.graphics();
-    const drawCurtain = (cx, dir) => {
-      curtain.fillStyle(C.curtainShade, 1);
-      curtain.fillRoundedRect(cx - 46, y - f - 30, 92, h + f + 70, { tl: 20, tr: 20, bl: 46, br: 46 });
-      curtain.fillStyle(C.curtain, 1);
-      curtain.fillRoundedRect(cx - 40 + dir * 4, y - f - 30, 70, h + f + 60, { tl: 18, tr: 18, bl: 40, br: 40 });
-      curtain.fillStyle(C.curtainShade, 1).fillRoundedRect(cx - 50, y + h * 0.55, 100, 22, 11);
-    };
-    drawCurtain(x - f - 4, 1);
-    drawCurtain(x + w + f + 4, -1);
-    // 커튼봉
-    curtain.fillStyle(C.woodDark, 1).fillRoundedRect(10, y - f - 44, UI.width - 20, 16, 8);
-    curtain.fillStyle(C.woodDark, 1).fillCircle(14, y - f - 36, 14).fillCircle(UI.width - 14, y - f - 36, 14);
-  }
-
-  drawSill() {
-    const { y, h, frame: f } = WIN;
-    const sillY = y + h + f - 6;
-    const g = this.add.graphics();
-    g.fillStyle(C.woodDark, 1).fillRoundedRect(20, sillY, UI.width - 40, 40, 10);
-    g.fillStyle(C.woodLight, 1).fillRoundedRect(24, sillY, UI.width - 48, 12, 6);
-
-    // 화분
-    const px = 470;
-    const top = sillY - 92;
-    g.fillStyle(C.potShade, 1).fillPoints([{ x: px - 70, y: top + 16 }, { x: px + 70, y: top + 16 }, { x: px + 52, y: sillY }, { x: px - 52, y: sillY }], true);
-    g.fillStyle(C.pot, 1).fillPoints([{ x: px - 70, y: top + 16 }, { x: px + 56, y: top + 16 }, { x: px + 40, y: sillY }, { x: px - 52, y: sillY }], true);
-    g.fillStyle(C.potShade, 1).fillRoundedRect(px - 82, top, 164, 26, 10);
-    g.fillStyle(C.pot, 1).fillRoundedRect(px - 82, top, 156, 20, 10);
-    g.fillStyle(C.soil, 1).fillEllipse(px, top + 4, 140, 14);
-    // 새싹 잎 두 장
-    g.fillStyle(C.leaf, 1).fillEllipse(px - 40, top - 30, 54, 26).fillEllipse(px + 34, top - 46, 60, 28);
-    g.lineStyle(5, C.leaf, 1).lineBetween(px, top, px - 6, top - 50);
-
-    // 화분 테두리 위의 블루나비 (창밖을 보는 중)
-    this.blue = this.add.sprite(px - 60, top + 10, 'blue_caterpillar_battle', 0).setOrigin(0.5, 0.92).setScale(0.46).setFlipX(true);
-    if (this.anims.exists('blue_caterpillar_battle_idle')) this.blue.play('blue_caterpillar_battle_idle');
-  }
-
+  // 로고 카드: "블루나비와 / 포포의 여행" (블루나비 파랑, 포포 분홍)
   drawLogo() {
-    // 유리창에 붙인 스티커 같은 제목
-    const c = this.add.container(UI.width / 2 - 70, 250).setAngle(-4);
+    const c = this.add.container(UI.width / 2, 300);
     const g = this.add.graphics();
-    // 게임 이름 「블루나비와 포포의 여행」(2026-11-10~) + 1탄 이름
-    g.fillStyle(C.ink, 0.18).fillRoundedRect(-200, -118, 412, 236, 34);
-    g.fillStyle(0xffffff, 1).fillRoundedRect(-206, -126, 412, 236, 34);
-    g.lineStyle(4, C.ink, 1).strokeRoundedRect(-206, -126, 412, 236, 34);
-    const big1 = this.add.text(0, -62, '블루나비와', { fontFamily: UI.fontTitle, fontSize: '62px', color: '#2f7bff' }).setOrigin(0.5);
-    const big2 = this.add.text(0, 6, '포포의 여행', { fontFamily: UI.fontTitle, fontSize: '62px', color: '#2b2d5a' }).setOrigin(0.5);
-    const chip = this.add.graphics();
-    chip.fillStyle(0x2f7bff, 1).fillRoundedRect(-118, 50, 236, 44, 22);
-    const sub = this.add.text(0, 72, '1탄 · 세계여행', { fontFamily: UI.fontTitle, fontSize: '28px', color: '#ffffff' }).setOrigin(0.5);
-    c.add([g, big1, big2, chip, sub]);
+    const W = 620, H = 300;
+    g.fillStyle(C.ink, 0.25).fillRoundedRect(-W / 2, -H / 2 + 12, W, H, 44);
+    g.fillStyle(0xfffaf0, 1).fillRoundedRect(-W / 2, -H / 2, W, H, 44);
+    g.lineStyle(7, C.ink, 1).strokeRoundedRect(-W / 2, -H / 2, W, H, 44);
+    c.add(g);
+    const line = (y, parts) => {
+      const st = (color) => ({ fontFamily: UI.fontTitle, fontSize: '104px', color });
+      const ts = parts.map(([t, col]) => this.add.text(0, y, t, st(col)).setOrigin(0, 0.5));
+      const w = ts.reduce((s, t) => s + t.width, 0);
+      let x = -w / 2;
+      for (const t of ts) { t.setX(x); x += t.width; }
+      c.add(ts);
+    };
+    line(-62, [['블루나비', '#2f7bff'], ['와', '#2b2d5a']]);
+    line(66, [['포포', '#e0557a'], ['의 여행', '#2b2d5a']]);
     this.logo = c;
   }
 
-  drawControls() {
-    this.startBtn = new Button(this, UI.width / 2, 960, {
-      label: hasProgress() ? '여행 이어하기' : '여행 시작하기',
-      onPress: () => this.onStart(),
-    });
-    // 기념품 퐁퐁 · 둘이서 하기 (나란히)
-    this.puzzleBtn = new Button(this, UI.width / 2 - 165, 1110, {
-      width: 310, height: 96, label: '기념품 퐁퐁', fontSize: 30, color: 0xffb347, shade: 0xd98a2b, textColor: '#2b2d5a',
-      onPress: () => { sfx('tap'); unlockAudio(); this.scene.start('Pop', { step: 'menu' }); },
-    });
-    this.duoBtn = new Button(this, UI.width / 2 + 165, 1110, {
-      width: 310, height: 96, label: '둘이서 하기', fontSize: 30, color: 0xff9fb8, shade: 0xe07a96, textColor: '#2b2d5a',
-      onPress: () => { sfx('tap'); unlockAudio(); this.scene.start('Duo', { step: 'setup' }); },
-    });
-    const pi = this.add.graphics();
-    iconPuzzle(pi, -112, 0, 40, 0x2b2d5a);
-    this.puzzleBtn.face.add(pi);
-    this.puzzleBtn.text.setX(16);
+  // 블루나비(왼쪽)·포포(오른쪽)가 서로 보며 통통
+  drawFriends() {
+    this.friends = [];
+    const mk = (key, x, flip, delay) => {
+      if (!this.textures.exists(key)) return;
+      const s = this.add.image(x, 600, key).setDisplaySize(230, 230).setFlipX(flip);
+      this.tweens.add({ targets: s, y: 584, duration: 520, yoyo: true, repeat: -1, delay, ease: 'Sine.easeInOut' });
+      this.friends.push(s);
+    };
+    mk('home_bluenabi', 220, false, 0);
+    mk('home_popo', 500, false, 260);
+  }
 
-    // 설정 (오른쪽 위, 커튼봉 위)
+  drawControls() {
+    // 큰 버튼 3개: 1탄 · 2탄 · 같이 하기 (아래 작은 글로 진행·설명)
+    const mkBtn = (opts, sub) => {
+      const b = new Button(this, UI.width / 2, 0, { width: 540, height: 136, fontSize: 44, ...opts });
+      b.text.setY(-18);
+      b.sub = this.add.text(0, 32, sub, { fontFamily: UI.font, fontSize: '26px', color: opts.textColor ?? '#ffffff' }).setOrigin(0.5);
+      b.face.add(b.sub);
+      return b;
+    };
+    this.seriesBtns = {};
+    for (const n of [1, 2]) {
+      this.seriesBtns[n] = mkBtn({ ...SERIES_BTN[n], onPress: () => this.startSeries(n) }, progressLabel(n));
+    }
+    this.togetherBtn = mkBtn({
+      label: '같이 하기', color: C.orange, shade: 0xd98a2b, textColor: '#2b2d5a',
+      onPress: () => { if (this.leaving) return; sfx('tap'); unlockAudio(); this.scene.start('Together'); },
+    }, '2~3명 · 미로 / 기념품 퐁퐁');
+
+    // 설정 (오른쪽 위)
     this.gear = this.add.container(UI.width - 64, 64);
     const gg = this.add.graphics();
     gg.fillStyle(0xffffff, 0.95).fillCircle(0, 0, 38);
-    gg.lineStyle(3, 0x2b2d5a, 0.2).strokeCircle(0, 0, 38);
+    gg.lineStyle(3, C.ink, 0.2).strokeCircle(0, 0, 38);
     iconGear(gg, 0, 0, 46);
-    this.gear.add(gg).setSize(96, 96).setInteractive({ useHandCursor: true })
-      .on('pointerup', () => this.openSettings());
+    this.gear.add(gg).setSize(96, 96).setInteractive({ useHandCursor: true }).on('pointerup', () => this.openSettings());
 
-    // 지구본 입구로 (왼쪽 위, 게임장 버튼이 있으면 그 아래) — 1탄·2탄은 입구에서 고른다 (16절)
+    // 지구본 입구로 (왼쪽 위, 게임장 버튼이 있으면 그 아래)
     const sw = this.add.container(130, window.BB_EMBED ? 140 : 64);
     const sg = this.add.graphics();
-    sg.fillStyle(0xffffff, 0.95).fillRoundedRect(-106, -30, 212, 60, 30).lineStyle(3, 0x2b2d5a, 0.2).strokeRoundedRect(-106, -30, 212, 60, 30);
+    sg.fillStyle(0xffffff, 0.95).fillRoundedRect(-106, -30, 212, 60, 30).lineStyle(3, C.ink, 0.2).strokeRoundedRect(-106, -30, 212, 60, 30);
     sw.add([sg, this.add.text(0, 0, '◀ 지구본', { fontFamily: UI.fontTitle, fontSize: '26px', color: '#2b2d5a' }).setOrigin(0.5)]);
     sw.setSize(216, 96).setInteractive({ useHandCursor: true }).on('pointerup', () => { sfx('tap'); this.scene.start('Entry'); });
-    this.seriesChip = sw;
+    this.globeChip = sw;
 
     // 게임장(eunyoug_3st_index.html) 안에서 열렸을 때만: 왼쪽 위 [← 게임장]
     this.hub = null;
@@ -256,7 +190,7 @@ export class TitleScene extends Phaser.Scene {
       this.hub = this.add.container(112, 64);
       const hg = this.add.graphics();
       hg.fillStyle(0xffffff, 0.95).fillRoundedRect(-88, -30, 176, 60, 30);
-      hg.lineStyle(3, 0x2b2d5a, 0.2).strokeRoundedRect(-88, -30, 176, 60, 30);
+      hg.lineStyle(3, C.ink, 0.2).strokeRoundedRect(-88, -30, 176, 60, 30);
       this.hub.add([hg, this.add.text(0, 0, '← 게임장', { fontFamily: UI.fontTitle, fontSize: '26px', color: '#2b2d5a' }).setOrigin(0.5)]);
       this.hub.setSize(180, 96).setInteractive({ useHandCursor: true })
         .on('pointerup', () => { sfx('tap'); try { parent.postMessage({ type: 'bb-close' }, '*'); } catch { /* 무시 */ } });
@@ -277,12 +211,9 @@ export class TitleScene extends Phaser.Scene {
       }).setOrigin(0, 1);
     }
 
-    this.input.keyboard?.on('keydown-ENTER', () => this.input.enabled && this.startBtn.trigger());
-    this.input.keyboard?.on('keydown-SPACE', () => this.input.enabled && this.startBtn.trigger());
-
-    const onSettingsClosed = ({ reset }) => {
+    const onSettingsClosed = () => {
       this.input.enabled = true;
-      if (reset) this.startBtn.text.setText('여행 시작하기');
+      for (const n of [1, 2]) this.seriesBtns[n].sub.setText(progressLabel(n));
     };
     this.game.events.on('settings-closed', onSettingsClosed);
     this.events.once('shutdown', () => this.game.events.off('settings-closed', onSettingsClosed));
@@ -299,79 +230,58 @@ export class TitleScene extends Phaser.Scene {
     sfx('tap');
     unlockAudio();
     this.input.enabled = false;
-    this.scene.launch('Settings', { frame: 'woodWindow' });
+    this.scene.launch('Settings', { frame: SERIES.n === 2 ? 'spring' : 'woodWindow' });
   }
 
-  // 가로 (18절): 창가 그림을 조금 줄여 왼쪽에, 버튼은 오른쪽에 위아래로
-  landscapeView() { return landView(0.84, 745, 450); }
+  // 가로 (18·19절): 왼쪽 반 = 로고 + 블루나비·포포, 오른쪽 반 = 버튼 3개 세로
+  landscapeView() { return landView(0.8, 720, 420); }
 
-  layoutSafeArea() {
+  layout() {
+    const btns = [this.seriesBtns[1], this.seriesBtns[2], this.togetherBtn];
     if (UI.landscape) {
       const v = this.landscapeView();
       const { top, right, left } = getSafeInsets(this.game);
       const z = v.zoom;
-      this.startBtn.setPosition(1135, 360);
-      this.puzzleBtn.setPosition(1135, 520);
-      this.duoBtn.setPosition(1135, 650);
+      this.logo.setPosition(380, 250);
+      this.friends.forEach((f, i) => f.setX(i ? 520 : 240));
+      btns.forEach((b, i) => b.setPosition(1110, 230 + i * 180));
       this.gear.setPosition(v.right - 60 - right / z, v.top + 56 + top / z);
       this.version.setPosition(v.right - 24 - right / z, v.bottom - 16);
-      this.seriesChip.setPosition(v.left + 126 + left / z, v.top + 56 + top / z + (window.BB_EMBED ? 76 : 0));
+      this.globeChip.setPosition(v.left + 126 + left / z, v.top + 56 + top / z + (window.BB_EMBED ? 76 : 0));
       if (this.hub) this.hub.setPosition(v.left + 112 + left / z, v.top + 56 + top / z);
-      this.toastText.setPosition(1135, 760);
+      this.toastText.setPosition(1110, 760);
       return;
     }
     const { top, bottom } = getSafeInsets(this.game);
+    this.logo.setPosition(UI.width / 2, 300 + top * 0.5);
+    btns.forEach((b, i) => b.setPosition(UI.width / 2, 790 + i * 166));
     this.version.y = UI.height - 20 - bottom;
     this.gear.y = 64 + top;
     if (this.hub) this.hub.y = 64 + top;
-    if (this.seriesChip) this.seriesChip.y = (window.BB_EMBED ? 140 : 64) + top;
+    this.globeChip.y = (window.BB_EMBED ? 140 : 64) + top;
   }
 
-  onStart() {
-    if (this.opening) return;
-    this.opening = true;
+  // 1탄·2탄 여행: 그 탄으로 바꾸고 이어하기(미로 / 여권·앨범) 또는 처음이면 바로 1단계 미로
+  startSeries(n) {
+    if (this.leaving) return;
+    this.leaving = true;
     unlockAudio();
     requestFullscreen();
     sfx('open');
     vibrate('collect');
-    // 창문이 활짝 열린다 — 바깥 세상으로 나가는 첫 장면
-    if (!this.windowOpen) {
-      this.windowOpen = true;
-      this.tweens.add({ targets: [this.paneL, this.paneR], scaleX: 0.08, duration: 700, ease: 'Back.easeIn' });
-      this.tweens.add({ targets: this.blue, y: '-=26', duration: 260, yoyo: true, ease: 'Quad.easeOut' });
-    }
-    this.time.delayedCall(hasProgress() ? 200 : 820, () => {
-      this.opening = false;
-      const playing = state.playing ?? CHAPTERS[state.chapter - 1]?.id ?? 'ch1';
-      if (state.step.endsWith('_maze')) {
-        this.scene.start('Maze', { chapter: playing });
-        return;
-      }
-      // 예전 대결 화면 중이던 저장은 그 단계 미로부터 다시 (17절, 친구·선물은 그대로)
-      if (state.step.endsWith('_boss')) {
-        this.scene.start('Maze', { chapter: playing, fresh: true });
-        return;
-      }
-      if (hasProgress()) {
-        this.scene.start('Map');
-        return;
-      }
-      this.playPrologue();
-    });
-  }
-
-  playPrologue() {
-    this.input.enabled = false;
-    this.tweens.add({ targets: [this.startBtn, this.puzzleBtn, this.duoBtn, this.logo, this.version, this.gear, this.seriesChip], alpha: 0, duration: 200 });
-    afterDialogue(this, () => {
-      state.step = 'ch1_maze';
-      state.chapter = 1;
-      state.playing = 'ch1';
-      state.mazeState = null;
-      save();
-      this.cameras.main.fadeOut(300, 233, 216, 180);
-      this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('Maze', { chapter: 'ch1', fresh: true }));
-    });
-    this.scene.launch('Dialogue', { key: 'prologue', frame: 'woodWindow', form: 'caterpillar' });
+    useSeries(n);
+    const ch = DATA[n].CHAPTERS;
+    const playing = state.playing ?? ch[state.chapter - 1]?.id ?? ch[0].id;
+    const go = (key, data) => {
+      this.cameras.main.fadeOut(260, 255, 250, 240);
+      this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start(key, data));
+    };
+    if (state.step.endsWith('_maze')) return go('Maze', { chapter: playing });
+    // 예전 대결 화면 중이던 저장은 그 단계 미로부터 다시 (17절, 친구·선물은 그대로)
+    if (state.step.endsWith('_boss')) return go('Maze', { chapter: playing, fresh: true });
+    if (state.step !== 'new') return go(SERIES.meta.mapScene);
+    Object.assign(state, { step: `${ch[0].id}_maze`, chapter: 1, playing: ch[0].id, mazeState: null });
+    save();
+    return go('Maze', { chapter: ch[0].id, fresh: true });
   }
 }

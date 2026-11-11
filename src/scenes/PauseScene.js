@@ -15,7 +15,8 @@ export class PauseScene extends Phaser.Scene {
     this.under = data.under ?? 'Maze';
     this.restartLabel = data.restartLabel ?? '미로 처음부터';
     this.restartData = data.restartData ?? { chapter: data.chapter, fresh: true };
-    this.confirmExit = !!data.confirmExit; // 게임 화면의 [나가기] (애벌레·발바닥 버튼): "홈으로 나갈까?" 확인만
+    // 게임 화면의 [나가기] (애벌레·발바닥 버튼): "1단계로 다시?" 확인 → 밑 화면의 restartFromFirst() (2026-11-11)
+    this.confirmExit = data.confirmExit || null; // { title, sub }
   }
 
   create() {
@@ -53,14 +54,15 @@ export class PauseScene extends Phaser.Scene {
     this.tweens.add({ targets: root, alpha: 1, y: 0, duration: 220, ease: 'Back.easeOut' });
   }
 
-  // "홈으로 나갈까?" — [나가기] [계속하기]
+  // "1단계로 다시?" — [다시 하기] [계속하기]
   drawConfirm(root, g, land) {
-    const y = land ? 470 : 420, w = land ? 640 : 540, h = land ? 360 : 440;
+    const { title = '1단계로 다시?', sub = '' } = this.confirmExit === true ? {} : this.confirmExit;
+    const y = land ? 470 : 420, w = land ? 640 : 560, h = land ? 360 : 440;
     drawPanel(g, UI.width / 2 - w / 2, y, w, h, this.frame);
     root.add([g,
-      this.add.text(UI.width / 2, y + 90, '홈으로 나갈까?', { fontFamily: UI.fontTitle, fontSize: '46px', color: '#2b2d5a' }).setOrigin(0.5),
-      this.add.text(UI.width / 2, y + 150, '모은 것은 저장돼 있어서 이어서 할 수 있어', { fontFamily: UI.font, fontSize: '24px', color: '#5a5c80' }).setOrigin(0.5)]);
-    const btns = [['나가기', 0xffb347, 0xd98a2b, '#2b2d5a', () => this.toTitle()], ['계속하기', 0x2f7bff, 0x1f5fd6, '#ffffff', () => this.resume()]];
+      this.add.text(UI.width / 2, y + 90, title, { fontFamily: UI.fontTitle, fontSize: '46px', color: '#2b2d5a' }).setOrigin(0.5),
+      this.add.text(UI.width / 2, y + 150, sub, { fontFamily: UI.font, fontSize: '24px', color: '#5a5c80', align: 'center' }).setOrigin(0.5)]);
+    const btns = [['다시 하기', 0xffb347, 0xd98a2b, '#2b2d5a', () => this.restartFirst()], ['계속하기', 0x2f7bff, 0x1f5fd6, '#ffffff', () => this.resume()]];
     btns.forEach(([label, color, shade, textColor, fn], i) => {
       const [bx, by] = land ? [UI.width / 2 + (i ? 150 : -150), y + 260] : [UI.width / 2, y + 240 + i * 120];
       root.add(new Button(this, bx, by, { width: land ? 270 : 400, height: 100, fontSize: 32, label, color, shade, textColor, onPress: () => { sfx('tap'); fn(); } }));
@@ -68,6 +70,13 @@ export class PauseScene extends Phaser.Scene {
     root.alpha = 0;
     root.y = 24;
     this.tweens.add({ targets: root, alpha: 1, y: 0, duration: 220, ease: 'Back.easeOut' });
+  }
+
+  restartFirst() {
+    unlockAudio();
+    const under = this.scene.get(this.under);
+    this.scene.stop();
+    under.restartFromFirst();
   }
 
   resume() {

@@ -1067,7 +1067,7 @@ export class MazeScene extends Phaser.Scene {
     pg.fillStyle(0xfffaf0, 1).fillCircle(0, 0, 32);
     pg.fillStyle(0x2b2d5a, 1).fillRoundedRect(-12, -14, 8, 28, 3).fillRoundedRect(4, -14, 8, 28, 3);
     pb.add(pg).setSize(96, 88).setInteractive({ useHandCursor: true }).on('pointerup', () => this.openPause());
-    addExitButton(this, 156, 54 + top, () => this.openPause(true));
+    addExitButton(this, 156, 54 + top, () => this.openPause(this.exitAsk()));
 
     this.add.text(UI.width / 2, 40 + top, stageLabel(this.chapter), {
       fontFamily: UI.fontTitle, fontSize: '30px', color: '#fffaf0',
@@ -1133,7 +1133,7 @@ export class MazeScene extends Phaser.Scene {
     pg.fillStyle(0xfffaf0, 1).fillCircle(0, 0, 32);
     pg.fillStyle(0x2b2d5a, 1).fillRoundedRect(-12, -14, 8, 28, 3).fillRoundedRect(4, -14, 8, 28, 3);
     pb.add(pg).setSize(96, 96).setInteractive({ useHandCursor: true }).on('pointerup', () => this.openPause());
-    addExitButton(this, x + 52, top + H - 70, () => this.openPause(true));
+    addExitButton(this, x + 52, top + H - 70, () => this.openPause(this.exitAsk()));
     this.timerText = this.add.text(x + w - 22, top + 54, '0:00', { fontFamily: UI.fontTitle, fontSize: '38px', color: '#fffaf0' }).setOrigin(1, 0.5);
     this.add.text(cx, top + 118, stageLabel(this.chapter), { fontFamily: UI.fontTitle, fontSize: '28px', color: '#fffaf0' }).setOrigin(0.5);
     const rival = this.duo ? null : activeChallenge();
@@ -1524,6 +1524,17 @@ export class MazeScene extends Phaser.Scene {
     this.heldDir = null;
     this.scene.launch('Pause', { chapter: this.chapter.id, frame: this.chapter.frame, confirmExit, ...(this.duo ? { restartData: { chapter: this.chapter.id, fresh: true, duo: this.duo } } : {}) });
     this.scene.pause();
+  }
+
+  // [나가기] (애벌레·발바닥): 1단계로 다시 (둘이서·각자 폰은 이 미로 처음부터) — 2026-11-11
+  exitAsk() {
+    if (this.duo) return { title: '처음부터 다시?', sub: '이 미로를 처음부터 다시 해' };
+    return { title: '1단계로 다시?', sub: `${stageLabel(CHAPTERS[0])} 미로를 처음부터 해\n열어 둔 단계${SERIES.meta.stars ? '·모은 별' : ''}은 그대로야` };
+  }
+
+  restartFromFirst() {
+    if (this.duo) { this.scene.start('Maze', { chapter: this.chapter.id, fresh: true, duo: this.duo }); return; }
+    startChapter(this, CHAPTERS[0].id, { replay: true });
   }
 
   // ── 출구 도착 ───────────────────────────────────

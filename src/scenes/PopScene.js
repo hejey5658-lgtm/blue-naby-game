@@ -170,7 +170,7 @@ export class PopScene extends Phaser.Scene {
     pg.fillStyle(0x2b2d5a, 1).fillRoundedRect(-12, -14, 8, 28, 3).fillRoundedRect(4, -14, 8, 28, 3);
     pb.add(pg).setSize(96, 96).setInteractive({ useHandCursor: true }).on('pointerup', () => this.openPause());
     this.pauseBtn = pb;
-    addExitButton(this, 156, 58 + top, () => this.openPause(true), { depth: 8 });
+    addExitButton(this, 156, 58 + top, () => this.openPause(this.step === 'remote' ? { title: '처음부터 다시?', sub: '이 대결을 처음부터 다시 해' } : { title: '1단계로 다시?', sub: `1/4 ${STAGES[0].name}부터 다시 해` }), { depth: 8 });
   }
 
   text(x, y, s, size = 30, color = '#fffaf0', font = UI.fontTitle) {
@@ -554,6 +554,12 @@ export class PopScene extends Phaser.Scene {
       if (this.leftMs <= 0) { this.remoteOver(); return; }
     }
     for (const b of this.boards) b.update(Math.min(delta, 100));
+  }
+
+  // [나가기] → 1단계(첫 나라·계절)부터 다시 (각자 폰 대결은 같은 판 처음부터)
+  restartFromFirst() {
+    if (this.step === 'remote') this.scene.start('Pop', { step: 'remote', stage: this.stageIdx, match: this.match?.id });
+    else this.scene.start('Pop', { step: this.step, stage: 0 });
   }
 
   openPause(confirmExit = false) {

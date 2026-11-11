@@ -53,7 +53,8 @@ export class EntryScene extends Phaser.Scene {
     this.globe.add([this.surface, this.shine]);
     this.drawRing();
     this.drawShine();
-    this.makeItems();
+    // 썸네일과 같은 모습으로 빽빽하게 (2026-11-11 "썸네일과 들어간 이미지가 동일하게")
+    this.makeItems({ step: 112, base: 0.5, vary: 0.1, gap: 8, max: 80, mix: 1.9, shrink: true, edge: 50 });
     this.makeFriends();
     this.makeChrome();
     this.drawSurface();

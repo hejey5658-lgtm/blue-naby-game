@@ -19,6 +19,7 @@ import { drawBackdrop, drawFloor, drawWallScenery, addAmbient } from '../maze/sc
 import { placeDrifters, patrolPath } from '../maze/drift.js';
 import { saveMyResult } from '../social/match.js';
 import { ITEMS } from '../data/items.js';
+import { addExitButton } from '../ui/exitButton.js';
 import { SERIES } from '../series.js';
 import { BOSSES } from '../data/bosses.js';
 import { DIALOGUE } from '../data/dialogue.js';
@@ -1065,6 +1066,7 @@ export class MazeScene extends Phaser.Scene {
     pg.fillStyle(0xfffaf0, 1).fillCircle(0, 0, 32);
     pg.fillStyle(0x2b2d5a, 1).fillRoundedRect(-12, -14, 8, 28, 3).fillRoundedRect(4, -14, 8, 28, 3);
     pb.add(pg).setSize(96, 88).setInteractive({ useHandCursor: true }).on('pointerup', () => this.openPause());
+    addExitButton(this, 156, 54 + top, () => this.openPause(true));
 
     this.add.text(UI.width / 2, 40 + top, stageLabel(this.chapter), {
       fontFamily: UI.fontTitle, fontSize: '30px', color: '#fffaf0',
@@ -1130,6 +1132,7 @@ export class MazeScene extends Phaser.Scene {
     pg.fillStyle(0xfffaf0, 1).fillCircle(0, 0, 32);
     pg.fillStyle(0x2b2d5a, 1).fillRoundedRect(-12, -14, 8, 28, 3).fillRoundedRect(4, -14, 8, 28, 3);
     pb.add(pg).setSize(96, 96).setInteractive({ useHandCursor: true }).on('pointerup', () => this.openPause());
+    addExitButton(this, x + 52, top + H - 70, () => this.openPause(true));
     this.timerText = this.add.text(x + w - 22, top + 54, '0:00', { fontFamily: UI.fontTitle, fontSize: '38px', color: '#fffaf0' }).setOrigin(1, 0.5);
     this.add.text(cx, top + 118, stageLabel(this.chapter), { fontFamily: UI.fontTitle, fontSize: '28px', color: '#fffaf0' }).setOrigin(0.5);
     const rival = this.duo ? null : activeChallenge();
@@ -1514,11 +1517,11 @@ export class MazeScene extends Phaser.Scene {
   }
 
   // ── 일시정지 ────────────────────────────────────
-  openPause() {
+  openPause(confirmExit = false) {
     if (this.finished || !this.scene.isActive()) return;
     this.saveProgress();
     this.heldDir = null;
-    this.scene.launch('Pause', { chapter: this.chapter.id, frame: this.chapter.frame, ...(this.duo ? { restartData: { chapter: this.chapter.id, fresh: true, duo: this.duo } } : {}) });
+    this.scene.launch('Pause', { chapter: this.chapter.id, frame: this.chapter.frame, confirmExit, ...(this.duo ? { restartData: { chapter: this.chapter.id, fresh: true, duo: this.duo } } : {}) });
     this.scene.pause();
   }
 

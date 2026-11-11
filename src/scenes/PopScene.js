@@ -15,6 +15,7 @@ import { hasNature, drawNature } from '../pop/popNature.js';
 import { PopBoard } from '../pop/PopBoard.js';
 import { matchById, createMatch, sendInvite, saveMyResult, seededRandom } from '../social/match.js';
 import { SERIES } from '../series.js';
+import { addExitButton } from '../ui/exitButton.js';
 
 // 기념품 퐁퐁 (design-brief 10·12절). scene.start('Pop', { step: 'menu' | 'solo' | 'duo' | 'remote', stage, match })
 // 혼자 하기: 중국 → 일본 → 미국 → 캐나다, 나라마다 목표만큼 퐁 하면 도장 쾅 → 다음 나라(더 빨라짐).
@@ -169,6 +170,7 @@ export class PopScene extends Phaser.Scene {
     pg.fillStyle(0x2b2d5a, 1).fillRoundedRect(-12, -14, 8, 28, 3).fillRoundedRect(4, -14, 8, 28, 3);
     pb.add(pg).setSize(96, 96).setInteractive({ useHandCursor: true }).on('pointerup', () => this.openPause());
     this.pauseBtn = pb;
+    addExitButton(this, 156, 58 + top, () => this.openPause(true), { depth: 8 });
   }
 
   text(x, y, s, size = 30, color = '#fffaf0', font = UI.fontTitle) {
@@ -554,9 +556,9 @@ export class PopScene extends Phaser.Scene {
     for (const b of this.boards) b.update(Math.min(delta, 100));
   }
 
-  openPause() {
+  openPause(confirmExit = false) {
     if (this.ended || !this.scene.isActive() || this.step === 'menu') return;
-    this.scene.launch('Pause', { under: 'Pop', frame: 'woodWindow', restartLabel: '이 나라 처음부터', restartData: { step: this.step, stage: this.stageIdx, match: this.match?.id } });
+    this.scene.launch('Pause', { under: 'Pop', frame: 'woodWindow', confirmExit, restartLabel: '이 나라 처음부터', restartData: { step: this.step, stage: this.stageIdx, match: this.match?.id } });
     this.scene.pause();
   }
 }

@@ -175,7 +175,14 @@ export class PopScene extends Phaser.Scene {
     c.add(box);
     c.items = [];
     c.show = (pair) => {
-      c.items.forEach((o) => o.destroy());
+      c.items.forEach((o) => { this.tweens.killTweensOf(o); o.destroy(); });
+      if (pair === 'hammer') { // 다음은 나무망치 (가운데 크게)
+        const im = this.add.image(0, 0, 'pop_hammer').setDisplaySize(size * 1.5, size * 1.5);
+        c.add(im);
+        c.items = [im];
+        this.tweens.add({ targets: im, angle: { from: -10, to: 10 }, duration: 420, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+        return;
+      }
       c.items = pair.map((t, i) => {
         const ty = this.stage.types[t];
         const g = this.add.graphics();
@@ -225,7 +232,7 @@ export class PopScene extends Phaser.Scene {
       },
       onTopOut: () => this.soloOver(),
     });
-    next.show(board.next);
+    next.show(board.upcoming());
     this.boards = [board];
     this.updateSolo();
     board.start();
@@ -308,7 +315,7 @@ export class PopScene extends Phaser.Scene {
       onTurnEnd: () => this.leftMs > 0,
       onTopOut: () => { this.flashChain(this.chainText, 0); this.chainText.setText('퐁! 다시 이어서'); board.clearTop(); },
     });
-    next.show(board.next);
+    next.show(board.upcoming());
     this.boards = [board];
     this.updateRemote();
     this.countdown(() => { this.running = true; board.start(); });
@@ -363,6 +370,7 @@ export class PopScene extends Phaser.Scene {
       next.list[0].clear().fillStyle(0x2b2d5a, 0.85).fillRoundedRect(-44, -22, 88, 44, 14);
       next.show = ((orig) => (pair) => {
         next.items.forEach((o) => o.destroy());
+        if (pair === 'hammer') { const im = this.add.image(0, 0, 'pop_hammer').setDisplaySize(40, 40); next.add(im); next.items = [im]; return; }
         next.items = pair.map((t, k) => {
           const ty = this.stage.types[t];
           const g = this.add.graphics().fillStyle(ty.bg, 1).fillCircle((k ? 1 : -1) * 20, 0, 18);
@@ -391,7 +399,7 @@ export class PopScene extends Phaser.Scene {
         },
         onTopOut: () => this.duoOver(1 - i),
       });
-      next.show(b.next);
+      next.show(b.upcoming());
       return b;
     });
     // 조작 안내: 터치 한 줄 (모바일 전용, 2026-11-06)

@@ -82,6 +82,22 @@ const DRAW = {
     g.fillStyle(INK, 1).fillCircle(44 * s, 58 * s, 3.5 * s).fillCircle(62 * s, 58 * s, 3.5 * s);
     g.fillStyle(0xff9fb8, 0.8).fillEllipse(36 * s, 66 * s, 8 * s, 5 * s).fillEllipse(70 * s, 66 * s, 8 * s, 5 * s);
   },
+  // 귀여운 나무망치 (웃는 얼굴 머리 + 분홍 줄무늬 손잡이) — 그림 하나를 콩! 없앤다
+  pop_hammer(g, s) {
+    g.fillStyle(INK, 1).fillRoundedRect(40 * s, 44 * s, 20 * s, 52 * s, 9 * s);
+    g.fillStyle(0xe2b57a, 1).fillRoundedRect(44 * s, 46 * s, 12 * s, 46 * s, 6 * s);
+    g.fillStyle(0xff9fb8, 1).fillRect(44 * s, 70 * s, 12 * s, 6 * s).fillRect(44 * s, 82 * s, 12 * s, 6 * s);
+    g.fillStyle(INK, 1).fillRoundedRect(6 * s, 8 * s, 88 * s, 46 * s, 20 * s);
+    g.fillStyle(0xc98a5a, 1).fillRoundedRect(10 * s, 12 * s, 80 * s, 38 * s, 16 * s);
+    g.fillStyle(0xe8b07a, 1).fillRoundedRect(22 * s, 12 * s, 56 * s, 38 * s, 10 * s);
+    g.fillStyle(INK, 1).fillRect(20 * s, 12 * s, 3 * s, 38 * s).fillRect(77 * s, 12 * s, 3 * s, 38 * s);
+    g.fillStyle(0xffffff, 0.45).fillEllipse(36 * s, 19 * s, 22 * s, 6 * s);
+    g.fillStyle(INK, 1).fillCircle(40 * s, 30 * s, 4 * s).fillCircle(60 * s, 30 * s, 4 * s);
+    g.fillStyle(0xffffff, 1).fillCircle(41.5 * s, 28.5 * s, 1.5 * s).fillCircle(61.5 * s, 28.5 * s, 1.5 * s);
+    g.lineStyle(3 * s, INK, 1);
+    g.beginPath(); g.arc(50 * s, 35 * s, 5 * s, 0.2, Math.PI - 0.2); g.strokePath();
+    g.fillStyle(0xff8fae, 0.85).fillEllipse(31 * s, 39 * s, 9 * s, 5 * s).fillEllipse(69 * s, 39 * s, 9 * s, 5 * s);
+  },
 };
 
 // 씬이 처음 쓸 때 한 번 굽는다 (같은 이름의 그림 파일이 생기면 그걸 쓴다)

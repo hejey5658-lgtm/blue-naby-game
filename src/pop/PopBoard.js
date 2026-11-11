@@ -3,6 +3,7 @@
 // 그리기는 판 하나를 담은 container 안에서, 좌표는 칸 단위 (r = 줄, c = 칸).
 import { POP } from '../data/popgame.js';
 import { sfx } from '../ui/feedback.js';
+import { UI } from '../data/ui.js';
 
 const INK = 0x2b2d5a;
 const CHILD = [[-1, 0], [0, 1], [1, 0], [0, -1]]; // 돌림 방향별로 짝이 붙는 자리 (위·오른쪽·아래·왼쪽)
@@ -69,6 +70,7 @@ export class PopBoard {
   free(r, c) { return c >= 0 && c < this.cols && r < this.rows && (r < 0 || this.grid[r][c] === null); }
 
   cells(p = this.piece) {
+    if (p.hammer) return [[p.r, p.c, 'H', p.sa]];
     const [dr, dc] = CHILD[p.rot];
     return [[p.r, p.c, p.a, p.sa], [p.r + dr, p.c + dc, p.b, p.sb]];
   }
@@ -82,10 +84,18 @@ export class PopBoard {
   // ── 차례 ──
   start() { this.spawn(); }
 
+  // 몇 번째 묶음이 나무망치인지 (POP.hammer.at)
+  isHammer(n) { return !!POP.hammer?.at.includes(n); }
+
+  // 미리 보기에 보여 줄 다음 것: 묶음 [a, b] 또는 'hammer'
+  upcoming() { return this.isHammer((this.count ?? 0) + 1) ? 'hammer' : this.next; }
+
   spawn() {
+    this.count = (this.count ?? 0) + 1;
+    if (this.isHammer(this.count)) { this.spawnHammer(); return; }
     const [a, b] = this.next;
     this.next = this.randomPair();
-    this.onNext?.(this.next);
+    this.onNext?.(this.upcoming());
     const p = { r: 0, c: 2, rot: 0, a, b };
     if (!this.fits(p)) { this.topOut(); return; }
     p.sa = this.token(a);
@@ -94,6 +104,51 @@ export class PopBoard {
     this.place();
     this.acc = 0;
     this.mode = 'falling';
+  }
+
+  // 나무망치: 한 칸짜리. 쓱 옮겨 떨어뜨리면 내려앉은 자리 바로 밑 그림 하나가 콩! (묶음 순서는 그대로 — 각자 폰도 같게)
+  spawnHammer() {
+    this.onNext?.(this.upcoming());
+    const p = { r: 0, c: 2, rot: 0, hammer: true };
+    if (!this.fits(p)) { this.topOut(); return; }
+    const sa = this.scene.add.container(0, 0);
+    const glow = this.scene.add.graphics();
+    glow.fillStyle(0xffd84a, 0.45).fillCircle(0, 0, this.cell * 0.5);
+    glow.lineStyle(3, 0xffd84a, 1).strokeCircle(0, 0, this.cell * 0.48);
+    sa.add([glow, this.scene.add.image(0, this.cell * 0.1, 'pop_hammer').setDisplaySize(this.cell * 1.08, this.cell * 1.08)]);
+    this.scene.tweens.add({ targets: glow, alpha: 0.4, duration: 380, yoyo: true, repeat: -1 });
+    this.layer.add(sa);
+    p.sa = sa;
+    this.piece = p;
+    this.place();
+    this.acc = 0;
+    this.mode = 'falling';
+    sfx('open');
+    this.scene.tweens.add({ targets: sa, scale: { from: 0.4, to: 1 }, duration: 260, ease: 'Back.easeOut' });
+  }
+
+  // 망치가 내려앉으면: 한 번 휘둘러 밑의 그림(구름도)을 콩! → 떨어진 뒤 이어지면 퐁 연쇄
+  hammerHit() {
+    const { r, c, sa } = this.piece;
+    this.piece = null;
+    this.mode = 'resolving';
+    const br = r + 1;
+    const target = br < this.rows && this.grid[br][c] !== null ? this.sprites[br][c] : null;
+    this.scene.tweens.add({ targets: sa, angle: -35, duration: 120, ease: 'Quad.easeOut', yoyo: false, onComplete: () => {
+      this.scene.tweens.add({ targets: sa, angle: 20, y: sa.y + this.cell * 0.25, duration: 90, ease: 'Quad.easeIn', onComplete: () => {
+        if (target) {
+          this.grid[br][c] = null; this.sprites[br][c] = null;
+          sfx('pop1');
+          this.scene.tweens.add({ targets: target, scaleX: 1.4, scaleY: 0.4, alpha: 0, duration: 220, ease: 'Quad.easeOut', onComplete: () => target.destroy() });
+          const q = this.at(br, c);
+          const t = this.scene.add.text(q.x, q.y - this.cell * 0.2, '콩!', { fontFamily: UI.fontTitle, fontSize: `${Math.round(this.cell * 0.5)}px`, color: '#c98a5a', stroke: '#fffaf0', strokeThickness: 6 }).setOrigin(0.5);
+          this.layer.add(t);
+          this.scene.tweens.add({ targets: t, y: t.y - this.cell * 0.6, alpha: 0, duration: 600, ease: 'Quad.easeOut', onComplete: () => t.destroy() });
+        } else sfx('tap');
+        this.scene.tweens.add({ targets: sa, alpha: 0, scale: 0.6, duration: 220, delay: 120, onComplete: () => { this.scene.tweens.killTweensOf(sa.list); sa.destroy(); } });
+        this.scene.time.delayedCall(260, () => { if (this.mode === 'resolving') this.fall(() => this.resolve(1)); });
+      } });
+    } });
   }
 
   update(dt) {
@@ -119,6 +174,7 @@ export class PopBoard {
   // 톡: 시계 방향으로 돌린다. 벽에 막히면 옆으로 한 칸 비켜서 다시 해 본다.
   rotate() {
     if (this.mode !== 'falling') return;
+    if (this.piece.hammer) { this.scene.tweens.add({ targets: this.piece.sa, angle: { from: -14, to: 0 }, duration: 160, ease: 'Back.easeOut' }); sfx('toggle'); return; }
     const rot = (this.piece.rot + 1) % 4;
     for (const dc of [0, -1, 1]) {
       const p = { ...this.piece, rot, c: this.piece.c + dc };
@@ -135,6 +191,7 @@ export class PopBoard {
   lock() {
     const cells = this.cells();
     if (cells.some(([r]) => r < 0)) { this.topOut(); return; }
+    if (this.piece.hammer) { this.hammerHit(); return; }
     for (const [r, c, t, s] of cells) { this.grid[r][c] = t; this.sprites[r][c] = s; }
     this.piece = null;
     this.mode = 'resolving';

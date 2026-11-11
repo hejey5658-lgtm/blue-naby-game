@@ -170,7 +170,7 @@ export class PopScene extends Phaser.Scene {
     pg.fillStyle(0x2b2d5a, 1).fillRoundedRect(-12, -14, 8, 28, 3).fillRoundedRect(4, -14, 8, 28, 3);
     pb.add(pg).setSize(96, 96).setInteractive({ useHandCursor: true }).on('pointerup', () => this.openPause());
     this.pauseBtn = pb;
-    addExitButton(this, 156, 58 + top, () => this.openPause({ title: '홈으로 나갈까?', sub: '', firstLabel: this.step === 'remote' ? '처음부터 다시' : '1단계로 되돌아가기', prevLabel: this.step !== 'remote' && this.stageIdx >= 2 ? '전 단계로 되돌아가기' : null }), { depth: 8 });
+    addExitButton(this, 156, 58 + top, () => this.openPause({ title: '홈으로 나갈까?', sub: '', firstLabel: this.step === 'remote' ? '처음부터 다시' : null, prevLabel: this.step !== 'remote' && this.stageIdx >= 1 ? '전 단계로 되돌아가기' : null }), { depth: 8 });
   }
 
   text(x, y, s, size = 30, color = '#fffaf0', font = UI.fontTitle) {

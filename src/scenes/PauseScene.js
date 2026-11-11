@@ -15,7 +15,7 @@ export class PauseScene extends Phaser.Scene {
     this.under = data.under ?? 'Maze';
     this.restartLabel = data.restartLabel ?? '미로 처음부터';
     this.restartData = data.restartData ?? { chapter: data.chapter, fresh: true };
-    // 게임 화면의 [나가기] (애벌레·발바닥 버튼): "홈으로 나갈까?" [나가기] [1단계로 되돌아가기 → 밑 화면의 restartFromFirst()] [계속하기] (2026-11-11)
+    // 게임 화면의 [나가기] (애벌레·발바닥 버튼): "홈으로 나갈까?" [나가기] [전 단계로 되돌아가기 → 밑 화면의 restartPrev()] [계속하기] (2026-11-11)
     this.confirmExit = data.confirmExit || null; // { title, sub, firstLabel }
   }
 
@@ -54,26 +54,26 @@ export class PauseScene extends Phaser.Scene {
     this.tweens.add({ targets: root, alpha: 1, y: 0, duration: 220, ease: 'Back.easeOut' });
   }
 
-  // "홈으로 나갈까?" — [나가기](홈) [전 단계로 되돌아가기](2단계부터) [1단계로 되돌아가기] [계속하기] (2026-11-11)
+  // "홈으로 나갈까?" — [나가기](홈) [전 단계로 되돌아가기](2단계부터) [계속하기] (2026-11-11). 둘이서·각자 폰은 [처음부터 다시](firstLabel)
   drawConfirm(root, g, land) {
-    const { title = '홈으로 나갈까?', sub = '', firstLabel = '1단계로 되돌아가기', prevLabel = null } = this.confirmExit === true ? {} : this.confirmExit;
+    const { title = '홈으로 나갈까?', sub = '', firstLabel = null, prevLabel = null } = this.confirmExit === true ? {} : this.confirmExit;
     const btns = [
       ['나가기', 0xffb347, 0xd98a2b, '#2b2d5a', () => this.toTitle()],
       ...(prevLabel ? [[prevLabel, 0xfffaf0, 0xd8c8a8, '#2b2d5a', () => this.restartPrev()]] : []),
-      [firstLabel, 0xfffaf0, 0xd8c8a8, '#2b2d5a', () => this.restartFirst()],
+      ...(firstLabel ? [[firstLabel, 0xfffaf0, 0xd8c8a8, '#2b2d5a', () => this.restartFirst()]] : []),
       ['계속하기', 0x2f7bff, 0x1f5fd6, '#ffffff', () => this.resume()],
     ];
     const n = btns.length;
     const grid = land && n === 4; // 가로 + 버튼 4개 = 2×2
-    const y = land ? (grid ? 380 : 440) : 330 - (n - 3) * 58;
-    const w = land ? 900 : 560, h = land ? (grid ? 470 : 400) : 230 + n * 116;
+    const y = land ? (grid ? 380 : 440) : 360 - (n - 3) * 58;
+    const w = land ? (n === 2 ? 660 : 900) : 560, h = land ? (grid ? 470 : 400) : 230 + n * 116;
     drawPanel(g, UI.width / 2 - w / 2, y, w, h, this.frame);
     root.add([g,
       this.add.text(UI.width / 2, y + 90, title, { fontFamily: UI.fontTitle, fontSize: '46px', color: '#2b2d5a' }).setOrigin(0.5),
       this.add.text(UI.width / 2, y + 150, sub, { fontFamily: UI.font, fontSize: '24px', color: '#5a5c80', align: 'center' }).setOrigin(0.5)]);
     btns.forEach(([label, color, shade, textColor, fn], i) => {
       const [bx, by] = grid ? [UI.width / 2 + (i % 2 ? 205 : -205), y + 260 + Math.floor(i / 2) * 124]
-        : land ? [UI.width / 2 + (i - 1) * 285, y + 280] : [UI.width / 2, y + 240 + i * 116];
+        : land ? [UI.width / 2 + (i - (n - 1) / 2) * 285, y + 280] : [UI.width / 2, y + 240 + i * 116];
       root.add(new Button(this, bx, by, { width: grid ? 390 : land ? 270 : 420, height: 100, fontSize: land && !grid ? 27 : 30, label, color, shade, textColor, onPress: () => { sfx('tap'); fn(); } }));
     });
     root.alpha = 0;

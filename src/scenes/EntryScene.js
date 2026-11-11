@@ -53,8 +53,10 @@ export class EntryScene extends Phaser.Scene {
     this.globe.add([this.surface, this.shine]);
     this.drawRing();
     this.drawShine();
-    // 썸네일과 같은 모습으로 빽빽하게 (2026-11-11 "썸네일과 들어간 이미지가 동일하게")
-    this.makeItems({ step: 112, base: 0.5, vary: 0.1, gap: 8, max: 80, mix: 1.9, shrink: true, edge: 50 });
+    // 썸네일·카카오 미리보기와 같은 한 장면 (2026-11-11 "카카오 미리보기·처음 화면·썸네일을 동일하게"):
+    // 아래(가로는 오른쪽)에 "블루나비와 포포를 톡! 여행을 시작해봐요" + 주소 + 만든 사람, 그 자리는 물품을 비운다.
+    const band = this.makeBanner();
+    this.makeItems({ step: 112, base: 0.5, vary: 0.1, gap: 8, max: 80, mix: 1.9, shrink: true, edge: 50, ...band });
     this.makeFriends();
     this.makeChrome();
     this.drawSurface();
@@ -183,6 +185,7 @@ export class EntryScene extends Phaser.Scene {
     const rnd = (k) => { const v = Math.sin(k * 12.9898 + 78.233) * 43758.5453; return v - Math.floor(v); };
     const blocked = (x, y, r) => {
       if (y + r > bottom) return true;                                                             // 비워 둘 아래 띠
+      if (opts.avoid?.some((a) => x + r > a.x1 && x - r < a.x2 && y + r > a.y1 && y - r < a.y2)) return true; // 글자 자리
       if (Math.hypot(x - gx, y - gy) < R + gap + r) return true;                                  // 지구본
       if (Math.abs(x - gx) < 160 * gs + r * 0.7 && y > gy && y < gy + 330 * gs + r * 0.6) return true; // 받침
       return false;
@@ -225,6 +228,65 @@ export class EntryScene extends Phaser.Scene {
     });
   }
 
+
+  // ── 썸네일과 같은 글자 띠: 한마디 + 주소 + 만든 사람 (톡 하는 곳은 아님) ──
+  // 세로 = 지도 아래쪽 가운데, 가로 = 지구본 오른쪽. 물품이 비켜 갈 자리({ bottom } 또는 { avoid })를 돌려준다.
+  makeBanner() {
+    const land = UI.landscape, P = this.paper, F = UI.fontTitle;
+    const c = this.add.container(0, 0).setDepth(2);
+    const word = (t, color, size, font = F) => this.add.text(0, 0, t, { fontFamily: font, fontSize: `${size}px`, color }).setOrigin(0, 0.5);
+    const line = (parts, y) => {
+      const ts = parts.map(([t, col]) => word(t, col, 31));
+      const w = ts.reduce((a, t) => a + t.width, 0);
+      let x = -w / 2;
+      ts.forEach((t) => { t.setPosition(x, y); x += t.width; c.add(t); });
+      return w;
+    };
+    const BLUE = '#2f7bff', PINK = '#e0557a', INK = '#2b2d5a';
+    let y = 0, kw;
+    if (land) {
+      kw = Math.max(line([['블루나비', BLUE], ['와 ', INK], ['포포', PINK], ['를 톡!', INK]], y), line([['여행을 시작해봐요', INK]], y + 44));
+      y += 44 + 72;
+    } else {
+      kw = line([['블루나비', BLUE], ['와 ', INK], ['포포', PINK], ['를 톡! 여행을 시작해봐요', INK]], y);
+      y += 74;
+    }
+    // 주소 알약 (흰 바탕·남색 테·빨간 재생 동그라미)
+    const url = word('blue-naby-game.web.app', INK, 37);
+    const lw = 10 + 51 + 12 + url.width + 27, lh = 70;
+    const lg = this.add.graphics();
+    lg.fillStyle(0x2b2d5a, 1).fillRoundedRect(-lw / 2, y - lh / 2 + 6, lw, lh, lh / 2);
+    lg.fillStyle(0x2b2d5a, 1).fillRoundedRect(-lw / 2, y - lh / 2, lw, lh, lh / 2);
+    lg.fillStyle(0xffffff, 1).fillRoundedRect(-lw / 2 + 5, y - lh / 2 + 5, lw - 10, lh - 10, (lh - 10) / 2);
+    const cx = -lw / 2 + 10 + 25;
+    lg.fillStyle(0xff6b5b, 1).fillCircle(cx, y, 25);
+    lg.fillStyle(0xffffff, 1).fillTriangle(cx - 6, y - 12, cx - 6, y + 12, cx + 14, y);
+    url.setPosition(cx + 25 + 12, y - 2);
+    c.add([lg, url]);
+    y += lh / 2 + 6 + 48;
+    // 만든 사람 (남색 알약)
+    const small = word('만든 사람', '#cfe3ff', 23, UI.font), name = word('장은영(블루나비)', '#ffffff', 32);
+    const bw = 27 + small.width + 10 + name.width + 27, bh = 56;
+    const bg = this.add.graphics();
+    bg.fillStyle(0x2b2d5a, 1).fillRoundedRect(-bw / 2, y - bh / 2, bw, bh, bh / 2);
+    small.setPosition(-bw / 2 + 27, y);
+    name.setPosition(-bw / 2 + 27 + small.width + 10, y - 1);
+    c.add([bg, small, name]);
+    const h = y + bh / 2 + 22; // 위(한마디 가운데)부터 아래 끝까지
+    const w = Math.max(kw, lw, bw);
+    if (land) {
+      // 지구본 고리 오른쪽 빈 칸 가운데
+      const x1 = this.lay.gx + (GLOBE.r + 30) * this.lay.gs + 16, x2 = P.x + P.w - 30;
+      const sc = Math.min(1, (x2 - x1) / (w + 20));
+      const top = this.lay.gy - (h * sc) / 2 + 20 * sc;
+      c.setPosition((x1 + x2) / 2, top).setScale(sc);
+      return { avoid: [{ x1: (x1 + x2) / 2 - (w * sc) / 2 - 10, x2: (x1 + x2) / 2 + (w * sc) / 2 + 10, y1: top - 30 * sc, y2: top + h * sc }] };
+    }
+    // 세로: 만든 사람 알약이 지도 아래 끝에 걸치게 (썸네일과 같게)
+    const base = P.y + P.h - 16 - (y);
+    c.setPosition(UI.fullWidth / 2, base);
+    return { bottom: base - 22 };
+  }
 
   // ── 블루나비(1탄)·포포(2탄) = 입구: 지구본 양옆에 서서 통통, 톡 하면 그 탄 게임으로 ──
   makeFriends() {

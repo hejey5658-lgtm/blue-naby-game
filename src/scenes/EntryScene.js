@@ -169,43 +169,54 @@ export class EntryScene extends Phaser.Scene {
   // ── 주변 빈 곳을 채우는 귀여운 여행 물품 (배낭·물병·나침반, 파일 없이 그림, 2026-11-10) ──
   // 지도 종이의 빈 곳(지구본·블루나비·포포·제목을 피해서)에 물품을 흩어 놓는다 — 세로·가로·길쭉한 폰 모두 채워지게.
   // 자리는 고른 격자 + 조금씩 어긋나게(시드 고정), 크기·기울기도 조금씩 달리해 책상 위에 놓인 듯 자연스럽게.
-  makeItems() {
+  // opts(썸네일처럼 빽빽하게 채울 때): step 칸 간격, base·vary 크기, gap 지구본과 틈, bottom 이 아래는 비워 둠, max 개수
+  makeItems(opts = {}) {
+    this.items?.forEach((g) => g.destroy());
     const P = this.paper, { gx, gy, gs } = this.lay, land = UI.landscape;
     const R = GLOBE.r * gs;
-    const step = land ? 150 : 172;
+    const step = opts.step ?? (land ? 150 : 172);
+    const gap = opts.gap ?? 40, base = opts.base ?? (land ? 0.52 : 0.6), vary = opts.vary ?? 0.14;
+    const bottom = opts.bottom ?? Infinity, max = opts.max ?? 22;
     const KINDS = ['backpack', 'camera', 'bottle', 'ticket', 'compass', 'hat', 'suitcase', 'passport'];
     const DRAW = { backpack: drawBackpack, bottle: drawBottle, compass: drawCompass, suitcase: drawSuitcase, camera: drawCamera, hat: drawHat, passport: drawPassport, ticket: drawTicket };
     const rnd = (k) => { const v = Math.sin(k * 12.9898 + 78.233) * 43758.5453; return v - Math.floor(v); };
     const blocked = (x, y, r) => {
-      if (Math.hypot(x - gx, y - gy) < R + 40 + r) return true;                                   // 지구본
-      if (Math.abs(x - gx) < 160 * gs + r * 0.7 && y > gy && y < gy + R + 130 * gs + r) return true; // 받침
+      if (y + r > bottom) return true;                                                             // 비워 둘 아래 띠
+      if (Math.hypot(x - gx, y - gy) < R + gap + r) return true;                                  // 지구본
+      if (Math.abs(x - gx) < 160 * gs + r * 0.7 && y > gy && y < gy + 330 * gs + r * 0.6) return true; // 받침
       return false;
     };
     const spots = [];
     let k = 0;
     for (let y = P.y + 80; y < P.y + P.h - 60; y += step * 0.86) {
       const row = Math.round((y - P.y) / step);
-      for (let x = P.x + 78 + (row % 2) * step * 0.5; x < P.x + P.w - 60; x += step) {
+      for (let x = P.x + (opts.edge ?? 78) + (row % 2) * step * 0.5; x < P.x + P.w - 40; x += step) {
         k++;
         const jx = x + (rnd(k) - 0.5) * 34, jy = y + (rnd(k + 99) - 0.5) * 30;
-        const sc = (land ? 0.52 : 0.6) + rnd(k + 7) * 0.14;
-        const r = 72 * sc;
-        if (jx - r < P.x + 26 || jx + r > P.x + P.w - 26 || jy - r < P.y + 24 || jy + r > P.y + P.h - 22) continue;
-        if (blocked(jx, jy, r)) continue;
-        spots.push([jx, jy, sc, k]);
+        // 좁은 틈이면(opts.shrink) 조금 작게 해서라도 채운다
+        for (const f of opts.shrink ? [1, 0.78, 0.62] : [1]) {
+          const sc = (base + rnd(k + 7) * vary) * f;
+          const r = 72 * sc;
+          if (jx - r < P.x + 26 || jx + r > P.x + P.w - 26 || jy - r < P.y + 24 || jy + r > P.y + P.h - 22) continue;
+          if (blocked(jx, jy, r)) continue;
+          spots.push([jx, jy, sc, k]);
+          break;
+        }
       }
     }
+    // 지구본에 가까운 자리부터 채운다 (지구본 중심으로)
+    spots.sort((a, b) => Math.hypot(a[0] - gx, a[1] - gy) - Math.hypot(b[0] - gx, b[1] - gy));
     // 골고루 섞기: 가까운(약 1.7칸 안) 물품과 겹치지 않는 종류 중 지금까지 덜 쓴 것부터
     const placed = [], used = Object.fromEntries(KINDS.map((kd) => [kd, 0]));
     const pick = (x, y, kk) => {
-      const near = new Set(placed.filter((q) => Math.hypot(q.x - x, q.y - y) < step * 1.7).map((q) => q.kind));
+      const near = new Set(placed.filter((q) => Math.hypot(q.x - x, q.y - y) < step * (opts.mix ?? 1.7)).map((q) => q.kind));
       const order = KINDS.map((kd, n) => ({ kd, w: used[kd] + rnd(kk + n * 31) * 0.9 })).sort((a, b) => a.w - b.w);
       const kind = (order.find((o) => !near.has(o.kd)) ?? order[0]).kd;
       used[kind]++;
       placed.push({ x, y, kind });
       return kind;
     };
-    this.items = spots.slice(0, 22).map(([x, y, sc, kk], i) => {
+    this.items = spots.slice(0, max).map(([x, y, sc, kk], i) => {
       const g = this.add.graphics({ x, y }).setScale(sc).setAngle((rnd(kk + 3) - 0.5) * 22);
       DRAW[pick(x, y, kk)](g);
       if (!platform.reducedMotion) this.tweens.add({ targets: g, angle: g.angle + (i % 2 ? 4 : -4), duration: 1400 + (i % 5) * 260, yoyo: true, repeat: -1, ease: 'Sine.easeInOut', delay: (i % 4) * 300 });

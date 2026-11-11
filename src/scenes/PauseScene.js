@@ -15,8 +15,8 @@ export class PauseScene extends Phaser.Scene {
     this.under = data.under ?? 'Maze';
     this.restartLabel = data.restartLabel ?? '미로 처음부터';
     this.restartData = data.restartData ?? { chapter: data.chapter, fresh: true };
-    // 게임 화면의 [나가기] (애벌레·발바닥 버튼): "1단계로 다시?" 확인 → 밑 화면의 restartFromFirst() (2026-11-11)
-    this.confirmExit = data.confirmExit || null; // { title, sub }
+    // 게임 화면의 [나가기] (애벌레·발바닥 버튼): "홈으로 나갈까?" [나가기] [1단계로 되돌아가기 → 밑 화면의 restartFromFirst()] [계속하기] (2026-11-11)
+    this.confirmExit = data.confirmExit || null; // { title, sub, firstLabel }
   }
 
   create() {
@@ -54,18 +54,22 @@ export class PauseScene extends Phaser.Scene {
     this.tweens.add({ targets: root, alpha: 1, y: 0, duration: 220, ease: 'Back.easeOut' });
   }
 
-  // "1단계로 다시?" — [다시 하기] [계속하기]
+  // "홈으로 나갈까?" — [나가기](홈) [1단계로 되돌아가기] [계속하기] (2026-11-11)
   drawConfirm(root, g, land) {
-    const { title = '1단계로 다시?', sub = '' } = this.confirmExit === true ? {} : this.confirmExit;
-    const y = land ? 470 : 420, w = land ? 640 : 560, h = land ? 360 : 440;
+    const { title = '홈으로 나갈까?', sub = '', firstLabel = '1단계로 되돌아가기' } = this.confirmExit === true ? {} : this.confirmExit;
+    const y = land ? 440 : 360, w = land ? 900 : 560, h = land ? 400 : 580;
     drawPanel(g, UI.width / 2 - w / 2, y, w, h, this.frame);
     root.add([g,
       this.add.text(UI.width / 2, y + 90, title, { fontFamily: UI.fontTitle, fontSize: '46px', color: '#2b2d5a' }).setOrigin(0.5),
       this.add.text(UI.width / 2, y + 150, sub, { fontFamily: UI.font, fontSize: '24px', color: '#5a5c80', align: 'center' }).setOrigin(0.5)]);
-    const btns = [['다시 하기', 0xffb347, 0xd98a2b, '#2b2d5a', () => this.restartFirst()], ['계속하기', 0x2f7bff, 0x1f5fd6, '#ffffff', () => this.resume()]];
+    const btns = [
+      ['나가기', 0xffb347, 0xd98a2b, '#2b2d5a', () => this.toTitle()],
+      [firstLabel, 0xfffaf0, 0xd8c8a8, '#2b2d5a', () => this.restartFirst()],
+      ['계속하기', 0x2f7bff, 0x1f5fd6, '#ffffff', () => this.resume()],
+    ];
     btns.forEach(([label, color, shade, textColor, fn], i) => {
-      const [bx, by] = land ? [UI.width / 2 + (i ? 150 : -150), y + 260] : [UI.width / 2, y + 240 + i * 120];
-      root.add(new Button(this, bx, by, { width: land ? 270 : 400, height: 100, fontSize: 32, label, color, shade, textColor, onPress: () => { sfx('tap'); fn(); } }));
+      const [bx, by] = land ? [UI.width / 2 + (i - 1) * 285, y + 280] : [UI.width / 2, y + 240 + i * 116];
+      root.add(new Button(this, bx, by, { width: land ? 270 : 420, height: 100, fontSize: land ? 27 : 32, label, color, shade, textColor, onPress: () => { sfx('tap'); fn(); } }));
     });
     root.alpha = 0;
     root.y = 24;

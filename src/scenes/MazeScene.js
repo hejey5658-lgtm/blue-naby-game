@@ -1526,10 +1526,10 @@ export class MazeScene extends Phaser.Scene {
     this.scene.pause();
   }
 
-  // [나가기] (애벌레·발바닥): 1단계로 다시 (둘이서·각자 폰은 이 미로 처음부터) — 2026-11-11
+  // [나가기] (애벌레·발바닥): "홈으로 나갈까?" + [1단계로 되돌아가기] (둘이서·각자 폰은 [처음부터 다시]) — 2026-11-11
   exitAsk() {
-    if (this.duo) return { title: '처음부터 다시?', sub: '이 미로를 처음부터 다시 해' };
-    return { title: '1단계로 다시?', sub: `${stageLabel(CHAPTERS[0])} 미로를 처음부터 해\n열어 둔 단계${SERIES.meta.stars ? '·모은 별' : ''}은 그대로야` };
+    const sub = this.duo ? '' : '모은 것은 저장돼 있어서 이어서 할 수 있어';
+    return { title: '홈으로 나갈까?', sub, firstLabel: this.duo ? '처음부터 다시' : '1단계로 되돌아가기' };
   }
 
   restartFromFirst() {

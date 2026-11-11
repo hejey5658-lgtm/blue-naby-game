@@ -11,6 +11,7 @@ import { getSafeInsets } from '../ui/safeArea.js';
 import { waitForAssets } from './PreloadScene.js';
 import { drawBackdrop, addAmbient } from '../maze/scenery.js';
 import { makePopIcons } from '../pop/icons.js';
+import { hasNature, drawNature } from '../pop/popNature.js';
 import { PopBoard } from '../pop/PopBoard.js';
 import { matchById, createMatch, sendInvite, saveMyResult, seededRandom } from '../social/match.js';
 import { SERIES } from '../series.js';
@@ -138,6 +139,13 @@ export class PopScene extends Phaser.Scene {
     UI.fullWidth = UI.width; UI.fullHeight = UI.height;
     // 가로·길쭉한 화면의 양옆·위아래는 그 나라 바탕색으로
     this.add.rectangle(-2000, -2000, UI.width + 4000, UI.height + 4000, this.look.floor ?? 0xf3e3c3).setOrigin(0);
+    // 1탄 나라: 보이는 칸 전체를 그 나라의 귀여운 자연 풍경으로 (2026-11-11, src/pop/popNature.js)
+    if (hasNature(this.stage.id)) {
+      [UI.fullWidth, UI.fullHeight] = keep;
+      const V = UI.landscape ? this.landscapeView() : UI.view;
+      drawNature(this, V, this.stage.id, UI.landscape ? V.zoom : 1);
+      return;
+    }
     const g = this.make.graphics({ x: 0, y: 0 }, false);
     drawBackdrop(this, g);
     if (this.textures.exists('pop_bg')) this.textures.remove('pop_bg');

@@ -1529,7 +1529,16 @@ export class MazeScene extends Phaser.Scene {
   // [나가기] (애벌레·발바닥): "홈으로 나갈까?" + [1단계로 되돌아가기] (둘이서·각자 폰은 [처음부터 다시]) — 2026-11-11
   exitAsk() {
     const sub = this.duo ? '' : '모은 것은 저장돼 있어서 이어서 할 수 있어';
-    return { title: '홈으로 나갈까?', sub, firstLabel: this.duo ? '처음부터 다시' : '1단계로 되돌아가기' };
+    const prev = this.duo ? null : this.prevChapter();
+    return { title: '홈으로 나갈까?', sub, firstLabel: this.duo ? '처음부터 다시' : '1단계로 되돌아가기', prevLabel: prev && prev !== CHAPTERS[0] ? '전 단계로 되돌아가기' : null };
+  }
+
+  // 바로 앞 단계 (1단계면 없음)
+  prevChapter() { const i = CHAPTERS.findIndex((c) => c.id === this.chapter.id); return i > 0 ? CHAPTERS[i - 1] : null; }
+
+  restartPrev() {
+    const prev = this.prevChapter();
+    if (prev) startChapter(this, prev.id, { replay: true }); else this.restartFromFirst();
   }
 
   restartFromFirst() {

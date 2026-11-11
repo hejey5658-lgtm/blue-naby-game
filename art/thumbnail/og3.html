@@ -1,10 +1,11 @@
 <!doctype html><html><head><meta charset="utf-8"><style>
+@font-face{font-family:Jua;src:url(../../public/fonts/Jua-subset.woff2)}
 *{margin:0;box-sizing:border-box}
 body{width:1200px;height:630px;overflow:hidden;position:relative;background:#8f6440}
-/* 카카오톡 미리보기 (2026-11-11~): 썸네일·게임 첫 화면과 같은 세로 화면을 가운데에 크게, 양옆은 같은 화면을 흐리게 깐 바탕 */
-.blur{position:absolute;left:-40px;top:-40px;width:1280px;height:710px;background:url(entry_v396.png) center 34%/1280px auto no-repeat;filter:blur(16px) brightness(.8) saturate(1.1)}
-.shot{position:absolute;left:50%;top:14px;transform:translateX(-50%);height:602px;border-radius:26px;box-shadow:0 10px 28px rgba(0,0,0,.35);border:5px solid #fffaf0}
-.ver{position:absolute;right:26px;bottom:24px;font-family:Jua;font-size:30px;color:#2b2d5a;background:#fffaf0;border:4px solid #2b2d5a;border-radius:999px;padding:4px 20px 6px;box-shadow:0 5px 0 #2b2d5a}
-@font-face{font-family:Jua;src:url(../../public/fonts/Jua-subset.woff2)}
-</style></head><body><div class="blur"></div><img class="shot" src="entry_v396.png"><div class="ver" id="ver"></div>
-<script>/* 버전 글자 (2026-11-11 "카카오 미리보기 v3.13.1로 보이게"): build-thumbnail.cjs 가 #v=버전 으로 넘김 */document.getElementById("ver").textContent="v"+(new URLSearchParams(location.hash.slice(1)).get("v")||"");</script></body></html>
+/* 카카오톡 미리보기 (2026-11-11~): 게임 첫 화면(지구본 입구)의 **가로 화면** 그대로 + 오른쪽 아래 버전 알약.
+   바탕 entry_land_og.png = 852×447 가로 폰 화면(캔버스 1372×720, 1200×630과 같은 비율, 버전 글자만 숨김) */
+.shot{position:absolute;left:0;top:0;width:1200px;height:630px}
+.ver{position:absolute;right:22px;bottom:18px;font-family:Jua;font-size:28px;color:#2b2d5a;background:#fffaf0;border:4px solid #2b2d5a;border-radius:999px;padding:3px 18px 5px;box-shadow:0 5px 0 #2b2d5a}
+</style></head><body><img class="shot" src="entry_land_og.png"><div class="ver" id="ver"></div>
+<script>/* 버전 글자: build-thumbnail.cjs 가 #v=버전 으로 넘김 */document.getElementById("ver").textContent="v"+(new URLSearchParams(location.hash.slice(1)).get("v")||"");</script>
+</body></html>

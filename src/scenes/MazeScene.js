@@ -60,7 +60,8 @@ export class MazeScene extends Phaser.Scene {
     // duo.remote = 각자 폰 대결 번호: 공평하게 아이템 없이, 카운트다운 뒤 출발, 끝나면 대결 화면(Match)으로
     this.duo = data.duo ?? null;
     // 방해물 빠르기 (ui.js hazardSpeed, 1탄 1.5배): 시간 값은 이것으로 나눠 쓴다
-    const hz = UI.hazardSpeed?.[SERIES.n] ?? 1;
+    // 단계마다 더 늦출 수 있다: chapters.js hazardSpeed (2026-11-11 1탄·2탄 1단계 = 0.5, 방해물만 절반 빠르기)
+    const hz = (UI.hazardSpeed?.[SERIES.n] ?? 1) * (this.chapter.hazardSpeed ?? 1);
     Object.assign(this, { patrolMs: PATROL_STEP_MS / hz, lampMs: LAMP_PULL_MS / hz, waterCycle: WATER_CYCLE / hz, waterOn: WATER_ON / hz, hz });
     this.remote = this.duo?.remote ?? null;
     this.hasItem = (k) => !this.remote && state.items.includes(k);

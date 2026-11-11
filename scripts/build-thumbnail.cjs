@@ -5,7 +5,7 @@
 //   docs/presentation/thumbnail-tall-2.png·.jpg — 같은 세로 썸네일, 게임명 "블루나비와 포포의 여행" (art/thumbnail/thumbnail-tall-2.html)
 //   docs/presentation/thumbnail-tall-3.png·.jpg — v3.8.0 새 홈 화면 그대로(바탕 art/thumbnail/home_clean.png) + 주소·만든 사람
 //   docs/presentation/thumbnail-tall-4.png·.jpg — 게임 첫 화면(지구본 입구, v3.9.6~) 그대로 (바탕 art/thumbnail/entry_v396.png, 한마디·주소·만든 사람도 게임 안에 있음)
-//   public/og-image-v12.png (1200×630) — 카카오톡·SNS 링크 미리보기 (2026-11-11~ 원본 art/thumbnail/og3.html: 썸네일과 같은 세로 게임 화면을 가운데에, 양옆은 흐린 바탕) (옛 설명: (2026-11-10~ 세로 썸네일과 같은 모습: 게임 입구 가로 화면 + 게임명·주소·만든 사람)
+//   public/og-image-v13.png (1200×630) — 카카오톡·SNS 링크 미리보기 (2026-11-11~ 원본 art/thumbnail/og3.html: 썸네일과 같은 세로 게임 화면을 가운데에, 양옆은 흐린 바탕) (옛 설명: (2026-11-10~ 세로 썸네일과 같은 모습: 게임 입구 가로 화면 + 게임명·주소·만든 사람)
 //     (2026-11-10 v3.9.5~: 원본 art/thumbnail/og2.html, 바탕 entry_land_v395.png = 지구본 입구 가로 화면, 오른쪽 칸 물품만 숨김))
 // 실행: node scripts/build-thumbnail.cjs  (Playwright 크로미움 필요)
 const path = require('path');
@@ -31,7 +31,7 @@ const page = 'file://' + path.join(root, 'art/thumbnail/thumbnail.html');
     await p.goto('file://' + path.join(root, 'art/thumbnail/og3.html') + '#v=' + ver);
     await p.evaluate(() => document.fonts.ready);
     await p.waitForTimeout(400);
-    await p.screenshot({ path: path.join(root, 'public/og-image-v12.png') });
+    await p.screenshot({ path: path.join(root, 'public/og-image-v13.png') });
     await p.close();
   }
   const shotTall = async (src = 'thumbnail-tall', out = 'thumbnail-tall') => {
@@ -50,11 +50,11 @@ const page = 'file://' + path.join(root, 'art/thumbnail/thumbnail.html');
   // og 는 1200×630 으로 줄이고, 모두 용량 줄이기
   execFileSync('python3', ['-c', `
 from PIL import Image
-im=Image.open('public/og-image-v12.png').convert('RGB').resize((1200,630),Image.LANCZOS); im.save('public/og-image-v12.png',optimize=True)
+im=Image.open('public/og-image-v13.png').convert('RGB').resize((1200,630),Image.LANCZOS); im.save('public/og-image-v13.png',optimize=True)
 for n in ['thumbnail-tall','thumbnail-tall-2','thumbnail-tall-3','thumbnail-tall-4']:
   Image.open('docs/presentation/'+n+'.png').convert('RGB').save('docs/presentation/'+n+'.jpg',quality=92,optimize=True)
 for f in ['docs/presentation/thumbnail.png','docs/presentation/thumbnail-1280.png','docs/presentation/thumbnail-tall.png','docs/presentation/thumbnail-tall-2.png','docs/presentation/thumbnail-tall-3.png','docs/presentation/thumbnail-tall-4.png']:
   Image.open(f).convert('RGB').save(f,optimize=True)
 `], { cwd: root, stdio: 'inherit' });
-  console.log('썸네일: docs/presentation/thumbnail*.png, 공유 그림: public/og-image-v12.png');
+  console.log('썸네일: docs/presentation/thumbnail*.png, 공유 그림: public/og-image-v13.png');
 })();

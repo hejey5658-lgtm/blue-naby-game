@@ -908,7 +908,9 @@ export class MazeScene extends Phaser.Scene {
       o.sp = this.add.image(0, 0, `boss_${f.key}`, 0);
       o.mound = this.add.graphics();
       o.hearts = this.add.graphics();
-      o.c.add([o.sp, o.mound, o.hearts]);
+      // 숨은 자리를 알려 주는 은은한 노란 빛 (2026-11-11 "2탄도 숨은 친구가 잘 보이게") — 찾으면 사라진다
+      o.glow = this.add.graphics();
+      o.c.add([o.glow, o.sp, o.mound, o.hearts]);
       if (o.found >= 3) this.waitAtExit(o, false); else this.hideAt(o, false);
       return o;
     });
@@ -917,9 +919,13 @@ export class MazeScene extends Phaser.Scene {
   hideAt(o, animate) {
     const { cell } = this;
     const [x, y] = o.spots[o.found];
-    this.tweens.killTweensOf([o.c, o.sp]);
+    this.tweens.killTweensOf([o.c, o.sp, o.glow]);
     o.c.setPosition(this.cx(x), this.cy(y)).setAngle(0);
-    o.sp.setFrame(0).setDisplaySize(cell * 1.05, cell * 1.05).setCrop(0, 0, 480, 330).setPosition(0, -cell * 0.04);
+    // 머리(눈까지)가 쿠션 위로 빼꼼 보이게 조금 높이, 몸은 쿠션 뒤로 (2026-11-11: 예전엔 머리끝만 보여 잘 안 보였다)
+    o.sp.setFrame(0).setDisplaySize(cell * 1.1, cell * 1.1).setCrop(0, 0, 480, 430).setPosition(0, -cell * 0.28);
+    o.glow.clear().fillStyle(0xffe9a8, 0.7).fillCircle(0, -cell * 0.08, cell * 0.62);
+    o.glow.setAlpha(1);
+    this.tweens.add({ targets: o.glow, alpha: 0.35, duration: 700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
     // 숨는 쿠션 (수집품·방해물과 헷갈리지 않는 크림색 + 남색 테두리)
     const g = o.mound.clear();
     g.fillStyle(0x2b2d5a, 0.18).fillEllipse(0, cell * 0.36, cell * 1.0, cell * 0.36);
@@ -927,9 +933,9 @@ export class MazeScene extends Phaser.Scene {
     g.fillStyle(0xfffaf0, 1).fillRoundedRect(-cell * 0.43, cell * 0.07, cell * 0.86, cell * 0.32, cell * 0.14);
     g.fillStyle(0xe8dcc0, 1).fillRoundedRect(-cell * 0.43, cell * 0.25, cell * 0.86, cell * 0.14, { tl: 0, tr: 0, bl: cell * 0.14, br: cell * 0.14 });
     g.fillStyle(0xff9fb8, 1).fillCircle(-cell * 0.22, cell * 0.2, cell * 0.04).fillCircle(0, cell * 0.2, cell * 0.04).fillCircle(cell * 0.22, cell * 0.2, cell * 0.04);
-    this.drawHearts(o, -cell * 0.62);
-    // 들썩들썩 빼꼼 (바스락)
-    this.tweens.add({ targets: o.sp, y: cell * 0.14, duration: 260, yoyo: true, hold: 700, repeat: -1, repeatDelay: 1100 + o.i * 230, ease: 'Sine.easeInOut' });
+    this.drawHearts(o, -cell * 0.95);
+    // 들썩들썩 빼꼼 (바스락) — 살짝 숨었다가 다시 고개를 내민다
+    this.tweens.add({ targets: o.sp, y: -cell * 0.1, duration: 260, yoyo: true, hold: 600, repeat: -1, repeatDelay: 1300 + o.i * 230, ease: 'Sine.easeInOut' });
     this.tweens.add({ targets: o.sp, angle: { from: -5, to: 5 }, duration: 380, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
     if (animate) {
       o.c.setScale(0.2).setAlpha(0);
@@ -943,7 +949,8 @@ export class MazeScene extends Phaser.Scene {
     const [ex, ey] = this.exitCell;
     const offs = [[-0.72, -0.2], [0.72, -0.2], [0, -0.75]];
     const [dx, dy] = offs[o.i % 3];
-    this.tweens.killTweensOf([o.c, o.sp]);
+    this.tweens.killTweensOf([o.c, o.sp, o.glow]);
+    o.glow.clear();
     o.c.setPosition(this.cx(ex) + dx * cell, this.cy(ey) + dy * cell).setAngle(0).setDepth(5.5);
     o.sp.setCrop().setFrame(3).setDisplaySize(cell * 0.9, cell * 0.9).setPosition(0, 0).setAngle(0);
     o.mound.clear();
@@ -973,7 +980,8 @@ export class MazeScene extends Phaser.Scene {
     this.say(line, 2000, { tex: `face_${f.key}`, frame: 0 });
     if (!this.duo) speak(line, null, f.key);
     this.addEnergy(UI.energy.find);
-    this.tweens.killTweensOf([f.c, f.sp]);
+    this.tweens.killTweensOf([f.c, f.sp, f.glow]);
+    f.glow.clear();
     f.sp.setCrop().setFrame(3).setPosition(0, 0).setAngle(0);
     f.mound.clear();
     this.drawHearts(f, -this.cell * 0.56);

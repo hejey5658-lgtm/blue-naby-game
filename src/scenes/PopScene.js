@@ -139,7 +139,7 @@ export class PopScene extends Phaser.Scene {
     UI.fullWidth = UI.width; UI.fullHeight = UI.height;
     // 가로·길쭉한 화면의 양옆·위아래는 그 나라 바탕색으로
     this.add.rectangle(-2000, -2000, UI.width + 4000, UI.height + 4000, this.look.floor ?? 0xf3e3c3).setOrigin(0);
-    // 1탄 나라: 보이는 칸 전체를 그 나라의 귀여운 자연 풍경으로 (2026-11-11, src/pop/popNature.js)
+    // 나라(1탄)·계절(2탄): 보이는 칸 전체를 그 나라의 귀여운 자연 풍경으로 (2026-11-11, src/pop/popNature.js)
     if (hasNature(this.stage.id)) {
       [UI.fullWidth, UI.fullHeight] = keep;
       const V = UI.landscape ? this.landscapeView() : UI.view;

@@ -31,10 +31,10 @@ export class PopBoard {
     const { cell } = this;
     const w = this.cols * cell, h = this.rows * cell;
     const g = this.scene.add.graphics();
-    g.fillStyle(INK, 0.18).fillRoundedRect(-8, -2, w + 16, h + 16, 22);
-    g.fillStyle(INK, 1).fillRoundedRect(-10, -10, w + 20, h + 20, 24);
-    g.fillStyle(0xfffaf0, 0.94).fillRoundedRect(-4, -4, w + 8, h + 8, 20);
-    g.fillStyle(INK, 0.07);
+    // 판 안쪽은 반투명 — 뒤의 나라 풍경이 비쳐 보이게 (2026-11-11). 테두리는 선으로(안을 채우면 남색이 비침)
+    g.fillStyle(0xfffaf0, 0.55).fillRoundedRect(-7, -7, w + 14, h + 14, 22);
+    g.lineStyle(7, INK, 1).strokeRoundedRect(-7, -7, w + 14, h + 14, 22);
+    g.fillStyle(INK, 0.12);
     for (let r = 1; r < this.rows; r++) for (let c = 1; c < this.cols; c++) g.fillCircle(c * cell, r * cell, 2);
     this.layer.add(g);
   }

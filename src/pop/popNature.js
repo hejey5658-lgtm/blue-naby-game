@@ -10,25 +10,50 @@ export const THEMES = {
   cn: {
     sky: [0xcfeedb, 0xf2f9ea], far: 'karst', farColor: [0x8fc3a0, 0xaed6b8], mid: [0xa9d68c, 0x93c878], wall: true,
     ground: 0xc6e4a2, tuft: 0x9fcf7c, water: 0x9fd8d2, onWater: 'lotus',
-    props: ['bamboo', 'bush', 'bamboo', 'pine', 'panda', 'bamboo', 'rock', 'bamboo', 'pine', 'bush', 'bamboo'],
+    props: ['bamboo', 'bush', 'bamboo', 'pine', 'panda', 'bamboo', 'rock', 'bamboo', 'pine', 'bush', 'bamboo'], edge: 'bamboo',
   },
   // 일본: 눈 덮인 큰 산 + 벚나무·돌등·잉어 연못
   jp: {
     sky: [0xfde0e8, 0xfff5f1], far: 'fuji', farColor: [0x9ab4dc, 0xbccbe6], mid: [0xbfe0a8, 0xa8d391],
     ground: 0xd3eab8, tuft: 0xb0d898, water: 0xa6d6ee, onWater: 'koi',
-    props: ['cherry', 'bush', 'cherry', 'lantern', 'cherry', 'rock', 'cherry', 'bush', 'cherry'],
+    props: ['cherry', 'bush', 'cherry', 'lantern', 'cherry', 'rock', 'cherry', 'bush', 'cherry'], edge: 'cherry',
   },
   // 미국: 붉은 협곡 바위산 + 큰 참나무·소나무·해바라기·오리 연못
   us: {
     sky: [0xcde7ff, 0xeef7ff], far: 'mesa', farColor: [0xe5a27a, 0xd0855e], mid: [0xa3d68c, 0x8cc877],
     ground: 0xc2e4a2, tuft: 0x9fd07f, water: 0x9fd0f0, onWater: 'duck', sun: true,
-    props: ['oak', 'sunflower', 'pine', 'oak', 'sunflower', 'bush', 'oak'],
+    props: ['oak', 'sunflower', 'pine', 'oak', 'sunflower', 'bush', 'oak'], edge: 'oak',
   },
   // 캐나다: 눈 덮인 로키 봉우리 + 침엽수 숲 + 단풍나무·튤립 밭·카누 호수
   ca: {
     sky: [0xd1e5ff, 0xf3f8ff], far: 'rocky', farColor: [0x8ea6cb, 0xb2c3df], mid: [0x6fae7a, 0x5d9c69], forest: true,
     ground: 0xdbe9ac, tuft: 0xbcd88c, water: 0x8fc6ec, onWater: 'canoe', sun: true,
-    props: ['maple', 'tulips', 'pine', 'maple', 'tulips', 'maple', 'pine'],
+    props: ['maple', 'tulips', 'pine', 'maple', 'tulips', 'maple', 'pine'], edge: 'maple',
+  },
+  // ── 2탄 포포의 사계절 서울 (계절 자연 + 먼 곳에 남산 타워·빌딩) ──
+  // 봄: 벚꽃 한강
+  sp: {
+    sky: [0xffe3ec, 0xfff6f2], far: 'seoul', farColor: [0xa9c7a0, 0xc9dcc0], city: [0xd8dff0, 0xc3cde6], mid: [0xbfe3a6, 0xaad694],
+    ground: 0xd6edbc, tuft: 0xb4dc9a, water: 0xa8d8f0, onWater: 'duck',
+    props: ['cherry', 'bush', 'cherry', 'tulips', 'cherry', 'bush', 'cherry'], edge: 'cherry',
+  },
+  // 여름: 초록 나무 + 물놀이 튜브 강
+  su: {
+    sky: [0xc8e8ff, 0xedf8ff], far: 'seoul', farColor: [0x7fbf7a, 0xa3d394], city: [0xd5e3f2, 0xbdd0e8], mid: [0x9fd98a, 0x86cc72],
+    ground: 0xbfe6a0, tuft: 0x98d27a, water: 0x8fcff2, onWater: 'tube', sun: true,
+    props: ['oak', 'sunflower', 'bush', 'oak', 'sunflower', 'pine', 'oak'], edge: 'oak',
+  },
+  // 가을: 은행나무·단풍 남산
+  au: {
+    sky: [0xffe9c8, 0xfff7ea], far: 'seoul', farColor: [0xe0a35e, 0xedc184], city: [0xeadfce, 0xdccdb6], mid: [0xe8c97a, 0xdcb865],
+    ground: 0xefdca4, tuft: 0xd9c27e, water: 0xa6d2e6, onWater: 'duck',
+    props: ['ginkgo', 'maple', 'bush', 'ginkgo', 'rock', 'maple', 'ginkgo'], edge: 'ginkgo',
+  },
+  // 겨울: 눈 덮인 소나무·눈사람·꽁꽁 언 연못
+  wi: {
+    sky: [0xdde9f8, 0xf6f9ff], far: 'seoul', farColor: [0xc9d6ea, 0xe3ebf6], city: [0xd4dcea, 0xc2cde0], mid: [0xf3f7ff, 0xe6eefa], snowy: true,
+    ground: 0xf6f9ff, tuft: 0xdbe5f3, water: 0xcfe6f6, onWater: 'ice',
+    props: ['snowpine', 'snowman', 'snowpine', 'bush', 'snowpine', 'rock', 'snowpine'], edge: 'snowpine',
   },
 };
 
@@ -67,7 +92,7 @@ export function drawNature(scene, V, id, k = 1) {
     cloud(g, x, y, 0.7 + rnd(i + 5) * 0.5);
   }
   // 먼 산
-  FAR[T.far](g, L, R, hz, T.farColor, H);
+  FAR[T.far](g, L, R, hz, T.farColor, land ? H : H * 1.7, T);
   // 가운데 언덕 (둥근 덩어리 두 겹)
   for (let x = L - 120, i = 0; x < R + 160; x += 210, i++) {
     g.fillStyle(T.mid[0], 1).fillEllipse(x, hz + 18, 340 + rnd(i) * 120, 120 + rnd(i + 9) * 50);
@@ -109,6 +134,19 @@ export function drawNature(scene, V, id, k = 1) {
     }
   });
 
+  // 세로: 판 양옆 좁은 칸도 꽉 차게 — 가장자리에 큰 나무 + 하늘에 새
+  if (!land) {
+    [[L + 46, 0.31], [R - 46, 0.37], [L + 40, 0.62], [R - 40, 0.7]].forEach(([x, f], j) => {
+      const y = hz + 50 + (B - hz - 50) * f;
+      PROPS[T.edge](g, x, y, 1.75 - j * 0.15, j + 3);
+    });
+  }
+  for (let i = 0; i < Math.max(3, Math.round(W / 300)); i++) {
+    const x = L + rnd(i + 900) * W, y = Tp + H * 0.1 + rnd(i + 950) * (hz - Tp - H * 0.25);
+    g.lineStyle(3, INK, 0.55); g.beginPath(); g.arc(x - 7, y, 7, Math.PI * 1.1, Math.PI * 1.9); g.strokePath();
+    g.beginPath(); g.arc(x + 7, y, 7, Math.PI * 1.1, Math.PI * 1.9); g.strokePath();
+  }
+
   const key = 'pop_nature';
   if (scene.textures.exists(key)) scene.textures.remove(key);
   g.generateTexture(key, Math.ceil(W * k), Math.ceil(H * k));
@@ -132,6 +170,30 @@ function cloud(g, x, y, s) {
 
 // ── 먼 산 ──
 const FAR = {
+  // 남산(타워) + 낮은 빌딩 숲 (2탄)
+  seoul(g, L, R, hz, [c1, c2], H, T) {
+    const W = R - L;
+    for (let x = L - 20, i = 0; x < R + 40; x += 46, i++) {
+      const h = 40 + rnd(i + 500) * 90, w = 34 + rnd(i + 520) * 14;
+      g.fillStyle(T.city[i % 2], 1).fillRoundedRect(x, hz - h + 20, w, h, 4);
+      g.fillStyle(0xffffff, 0.6);
+      for (let yy = hz - h + 30; yy < hz + 6; yy += 16) for (let xx = x + 6; xx < x + w - 8; xx += 11) g.fillRect(xx, yy, 6, 7);
+    }
+    const cs = W > 1000 ? [L + W * 0.22, L + W * 0.8] : [L + W * 0.12];
+    for (const cx of cs) {
+      const h = H * 0.13, w = h * 3.4;
+      g.fillStyle(c2, 1).fillEllipse(cx + w * 0.3, hz + 8, w * 0.8, h * 1.3);
+      g.fillStyle(c1, 1).fillEllipse(cx, hz + 10, w, h * 2);
+      if (T.snowy) g.fillStyle(0xffffff, 1).fillEllipse(cx, hz - h * 0.7, w * 0.42, h * 0.5);
+      // 남산 타워 (둥근 전망대)
+      const ty = hz - h + 4;
+      g.fillStyle(0xf3f4fb, 1).fillRect(cx - 5, ty - 120, 10, 122);
+      g.fillStyle(INK, 1).fillRect(cx - 2, ty - 160, 4, 44);
+      g.fillStyle(0xf3f4fb, 1).fillRoundedRect(cx - 18, ty - 112, 36, 18, 8);
+      g.fillStyle(0x7ec8ff, 1).fillRect(cx - 14, ty - 106, 28, 5);
+      g.fillStyle(0xe8584a, 1).fillCircle(cx, ty - 160, 4);
+    }
+  },
   karst(g, L, R, hz, [c1, c2], H) {
     for (let x = L - 60, i = 0; x < R + 80; x += 120, i++) {
       const w = 90 + rnd(i + 70) * 50, h = H * (0.13 + rnd(i + 80) * 0.12);
@@ -197,6 +259,18 @@ function tuft(g, x, y, c) {
 
 // ── 물 위 ──
 const WATER = {
+  tube(g, x, y, w, h, i) {
+    [[-0.22, 0xff8fae], [0.05, 0xffd84a], [0.26, 0x7ec8ff]].forEach(([dx, c], j) => {
+      const px = x + dx * w, py = y + (j % 2 ? 8 : -6);
+      g.fillStyle(c, 1).fillEllipse(px, py, 40, 18);
+      g.fillStyle(0xffffff, 1).fillEllipse(px, py - 1, 16, 7);
+    });
+  },
+  ice(g, x, y, w, h, i) {
+    g.fillStyle(0xffffff, 0.7).fillEllipse(x, y, w * 0.8, h * 0.6);
+    g.lineStyle(2, 0x9fbfe0, 0.9); g.beginPath(); g.arc(x - 20, y, 26, 0.3, 2.6); g.strokePath();
+    g.beginPath(); g.arc(x + 24, y - 4, 20, 3.4, 5.9); g.strokePath();
+  },
   lotus(g, x, y, w, h, i) {
     for (let j = 0; j < 4; j++) {
       const px = x + (j - 1.5) * w * 0.22 + (rnd(i * 9 + j) - 0.5) * 12, py = y + (rnd(i * 7 + j) - 0.5) * h * 0.4;
@@ -235,6 +309,26 @@ const WATER = {
 
 // ── 나무·꽃 (x, y = 밑동, s = 크기) ──
 const PROPS = {
+  ginkgo(g, x, y, s, n) {
+    g.fillStyle(0x000000, 0.1).fillEllipse(x, y + 2, 70 * s, 12 * s);
+    g.fillStyle(0x8f6440, 1).fillRoundedRect(x - 6 * s, y - 70 * s, 12 * s, 70 * s, 5 * s);
+    const ys = [0xffd84a, 0xf5c542, 0xffe27a];
+    [[0, -120, 26], [-16, -98, 26], [16, -96, 26], [-22, -76, 24], [22, -74, 24], [0, -84, 26]].forEach(([dx, dy, r], j) => g.fillStyle(ys[(n + j) % 3], 1).fillCircle(x + dx * s, y + dy * s, r * s));
+    g.fillStyle(0xffffff, 0.6).fillCircle(x - 8 * s, y - 126 * s, 5 * s);
+  },
+  snowpine(g, x, y, s) {
+    pine(g, x, y, s, [0x4f8f6a, 0x3f7d5a]);
+    g.fillStyle(0xffffff, 1).fillEllipse(x, y - 108 * s, 22 * s, 12 * s).fillEllipse(x - 14 * s, y - 78 * s, 26 * s, 9 * s).fillEllipse(x + 16 * s, y - 50 * s, 30 * s, 9 * s).fillEllipse(x - 18 * s, y - 22 * s, 30 * s, 9 * s);
+  },
+  snowman(g, x, y, s) {
+    g.fillStyle(0x000000, 0.08).fillEllipse(x, y + 2, 56 * s, 10 * s);
+    g.fillStyle(0xdbe5f3, 1).fillCircle(x, y - 22 * s, 24 * s);
+    g.fillStyle(0xffffff, 1).fillCircle(x, y - 24 * s, 22 * s).fillCircle(x, y - 60 * s, 17 * s);
+    g.fillStyle(INK, 1).fillCircle(x - 6 * s, y - 63 * s, 2.4 * s).fillCircle(x + 6 * s, y - 63 * s, 2.4 * s);
+    g.fillStyle(0xf59a3b, 1).fillTriangle(x - 1 * s, y - 59 * s, x - 1 * s, y - 54 * s, x + 12 * s, y - 56 * s);
+    g.fillStyle(0xff8fae, 0.8).fillEllipse(x - 11 * s, y - 55 * s, 6 * s, 3.5 * s).fillEllipse(x + 11 * s, y - 55 * s, 6 * s, 3.5 * s);
+    g.fillStyle(0xe8584a, 1).fillRoundedRect(x - 16 * s, y - 46 * s, 32 * s, 7 * s, 3 * s);
+  },
   bamboo(g, x, y, s, n) {
     const cols = [0x5fb84f, 0x4f9f4c, 0x7cc56a];
     for (let j = 0; j < 3; j++) {

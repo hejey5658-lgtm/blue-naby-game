@@ -3,6 +3,7 @@
 // 한국(ch1)은 한 판에 집·밤 골목·아침 시장 구역이 있고, 구역마다 친구가 숨어 있다(먼지몽 · 실실이 · 짹짹이).
 // theme = 화면 여백 색, frame = 그 단계의 '창틀' 모양 (docs/design-brief.md "창문이 넓어진다")
 // stamp = 여권 도장 이름, starSec = 별을 받는 미로 기준 시간(초). 2026-11-06 미로 1.5배 빠르게 하면서 약 2/3로, 숨바꼭질이 생기며 늘림, 2026-11-07 2.5배 빠르게 하면서 약 0.65배로
+// (2026-11-11~ 피리·자전거·비눗방울은 처음부터 모든 미로에 있어서 선물로 주지 않는다. 한국 숨은 친구는 짹짹이 1명)
 // rewards = 친구가 되면 받는 아이템 (친구 순서대로, 없으면 null, 여럿이면 배열)
 // bosses = 미로 안에 숨은 친구들(숨바꼭질, design-brief 17절). hideZones = 친구마다 숨는 줄 범위(없으면 판 전체)
 // hazardSpeed = 이 단계만 방해물 빠르기 배율 (1단계는 0.5 = 절반, 2026-11-11 "1단계가 너무 어려워")
@@ -10,11 +11,11 @@
 // 대사 키 규칙: intro, `${id}_boss`(숨바꼭질 시작), `${id}_friend`(출구에서 친구 되기) (친구가 여럿이면 `${id}_boss2`, `${id}_friend2` …),
 // 진화는 `evo_${형태}_pre` / `evo_${형태}_post`
 export const CHAPTERS = [
-  { id: 'ch1', country: 'korea',  name: '한국',   place: '집 · 밤 골목 · 아침 시장', form: 'caterpillar', intro: 'prologue',  bosses: ['dustmong', 'silsili', 'jjakjjak'], rewards: [null, 'scarf', 'bike'], hideZones: [[0, 5], [6, 10], [11, 16]], evolveTo: 'moth',      item: 'seed',       theme: '#e9d8b4', frame: 'woodWindow', starSec: 115, stamp: '한국',   drift: { puddle: 1, web: 1, stepMs: 1200 }, hazardSpeed: 0.5 },
-  { id: 'ch4', country: 'china',  name: '중국',   place: '대나무 숲',             form: 'moth',        intro: 'ch4_intro', bosses: ['bbangbbang'],        rewards: ['flute'],          evolveTo: null,        item: 'bambooLeaf', patrolKind: 'shoot',      theme: '#cfe8b8', frame: 'moonGate',   starSec: 80,  stamp: '중국',   drift: { puddle: 2, web: 2, stepMs: 1100 } },
+  { id: 'ch1', country: 'korea',  name: '한국',   place: '집 · 밤 골목 · 아침 시장', form: 'caterpillar', intro: 'prologue',  bosses: ['jjakjjak'], rewards: [null], hideZones: [[11, 16]], evolveTo: 'moth',      item: 'seed',       theme: '#e9d8b4', frame: 'woodWindow', starSec: 115, stamp: '한국',   drift: { puddle: 1, web: 1, stepMs: 1200 }, hazardSpeed: 0.5 },
+  { id: 'ch4', country: 'china',  name: '중국',   place: '대나무 숲',             form: 'moth',        intro: 'ch4_intro', bosses: ['bbangbbang'],        rewards: [null],          evolveTo: null,        item: 'bambooLeaf', patrolKind: 'shoot',      theme: '#cfe8b8', frame: 'moonGate',   starSec: 80,  stamp: '중국',   drift: { puddle: 2, web: 2, stepMs: 1100 } },
   { id: 'ch5', country: 'japan',  name: '일본',   place: '벚꽃 정원',             form: 'moth',        intro: 'ch5_intro', bosses: ['sappuni'],           rewards: ['umbrella'],       evolveTo: 'butterfly', item: 'petal',      splash: 'koi',            theme: '#fbe0e6', frame: 'lattice',    starSec: 90,  stamp: '일본',   drift: { puddle: 2, web: 3, stepMs: 1000 } },
-  { id: 'ch6', country: 'usa',    name: '미국',   place: '센트럴파크',            form: 'butterfly',   intro: 'ch6_intro', bosses: ['dotori'],            rewards: ['bubble'],         evolveTo: null,        item: 'acorn',      patrolKind: 'skateboard', splash: 'fountain', theme: '#d9ecc8', frame: 'cityGlass', starSec: 85,  stamp: '미국',   drift: { puddle: 3, web: 2, stepMs: 900 } },
-  { id: 'ch7', country: 'canada', name: '캐나다', place: '단풍 숲과 튤립 꽃밭',   form: 'butterfly',   intro: 'ch7_intro', bosses: ['damdam', 'buzzboss'], rewards: ['honey', null],    evolveTo: null,        item: 'nectar',     splash: 'sprinkler',      theme: '#fde3c8', frame: 'cloud',      starSec: 100, stamp: '캐나다', drift: { puddle: 3, web: 3, stepMs: 800 } },
+  { id: 'ch6', country: 'usa',    name: '미국',   place: '센트럴파크',            form: 'butterfly',   intro: 'ch6_intro', bosses: ['dotori'],            rewards: [null],         evolveTo: null,        item: 'acorn',      patrolKind: 'skateboard', splash: 'fountain', theme: '#d9ecc8', frame: 'cityGlass', starSec: 85,  stamp: '미국',   drift: { puddle: 3, web: 2, stepMs: 900 } },
+  { id: 'ch7', country: 'canada', name: '캐나다', place: '단풍 숲과 튤립 꽃밭',   form: 'butterfly',   intro: 'ch7_intro', bosses: ['damdam', 'buzzboss'], rewards: [null, null],    evolveTo: null,        item: 'nectar',     splash: 'sprinkler',      theme: '#fde3c8', frame: 'cloud',      starSec: 100, stamp: '캐나다', drift: { puddle: 3, web: 3, stepMs: 800 } },
 ];
 
 // 예전(7장) 순서. 옛 저장·저장 코드(BB1)·도전장(C1)을 읽을 때만 쓴다. 절대 바꾸지 않는다.

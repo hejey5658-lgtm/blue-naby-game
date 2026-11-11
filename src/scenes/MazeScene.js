@@ -1208,8 +1208,9 @@ export class MazeScene extends Phaser.Scene {
     const land = UI.landscape;
     // 가로: 오른쪽 띠 위쪽에 도우미 얼굴 + 여러 줄 말풍선
     this.bubbleBox = land ? { x: this.sideR.x, y: 8 + this.insets.top + 96, w: this.sideR.w } : null;
-    this.dot = this.add.image(land ? this.sideR.x + 50 : 70, land ? 8 + this.insets.top + 46 : by, SERIES.meta.helperTex, SERIES.meta.helperFrame).setDisplaySize(84, 84).setDepth(8).setAlpha(0);
-    this.bubble = this.add.container(0, 0).setDepth(8).setAlpha(0);
+    this.dot = this.add.image(land ? this.sideR.x + 50 : 70, land ? 8 + this.insets.top + 46 : by, SERIES.meta.helperTex, SERIES.meta.helperFrame).setDisplaySize(84, 84).setDepth(10).setAlpha(0);
+    // 말풍선은 아이템 버튼(깊이 9)보다 위에 — 잠깐 떴다 사라지므로 글이 가리지 않게 (2026-11-11)
+    this.bubble = this.add.container(0, 0).setDepth(10).setAlpha(0);
     this.bubbleG = this.add.graphics();
     this.bubbleText = land
       ? this.add.text(this.bubbleBox.x + 18, this.bubbleBox.y + 14, '', { fontFamily: UI.font, fontSize: '25px', color: '#2b2d5a', wordWrap: { width: this.bubbleBox.w - 36, useAdvancedWrap: true }, lineSpacing: 4 }).setOrigin(0, 0)
@@ -1252,8 +1253,8 @@ export class MazeScene extends Phaser.Scene {
   // 비눗방울 막대 = 둘레 3칸 방해물이 비눗방울에 싸여 날아감, 꿀 도시락 = 에너지 가득.
   makeItemButton(bottom) {
     const COLORS = { sparkle: 0xffd84a, flute: 0x7cc56a, bike: 0x7ec8ff, bubble: 0xc9b6ff, honey: 0xffb347 };
-    const list = ['flute', 'bike', 'bubble', 'honey']
-      .filter((k) => this.hasItem(k) && ITEMS[k] && !(k === 'flute' && this.chapter.id === 'ch4'));
+    // 2026-11-11~ 1탄·2탄 모두 피리·자전거·비눗방울 세 가지를 처음부터 (각자 폰 대결은 공평하게 없음)
+    const list = this.remote ? [] : ['flute', 'bike', 'bubble'].filter((k) => ITEMS[k]);
     const y = (this.dpad ? this.bottomY - 149 : this.bottomY - 5);
     void bottom;
     // 가로: 오른쪽 띠에 2개씩 (방향 버튼이 있으면 그 위)

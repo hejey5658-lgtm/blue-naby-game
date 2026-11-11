@@ -1,5 +1,5 @@
 // 보상 아이템 (친구가 되면 받음). short = 미로 아이템 버튼 아래 짧은 이름
-// 버튼으로 쓰는 것(미로마다 1번): flute·bike·bubble·honey. 늘 켜진 것: scarf·umbrella
+// 버튼으로 쓰는 것(미로마다 1번): flute·bike·bubble — 2026-11-11~ 1탄·2탄 모두 처음부터 모든 미로에(친구 선물 아님). honey(꿀 도시락)는 버튼에서 뺌. 늘 켜진 것: umbrella
 // sparkle(반짝가루)은 2026-11-06 아이템에서 뺐다 — 저장 코드 칸 순서 때문에 키만 남겨 둔다(아무도 주지 않음)
 export const ITEMS = {
   sparkle:  { name: '반짝가루',    short: '반짝가루', from: 'dustmong',   effect: '미로마다 1번, 8초 동안 반짝반짝 — 방해물·웅덩이·거미줄에 닿아도 괜찮아요' },

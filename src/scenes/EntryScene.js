@@ -244,13 +244,9 @@ export class EntryScene extends Phaser.Scene {
     };
     const BLUE = '#2f7bff', PINK = '#e0557a', INK = '#2b2d5a';
     let y = 0, kw;
-    if (land) {
-      kw = Math.max(line([['블루나비', BLUE], ['와 ', INK], ['포포', PINK], ['를 톡!', INK]], y), line([['여행을 시작해봐요', INK]], y + 44));
-      y += 44 + 72;
-    } else {
-      kw = line([['블루나비', BLUE], ['와 ', INK], ['포포', PINK], ['를 톡! 여행을 시작해봐요', INK]], y);
-      y += 74;
-    }
+    // 세로·가로 모두 한 줄 (세로 썸네일과 같게, 2026-11-11)
+    kw = line([['블루나비', BLUE], ['와 ', INK], ['포포', PINK], ['를 톡! 여행을 시작해봐요', INK]], y);
+    y += 74;
     // 주소 알약 (흰 바탕·남색 테·빨간 재생 동그라미)
     const url = word('blue-naby-game.web.app', INK, 37);
     const lw = 10 + 51 + 12 + url.width + 27, lh = 70;

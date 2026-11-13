@@ -24,10 +24,10 @@ export const DATA = { 1: S1, 2: S2.DATA };
 // 탄마다 다른 글·화면 이름
 export const META = {
   1: { n: 1, title: '블루나비와 포포의 여행 1탄', short: '1탄 블루나비', hero: '블루나비', helperTex: 'npc_dot', helperFrame: 0, helperHint: '에헴, 이쪽으로 가 봐!',
-    titleScene: 'Title', mapScene: 'Map', endingScene: 'Ending', dressScene: 'Evolution', stars: true,
+    titleScene: 'Title', endingScene: 'Ending', dressScene: 'Evolution', stars: true,
     popDone: ['세계 일주 완성!', '중국부터 캐나다까지 다 돌았어요'], saveCode: 'BB3-', challenge: 'C3-' }, // BB3·C3 = 4단계(한국 뺌, 2026-11-13~). BB2·BB1·C2·C1도 읽는다
   2: { n: 2, title: '블루나비와 포포의 여행 2탄', short: '2탄 포포', hero: '포포', helperTex: 'face_bluenabi', helperFrame: 1, helperHint: '포포야, 이쪽이야!',
-    titleScene: 'Title', mapScene: 'Album', endingScene: 'Ending2', dressScene: 'Dress', stars: false,
+    titleScene: 'Title', endingScene: 'Ending2', dressScene: 'Dress', stars: false,
     popDone: ['사계절 한 바퀴 완성!', '봄부터 겨울까지 다 돌았어요'], saveCode: 'PP1-', challenge: 'P1-' },
 };
 export const SERIES = { n: 1, meta: META[1], game: null };

@@ -7,10 +7,10 @@ import { setTheme } from '../ui/theme.js';
 import { Button } from '../ui/Button.js';
 import { sfx, vibrate } from '../ui/feedback.js';
 import { josa } from '../ui/josa.js';
-import { chapterById } from '../flow.js';
+import { chapterById, startChapter, chapterAfter } from '../flow.js';
 import { waitForAssets } from './PreloadScene.js';
 
-// 2탄 '옷 갈아입기' (1탄 진화 자리, design-brief 13절): 대사 → 친구 선물이 반짝 날아와 입혀짐 → "포포가 ○○을 입었어요!" → 대사 → 앨범.
+// 2탄 '옷 갈아입기' (1탄 진화 자리, design-brief 13절): 대사 → 친구 선물이 반짝 날아와 입혀짐 → "포포가 ○○을 입었어요!" → 대사 → 다음 계절 미로 (2026-11-13~ 앨범 없음).
 // 게임오버·다치는 표현 없음. scene.start('Dress', { chapter })
 const NEXT_SKY = { popoSummer: 0xd6efff, popoAutumn: 0xfbe7c2, popoWinter: 0xe6f0fa };
 
@@ -64,7 +64,7 @@ export class DressScene extends Phaser.Scene {
   }
 
   showButton() {
-    const b = new Button(this, UI.width / 2, 1130, { label: '앨범 보기', onPress: () => { sfx('tap'); this.scene.start('Album', { justCleared: this.chapter.id }); } });
+    const b = new Button(this, UI.width / 2, 1130, { label: '다음 계절로', onPress: () => { sfx('tap'); startChapter(this, chapterAfter(this.chapter.id)); } });
     this.input.keyboard?.once('keydown-ENTER', () => b.trigger());
   }
 

@@ -13,7 +13,7 @@ import { drawPanel } from '../ui/frames.js';
 import { Button } from '../ui/Button.js';
 import { sfx, vibrate } from '../ui/feedback.js';
 import { josa } from '../ui/josa.js';
-import { activeChallenge, challengeResult, fmt as fmtShort } from '../social/social.js';
+import { activeChallenge, challengeResult, openShareMenu, fmt as fmtShort } from '../social/social.js';
 import { LOOK } from '../data/mazeLooks.js';
 import { drawBackdrop, drawFloor, drawWallScenery, addAmbient } from '../maze/scenery.js';
 import { placeDrifters, patrolPath } from '../maze/drift.js';
@@ -1688,10 +1688,10 @@ export class MazeScene extends Phaser.Scene {
       ly += 50;
     }
     const by = y + h - 90;
-    const btns = [['여행 계속', () => afterChapter(this, id)], ['미로 다시', () => startChapter(this, id, { replay: true })]];
-    btns.forEach(([label, fn], i) => {
-      const blue = i === 0;
-      layer.add(new Button(this, UI.width / 2 + (i === 0 ? -140 : 140), by, { width: 250, height: 100, fontSize: 30, label, color: blue ? 0x2f7bff : 0xffb347, shade: blue ? 0x1f5fd6 : 0xd98a2b, textColor: blue ? '#ffffff' : '#2b2d5a', onPress: () => { sfx('tap'); fn(); } }));
+    // [자랑하기] = 기록 카드·도전장·도전장함·닉네임 (2026-11-13~ 여권 화면이 없어져 여기로)
+    const btns = [['여행 계속', () => afterChapter(this, id), 0x2f7bff, 0x1f5fd6, '#ffffff'], ['미로 다시', () => startChapter(this, id, { replay: true }), 0xffb347, 0xd98a2b, '#2b2d5a'], ['자랑하기', () => openShareMenu(this.game), 0xfdf7ea, 0xc9c0ae, '#2f7bff']];
+    btns.forEach(([label, fn, color, shade, textColor], i) => {
+      layer.add(new Button(this, UI.width / 2 + (i - 1) * 196, by, { width: 180, height: 100, fontSize: 28, label, color, shade, textColor, onPress: () => { sfx('tap'); fn(); } }));
     });
     layer.alpha = 0;
     this.tweens.add({ targets: layer, alpha: 1, duration: 240 });

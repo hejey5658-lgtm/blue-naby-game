@@ -5,6 +5,7 @@ import { Button } from '../ui/Button.js';
 import { getSafeInsets } from '../ui/safeArea.js';
 import { platform, requestFullscreen } from '../platform.js';
 import { state, save } from '../state.js';
+import { nextChapterId, prepareChapter } from '../flow.js';
 import { unlockAudio, sfx, vibrate } from '../ui/feedback.js';
 import { iconGear } from '../ui/icons.js';
 import { updateBand, inAppBand, challengeBand } from '../ui/bands.js';
@@ -28,14 +29,14 @@ function progressOf(n) {
   return (state.series === 2 ? 2 : 1) === n ? state : state.other;
 }
 
-// 버튼 아래 작은 글: "처음부터" / "이어하기 · 3단계 일본" / "여행 끝! 여권 보기"
+// 버튼 아래 작은 글: "처음부터" / "이어하기 · 3단계 일본" / "여행 끝! 엔딩 보기"
 export function progressLabel(n) {
   const p = progressOf(n);
   if (!p || !p.step || p.step === 'new') return '처음부터';
-  if (p.cleared && p.step === 'map') return n === 1 ? '여행 끝! 여권 보기' : '여행 끝! 앨범 보기';
+  if (p.cleared && p.step === 'map') return '여행 끝! 엔딩 보기';
   const ch = DATA[n].CHAPTERS;
-  // 미로 중이면 그 단계, 여권·앨범(map)에 있으면 다음에 할 단계(열린 가장 먼 단계)
-  let i = p.step === 'map' ? -1 : ch.findIndex((c) => c.id === p.playing);
+  // 미로 중이면 그 단계, 단계 사이(map)면 다음에 할 단계(아직 안 깬 첫 단계)
+  let i = p.step === 'map' ? ch.findIndex((c) => !(p.stars?.[c.id] > 0)) : ch.findIndex((c) => c.id === p.playing);
   if (i < 0) i = Math.min(ch.length - 1, Math.max(0, (p.chapter ?? 1) - 1));
   return `이어하기 · ${n === 1 ? `${i + 1}단계 ` : ''}${ch[i].name}`;
 }
@@ -280,7 +281,11 @@ export class TitleScene extends Phaser.Scene {
     if (state.step.endsWith('_maze')) return go('Maze', { chapter: playing });
     // 예전 대결 화면 중이던 저장은 그 단계 미로부터 다시 (17절, 친구·선물은 그대로)
     if (state.step.endsWith('_boss')) return go('Maze', { chapter: playing, fresh: true });
-    if (state.step !== 'new') return go(SERIES.meta.mapScene);
+    // 단계 사이(예전 여권·앨범 자리)면 아직 안 깬 첫 단계 미로로, 다 깼으면 엔딩 (2026-11-13~ 여권·앨범 화면 없음)
+    if (state.step !== 'new') {
+      const nx = nextChapterId();
+      return nx ? go('Maze', prepareChapter(nx)) : go(SERIES.meta.endingScene);
+    }
     // 1탄은 처음에 진화 장면(애벌레 → 나방, 배 타고 중국으로) 뒤 1단계 미로 (2026-11-13~ 한국 미로 뺌)
     if (n === 1) return go('Evolution', { start: true });
     Object.assign(state, { step: `${ch[0].id}_maze`, chapter: 1, playing: ch[0].id, mazeState: null });

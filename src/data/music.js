@@ -75,5 +75,5 @@ export const SONGS = {
 // 어떤 화면에서 어떤 곡을: 미로는 그 단계 곡(속 id), 2탄 대결·엔딩·타이틀은 2탄 곡
 export const SCENE_SONG = {
   1: { Entry: 'title', Title: 'title', Pop: 'pop', Ending: 'ending', Map: 'title', Duo: 'title', Match: 'title', Evolution: 'ending' },
-  2: { Entry: 'title', Title2: 'title2', Pop: 'pop', Ending2: 'ending2', Album: 'title2', Duo: 'title2', Match: 'title2', Dress: 'ending2' },
+  2: { Entry: 'title', Title2: 'title2', Pop: 'pop', Ending2: 'ending2', Duo: 'title2', Match: 'title2', Dress: 'ending2' },
 };

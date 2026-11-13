@@ -94,7 +94,7 @@ export class Ending2Scene extends Phaser.Scene {
     row.add(new Button(this, 130, by, { width: 220, height: 96, fontSize: 26, label: '사진 남기기', color: 0xffd84a, shade: 0xd9a92b, textColor: '#2b2d5a',
       onPress: async () => { row.setVisible(false); await new Promise((r) => this.time.delayedCall(60, r)); await takePhoto(this.game, 'popo-ending.png'); row.setVisible(true); } }));
     row.add(new Button(this, 360, by, { width: 220, height: 96, fontSize: 26, label: '기록 자랑', color: 0xff9fb8, shade: 0xe07a96, textColor: '#2b2d5a', onPress: () => sendRecordCard(this.game) }));
-    row.add(new Button(this, 590, by, { width: 220, height: 96, fontSize: 26, label: '앨범으로', onPress: () => this.scene.start('Album') }));
+    row.add(new Button(this, 590, by, { width: 220, height: 96, fontSize: 26, label: '홈으로', onPress: () => this.scene.start('Title') }));
     if (land) row.list.forEach((b, i) => b.setPosition(this.rightX, 720 + i * 112));
     this.tweens.add({ targets: row, alpha: 1, duration: 400, delay: 800 });
     this.done = true;

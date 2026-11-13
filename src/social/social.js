@@ -230,7 +230,7 @@ export function openInbox(onChange) {
   const lines = list.map((c, i) => `${i === (state.activeChallenge ?? 0) ? '▶ ' : '   '}${c.nick} · ${Object.entries(c.times).map(([k, t]) => `${nameOf(k)} ${fmt(t)}`).join(', ')}`).join('\n');
   openBox({
     title: '도전장함',
-    text: '▶ 표시가 지금 도전 중인 친구예요. 여권과 미로에 그 친구 기록이 깃발로 떠요.',
+    text: '▶ 표시가 지금 도전 중인 친구예요. 미로에 그 친구 기록이 깃발로 떠요.',
     value: lines,
     readonly: true,
     buttons: [
@@ -246,7 +246,7 @@ export function openInbox(onChange) {
   });
 }
 
-// 여권 [자랑하기] 메뉴
+// 미로 결과 창 [자랑하기] 메뉴 (2026-11-13~, 예전엔 여권)
 export function openShareMenu(game, onChange) {
   openBox({
     title: '친구와 함께',

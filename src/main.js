@@ -8,7 +8,6 @@ import { SettingsScene } from './scenes/SettingsScene.js';
 import { EntryScene } from './scenes/EntryScene.js';
 import { MazeScene } from './scenes/MazeScene.js';
 import { PauseScene } from './scenes/PauseScene.js';
-import { MapScene } from './scenes/MapScene.js';
 import { EvolutionScene } from './scenes/EvolutionScene.js';
 import { PreloadScene } from './scenes/PreloadScene.js';
 import { EndingScene } from './scenes/EndingScene.js';
@@ -17,7 +16,6 @@ import { PopScene } from './scenes/PopScene.js';
 import { MatchScene } from './scenes/MatchScene.js';
 import { Title2Scene } from './scenes/Title2Scene.js';
 import { TogetherScene } from './scenes/TogetherScene.js';
-import { AlbumScene } from './scenes/AlbumScene.js';
 import { DressScene } from './scenes/DressScene.js';
 import { Ending2Scene } from './scenes/Ending2Scene.js';
 import { state, save } from './state.js';
@@ -53,7 +51,7 @@ const game = new Phaser.Game({
   // (저장 코드·이름을 적는 글자 칸은 HTML 상자라 그대로 입력된다)
   input: { activePointers: 2, keyboard: false },
   render: { antialias: true, powerPreference: 'high-performance' },
-  scene: [BootScene, PreloadScene, EntryScene, TitleScene, MazeScene, MapScene, EvolutionScene, EndingScene, PopScene, DuoScene, MatchScene, Title2Scene, TogetherScene, AlbumScene, DressScene, Ending2Scene, DialogueScene, PauseScene, SettingsScene],
+  scene: [BootScene, PreloadScene, EntryScene, TitleScene, MazeScene, EvolutionScene, EndingScene, PopScene, DuoScene, MatchScene, Title2Scene, TogetherScene, DressScene, Ending2Scene, DialogueScene, PauseScene, SettingsScene],
 });
 // 하는 탄 그림만 받기 (모바일 최적화): PreloadScene·waitForAssets 가 registry 'series'를 본다
 game.registry.set('series', state.series === 2 ? 2 : 1);

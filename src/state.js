@@ -1,10 +1,10 @@
 // 게임 진행 상태 + 저장/불러오기. 저장 형식이 바뀌면 migrate()에서 옛 저장을 새 형식으로 바꾼다.
 // 자세한 저장(미로 위치·저장 코드)은 6단계에서 채운다.
 import { platform } from './platform.js';
-import { legacyStage } from './data/chapters.js';
+import { legacyStage, v5Stage } from './data/chapters.js';
 
 const KEY = 'blueButterfly.save';
-const SAVE_VERSION = 2; // 2 = 5단계(나라마다 1단계, 2026-11-04)
+const SAVE_VERSION = 3; // 2 = 5단계(나라마다 1단계, 2026-11-04), 3 = 1탄 4단계(한국 미로 뺌, 2026-11-13)
 
 export const DEFAULT_SETTINGS = { sound: true, vibrate: true, control: 'swipe', textSpeed: 'normal' };
 
@@ -67,8 +67,22 @@ function upgradeV1(d) {
   return d;
 }
 
+// 저장 2판(5단계) → 3판(1탄 4단계, 한국 미로 뺌): 1탄 진행만 바꾼다 (1탄 진행은 지금 탄이 1탄이면 맨 위, 2탄이면 state.other)
+export function upgradeKoreaGone(p) {
+  if (!p) return p;
+  p.chapter = v5Stage(p.chapter);
+  for (const k of ['stars', 'records', 'mazeTimeStar']) if (p[k]) delete p[k].ch1;
+  if (p.playing === 'ch1' || /^ch1_/.test(p.step ?? '')) Object.assign(p, { playing: null, mazeState: null, step: p.step === 'new' ? 'new' : 'map' });
+  if (p.form === 'caterpillar' && p.step && p.step !== 'new') p.form = 'moth';
+  return p;
+}
+
 function migrate(data) {
   if ((data.version ?? 1) < 2) upgradeV1(data);
+  if ((data.version ?? 1) < 3) {
+    if (data.series === 2) upgradeKoreaGone(data.other); else upgradeKoreaGone(data);
+    data.challenges = (data.challenges ?? []).map((c) => { const times = { ...(c.times ?? {}) }; delete times.ch1; return { ...c, times }; }).filter((c) => Object.keys(c.times).length);
+  }
   const base = fresh();
   return { ...base, ...data, settings: { ...base.settings, ...(data.settings || {}) }, version: SAVE_VERSION };
 }

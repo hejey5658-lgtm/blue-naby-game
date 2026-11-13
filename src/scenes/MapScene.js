@@ -33,7 +33,7 @@ export class MapScene extends Phaser.Scene {
 
   create() {
     // 홈에서 탄을 바꿔 들어오면 이 탄 그림이 아직 없을 수 있다 (19절)
-    if (waitForAssets(this, ['boss_dustmong', 'face_dustmong'], this.initData)) return;
+    if (waitForAssets(this, ['boss_bbangbbang', 'face_bbangbbang'], this.initData)) return;
     setTheme('#1f3a7a', '#1f3a7a');
     this.insets = getSafeInsets(this.game);
     const top = this.insets.top;
@@ -68,7 +68,7 @@ export class MapScene extends Phaser.Scene {
       sc.setSize(170, 80).setInteractive({ useHandCursor: true }).on('pointerup', () => { sfx('tap'); openShareMenu(this.game, () => this.scene.restart(this.initData)); });
     }
     // 1장을 깬 뒤 홈 화면 설치 안내 (처음 들어오자마자 띄우지 않기)
-    if (isCleared('ch1') && canOfferInstall()) {
+    if (isCleared(PASSPORT[0].chapters[0]) && canOfferInstall()) {
       const c = this.add.container(land ? 910 : UI.width - 92, land ? 200 : 64 + top).setDepth(5);
       const g = this.add.graphics();
       g.fillStyle(0xffd84a, 1).fillRoundedRect(-80, -26, 160, 52, 26);
@@ -288,7 +288,7 @@ export class MapScene extends Phaser.Scene {
   makeNav() {
     const land = UI.landscape;
     const y = land ? 240 : PAGE.y + PAGE.h + 40;
-    this.dots = PASSPORT.map((_, i) => this.add.circle(UI.width / 2 + (i - 2) * 30, y, 8, 0xffffff, 0.35));
+    this.dots = PASSPORT.map((_, i) => this.add.circle(UI.width / 2 + (i - (PASSPORT.length - 1) / 2) * 30, y, 8, 0xffffff, 0.35));
     const arrow = (x, d) => {
       const c = this.add.container(x, y);
       const g = this.add.graphics();

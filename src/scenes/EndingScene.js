@@ -15,10 +15,10 @@ import { sendRecordCard } from '../social/social.js';
 // 엔딩 (scenario 9절, concept-v2 3절): 캐나다 튤립 꽃밭 한가운데 가장 큰 파란 꽃(꽃님).
 // 블루나비가 날아와 꽃 위에 앉고, 대사가 이어질 때마다 친구들이 하나씩 꽃 주위에 나타난다.
 // "창문이 넓어진다"의 끝 — 화면 틀이 없다. 마지막 화면: "블루나비와 포포의 여행 — 1탄 세계여행 끝", 장별 기록, 사진 남기기.
-// (2026-11-11~ 한국 숨은 친구는 짹짹이 1명 — 먼지몽·실실이는 엔딩에도 나오지 않는다)
+// (2026-11-13~ 1탄 미로에서 한국을 빼서 한국 친구(먼지몽·실실이·짹짹이)는 엔딩에도 나오지 않는다 — 친구 5명)
 const FRIEND_SPOTS = {
-  jjakjjak: [560, 720], bbangbbang: [160, 720],
-  sappuni: [628, 830], dotori: [92, 830], damdam: [200, 900], buzzboss: [520, 900],
+  bbangbbang: [160, 720], sappuni: [560, 720],
+  dotori: [92, 830], buzzboss: [628, 830], damdam: [200, 900],
 };
 const fmt = (sec) => `${Math.floor(sec / 60)}:${String(Math.floor(sec % 60)).padStart(2, '0')}`;
 

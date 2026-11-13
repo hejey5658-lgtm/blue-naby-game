@@ -82,6 +82,24 @@ const DRAW = {
     g.fillStyle(INK, 1).fillCircle(44 * s, 58 * s, 3.5 * s).fillCircle(62 * s, 58 * s, 3.5 * s);
     g.fillStyle(0xff9fb8, 0.8).fillEllipse(36 * s, 66 * s, 8 * s, 5 * s).fillEllipse(70 * s, 66 * s, 8 * s, 5 * s);
   },
+  // 폭죽 기념품 (2026-11-13): 웃는 얼굴 로켓 폭죽 — 내려앉으면 둘레 그림이 펑!
+  pop_firework(g, s) {
+    g.fillStyle(0xffb347, 1).fillTriangle(40 * s, 82 * s, 50 * s, 98 * s, 60 * s, 82 * s);
+    g.fillStyle(0xffd84a, 1).fillTriangle(44 * s, 82 * s, 50 * s, 92 * s, 56 * s, 82 * s);
+    g.fillStyle(INK, 1).fillRoundedRect(30 * s, 30 * s, 40 * s, 56 * s, 12 * s);
+    g.fillStyle(0xe8584a, 1).fillRoundedRect(34 * s, 33 * s, 32 * s, 50 * s, 10 * s);
+    g.fillStyle(0xffd84a, 1).fillRect(34 * s, 42 * s, 32 * s, 6 * s).fillRect(34 * s, 72 * s, 32 * s, 6 * s);
+    g.fillStyle(INK, 1).fillTriangle(26 * s, 34 * s, 74 * s, 34 * s, 50 * s, 4 * s);
+    g.fillStyle(0x7ec8ff, 1).fillTriangle(32 * s, 31 * s, 68 * s, 31 * s, 50 * s, 9 * s);
+    g.fillStyle(0xffffff, 0.5).fillEllipse(43 * s, 20 * s, 6 * s, 12 * s);
+    g.fillStyle(INK, 1).fillCircle(44 * s, 58 * s, 3.4 * s).fillCircle(56 * s, 58 * s, 3.4 * s);
+    g.fillStyle(0xffffff, 1).fillCircle(45 * s, 57 * s, 1.2 * s).fillCircle(57 * s, 57 * s, 1.2 * s);
+    g.lineStyle(2.6 * s, INK, 1); g.beginPath(); g.arc(50 * s, 62 * s, 4 * s, 0.25, Math.PI - 0.25); g.strokePath();
+    g.fillStyle(0xffc4d4, 0.9).fillEllipse(39 * s, 65 * s, 6 * s, 3.5 * s).fillEllipse(61 * s, 65 * s, 6 * s, 3.5 * s);
+    // 반짝이
+    g.fillStyle(0xffd84a, 1).fillTriangle(14 * s, 40 * s, 20 * s, 44 * s, 14 * s, 48 * s).fillTriangle(14 * s, 40 * s, 8 * s, 44 * s, 14 * s, 48 * s);
+    g.fillStyle(0xff8fae, 1).fillTriangle(86 * s, 22 * s, 91 * s, 26 * s, 86 * s, 30 * s).fillTriangle(86 * s, 22 * s, 81 * s, 26 * s, 86 * s, 30 * s);
+  },
   // 귀여운 나무망치 (웃는 얼굴 머리 + 분홍 줄무늬 손잡이) — 그림 하나를 콩! 없앤다
   pop_hammer(g, s) {
     g.fillStyle(INK, 1).fillRoundedRect(40 * s, 44 * s, 20 * s, 52 * s, 9 * s);

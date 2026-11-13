@@ -1,4 +1,7 @@
 // 단계 순서와 단계별 정보 (2026-11-04: 나라마다 1단계 — 한국·중국·일본·미국·캐나다 = 5단계, docs/design-brief.md 11절)
+// 2026-11-13~ 1탄 미로에서 한국을 뺐다(사용자 결정): 중국·일본·미국·캐나다 = 4단계. 블루나비는 한국 창가에서 태어나
+// 배를 타며 나방으로 진화(처음 시작할 때 진화 장면)한 뒤 중국 미로부터. 한국 미로 데이터(mazes.js ch1)는 남겨 둠.
+// 중국이 새 1단계라서 1단계 규칙(방해물 절반 빠르기, 웅덩이·거미줄 1개씩)을 중국에 옮김.
 // 속 id(ch1, ch4~ch7)는 대사·미로·그림·저장 키라서 그대로 둔다. 화면에는 "N단계 · 나라"(stageLabel)로 보인다.
 // 한국(ch1)은 한 판에 집·밤 골목·아침 시장 구역이 있고, 구역마다 친구가 숨어 있다(먼지몽 · 실실이 · 짹짹이).
 // theme = 화면 여백 색, frame = 그 단계의 '창틀' 모양 (docs/design-brief.md "창문이 넓어진다")
@@ -11,8 +14,7 @@
 // 대사 키 규칙: intro, `${id}_boss`(숨바꼭질 시작), `${id}_friend`(출구에서 친구 되기) (친구가 여럿이면 `${id}_boss2`, `${id}_friend2` …),
 // 진화는 `evo_${형태}_pre` / `evo_${형태}_post`
 export const CHAPTERS = [
-  { id: 'ch1', country: 'korea',  name: '한국',   place: '집 · 밤 골목 · 아침 시장', form: 'caterpillar', intro: 'prologue',  bosses: ['jjakjjak'], rewards: [null], hideZones: [[11, 16]], evolveTo: 'moth',      item: 'seed',       theme: '#e9d8b4', frame: 'woodWindow', starSec: 115, stamp: '한국',   drift: { puddle: 1, web: 1, stepMs: 1200 }, hazardSpeed: 0.5 },
-  { id: 'ch4', country: 'china',  name: '중국',   place: '대나무 숲',             form: 'moth',        intro: 'ch4_intro', bosses: ['bbangbbang'],        rewards: [null],          evolveTo: null,        item: 'bambooLeaf', patrolKind: 'shoot',      theme: '#cfe8b8', frame: 'moonGate',   starSec: 80,  stamp: '중국',   drift: { puddle: 2, web: 2, stepMs: 1100 } },
+  { id: 'ch4', country: 'china',  name: '중국',   place: '대나무 숲',             form: 'moth',        intro: 'ch4_intro', bosses: ['bbangbbang'],        rewards: [null],          evolveTo: null,        item: 'bambooLeaf', patrolKind: 'shoot',      theme: '#cfe8b8', frame: 'moonGate',   starSec: 80,  stamp: '중국',   drift: { puddle: 1, web: 1, stepMs: 1100 }, hazardSpeed: 0.5 },
   { id: 'ch5', country: 'japan',  name: '일본',   place: '벚꽃 정원',             form: 'moth',        intro: 'ch5_intro', bosses: ['sappuni'],           rewards: ['umbrella'],       evolveTo: 'butterfly', item: 'petal',      splash: 'koi',            theme: '#fbe0e6', frame: 'lattice',    starSec: 90,  stamp: '일본',   drift: { puddle: 2, web: 3, stepMs: 1000 } },
   { id: 'ch6', country: 'usa',    name: '미국',   place: '센트럴파크',            form: 'butterfly',   intro: 'ch6_intro', bosses: ['dotori'],            rewards: [null],         evolveTo: null,        item: 'acorn',      patrolKind: 'skateboard', splash: 'fountain', theme: '#d9ecc8', frame: 'cityGlass', starSec: 85,  stamp: '미국',   drift: { puddle: 3, web: 2, stepMs: 900 } },
   { id: 'ch7', country: 'canada', name: '캐나다', place: '단풍 숲과 튤립 꽃밭',   form: 'butterfly',   intro: 'ch7_intro', bosses: ['damdam', 'buzzboss'], rewards: [null, null],    evolveTo: null,        item: 'nectar',     splash: 'sprinkler',      theme: '#fde3c8', frame: 'cloud',      starSec: 100, stamp: '캐나다', drift: { puddle: 3, web: 3, stepMs: 800 } },
@@ -22,6 +24,10 @@ export const CHAPTERS = [
 export const LEGACY_IDS = ['ch1', 'ch2', 'ch3', 'ch4', 'ch5', 'ch6', 'ch7'];
 // 옛 장 번호(1~7) → 새 단계 번호(1~5): 한국 1~3장은 모두 1단계
 export const legacyStage = (n) => (n <= 3 ? 1 : n - 2);
+// 5단계(한국 포함, 2026-11-04~11-12) 순서. 저장 2판·저장 코드 BB2·도전장 C2를 읽을 때만 쓴다.
+export const V5_IDS = ['ch1', 'ch4', 'ch5', 'ch6', 'ch7'];
+// 5단계 번호 → 4단계 번호 (한국이 빠져 하나씩 당겨짐)
+export const v5Stage = (n) => Math.max(1, (n ?? 1) - 1);
 
 // 단계 번호(1부터)와 화면 이름
 export const stageNo = (id) => CHAPTERS.findIndex((c) => c.id === id) + 1;

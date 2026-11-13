@@ -7,7 +7,8 @@ import { state, save } from '../state.js';
 import { setTheme } from '../ui/theme.js';
 import { sfx, vibrate } from '../ui/feedback.js';
 import { Button } from '../ui/Button.js';
-import { chapterById } from '../flow.js';
+import { chapterById, startChapter } from '../flow.js';
+import { CHAPTERS } from '../data/chapters.js';
 
 // 진화 (systems.md 5절, 약 5초, 톡 하면 건너뛰기):
 // 대사(졸려…) → 어두워짐 → 고치 → 고치 3번 흔들림 → 흰 빛 → 새 모습 + 반짝이 → "블루나비가 ○○(으)로 진화했다!" → 대사 → 여권
@@ -22,7 +23,9 @@ export class EvolutionScene extends Phaser.Scene {
 
   init(data) {
     this.initData = data;
-    this.chapter = chapterById(data.chapter);
+    // 처음 시작(2026-11-13~, 한국 미로를 뺀 뒤): 한국 창가에서 태어난 애벌레가 배 타고 가며 나방으로 → 1단계(중국) 미로
+    this.startNext = data.start ? CHAPTERS[0].id : null;
+    this.chapter = this.startNext ? { id: null, form: 'caterpillar', evolveTo: 'moth', frame: 'woodWindow' } : chapterById(data.chapter);
     this.from = this.chapter.form;
     this.to = this.chapter.evolveTo;
     this.look = SCENES[this.to];
@@ -145,7 +148,7 @@ export class EvolutionScene extends Phaser.Scene {
       new Button(this, UI.width / 2, 1130, {
         width: 400, height: 110, fontSize: 32, label: '계속하기',
         onPress: () => {
-          afterDialogue(this, () => this.scene.start('Map', { justCleared: this.chapter.id }));
+          afterDialogue(this, () => (this.startNext ? startChapter(this, this.startNext) : this.scene.start('Map', { justCleared: this.chapter.id })));
           this.scene.launch('Dialogue', { key: `evo_${this.to}_post`, frame: this.chapter.frame, form: this.to });
         },
       }).setDepth(12);

@@ -1,7 +1,7 @@
 // 친구와 함께 (systems.md 10절): 닉네임, 기록 카드(그림), 도전 링크(#c=C2-…), 도전장함.
 // C2 = 5단계 순서(2026-11-04~), C1 = 예전 7장 순서 — C1은 중국~캐나다 기록만 읽는다(한국 미로가 바뀌어서).
 // 모든 정보는 플레이어가 직접 공유한 링크·그림 안에만 담기고, 어디에도 자동으로 보내지 않는다.
-import { CHAPTERS, LEGACY_IDS, stageLabel } from '../data/chapters.js';
+import { CHAPTERS, LEGACY_IDS, V5_IDS, stageLabel } from '../data/chapters.js';
 import { MAZES } from '../data/mazes.js';
 import { FORMS } from '../data/forms.js';
 import { state, save } from '../state.js';
@@ -83,6 +83,7 @@ export function readChallenge(raw) {
   let d = unpack(META[1].challenge, raw);
   let ids = DATA[1].CHAPTERS.map((c) => c.id);
   if (!d) { d = unpack(META[2].challenge, raw); ids = DATA[2].CHAPTERS.map((c) => c.id); }
+  if (!d) { d = unpack('C2-', raw); ids = V5_IDS.map((id) => (id === 'ch1' ? null : id)); } // 5단계(한국 포함) 도전장 — 한국 기록만 뺀다
   if (!d) { d = unpack(LEGACY_PREFIX, raw); ids = LEGACY_IDS.map((id, i) => (i < 3 ? null : id)); }
   if (!Array.isArray(d) || !Array.isArray(d[1])) return null;
   const nick = String(d[0] || ANON).slice(0, 8);

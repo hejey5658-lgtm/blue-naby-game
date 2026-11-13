@@ -52,7 +52,7 @@ export class MazeScene extends Phaser.Scene {
 
   init(data) {
     this.initData = data;
-    this.chapter = CHAPTERS.find((c) => c.id === (data.chapter ?? 'ch1'));
+    this.chapter = CHAPTERS.find((c) => c.id === data.chapter) ?? CHAPTERS[0];
     this.maze = MAZES[this.chapter.id];
     this.form = FORMS[this.chapter.form];
     this.look = LOOK[this.chapter.id] ?? LOOK.ch1;

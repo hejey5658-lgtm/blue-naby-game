@@ -19,7 +19,7 @@ export function afterChapter(scene, id) {
   const nextIdx = CHAPTERS.indexOf(ch) + 1;
   const nextStarted = nextIdx < CHAPTERS.length && (isCleared(CHAPTERS[nextIdx].id) || state.chapter > nextIdx);
   state.step = 'map';
-  if (id === 'ch1' && !state.persistAsked && platform.can.persist) {
+  if (stageNo(id) === 1 && !state.persistAsked && platform.can.persist) {
     state.persistAsked = true;
     try { navigator.storage.persist().catch(() => {}); } catch { /* 브라우저가 정함 */ }
   }

@@ -281,6 +281,8 @@ export class TitleScene extends Phaser.Scene {
     // 예전 대결 화면 중이던 저장은 그 단계 미로부터 다시 (17절, 친구·선물은 그대로)
     if (state.step.endsWith('_boss')) return go('Maze', { chapter: playing, fresh: true });
     if (state.step !== 'new') return go(SERIES.meta.mapScene);
+    // 1탄은 처음에 진화 장면(애벌레 → 나방, 배 타고 중국으로) 뒤 1단계 미로 (2026-11-13~ 한국 미로 뺌)
+    if (n === 1) return go('Evolution', { start: true });
     Object.assign(state, { step: `${ch[0].id}_maze`, chapter: 1, playing: ch[0].id, mazeState: null });
     save();
     return go('Maze', { chapter: ch[0].id, fresh: true });

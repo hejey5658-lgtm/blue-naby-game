@@ -186,8 +186,8 @@ export class PopScene extends Phaser.Scene {
     c.items = [];
     c.show = (pair) => {
       c.items.forEach((o) => { this.tweens.killTweensOf(o); o.destroy(); });
-      if (pair === 'hammer') { // 다음은 나무망치 (가운데 크게)
-        const im = this.add.image(0, 0, 'pop_hammer').setDisplaySize(size * 1.5, size * 1.5);
+      if (pair === 'hammer' || pair === 'firework') { // 다음은 나무망치·폭죽 (가운데 크게)
+        const im = this.add.image(0, 0, `pop_${pair}`).setDisplaySize(size * 1.5, size * 1.5);
         c.add(im);
         c.items = [im];
         this.tweens.add({ targets: im, angle: { from: -10, to: 10 }, duration: 420, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
@@ -225,12 +225,16 @@ export class PopScene extends Phaser.Scene {
     const next = this.preview(ox + POP.cols * cell + 62, oy + 90, 40);
     this.text(ox + POP.cols * cell + 62, oy + 4, '다음', 20, '#2b2d5a').setOrigin(0.5);
     this.chainText = this.text(UI.width / 2, oy + 300, '', 64, '#2f7bff').setOrigin(0.5).setAlpha(0).setStroke('#fffaf0', 10);
+    // 나라 미션 (2026-11-13): 정한 그림을 count개 퐁 하면 보너스 점수
+    this.mission = this.stage.mission ? { ...this.stage.mission, got: 0, done: false } : null;
+    if (this.mission) this.makeMission(ox + POP.cols * cell + 62, oy + 186);
     const board = new PopBoard(this, {
       x: ox, y: oy, cell, stage: this.stage,
       onNext: (p) => next.show(p),
-      onPop: (n, chain) => {
+      onPop: (n, chain, byType = {}) => {
         this.score += n * POP.scorePerPop * chain;
         this.popped += n;
+        this.countMission(byType);
         vibrate('collect');
         if (chain >= 2) this.flashChain(this.chainText, chain);
         this.updateSolo();
@@ -246,6 +250,38 @@ export class PopScene extends Phaser.Scene {
     this.boards = [board];
     this.updateSolo();
     board.start();
+  }
+
+  // 나라 미션 칸: "미션" + 그 그림 + 0/6 (판 오른쪽, 다음 칸 아래)
+  makeMission(x, y) {
+    const m = this.mission;
+    const ty = this.stage.types[m.type];
+    const c = this.add.container(x, y).setDepth(8);
+    const g = this.add.graphics();
+    g.fillStyle(0x2b2d5a, 0.85).fillRoundedRect(-48, 0, 96, 132, 18);
+    const tex = this.textures.get(ty.icon);
+    const ig = this.add.graphics().fillStyle(ty.bg, 1).fillCircle(0, 62, 26);
+    const im = this.add.image(0, 62, ty.icon, ty.frame != null && tex.has(ty.frame) ? ty.frame : (tex.has(0) ? 0 : '__BASE')).setDisplaySize(40, 40);
+    this.missionText = this.add.text(0, 110, `0/${m.count}`, { fontFamily: UI.fontTitle, fontSize: '22px', color: '#fffaf0' }).setOrigin(0.5);
+    c.add([g, this.add.text(0, 20, '미션', { fontFamily: UI.fontTitle, fontSize: '22px', color: '#ffd84a' }).setOrigin(0.5), ig, im, this.missionText]);
+    this.missionBox = c;
+  }
+
+  countMission(byType) {
+    const m = this.mission;
+    if (!m || m.done) return;
+    m.got = Math.min(m.count, m.got + (byType[m.type] ?? 0));
+    this.missionText?.setText(`${m.got}/${m.count}`);
+    if (m.got < m.count) return;
+    m.done = true;
+    this.score += POP.missionBonus;
+    this.missionText?.setText('성공!').setColor('#ffd84a');
+    sfx('ding');
+    vibrate('collect');
+    const t = this.text(UI.width / 2, 236 + this.top + 200, `${m.name} 미션 성공! +${POP.missionBonus}`, 40, '#e0557a').setOrigin(0.5).setStroke('#fffaf0', 10).setScale(0.6);
+    this.tweens.add({ targets: t, scale: 1, duration: 260, ease: 'Back.easeOut' });
+    this.tweens.add({ targets: t, alpha: 0, y: t.y - 40, delay: 1300, duration: 400, onComplete: () => t.destroy() });
+    if (this.missionBox) this.tweens.add({ targets: this.missionBox, scale: 1.12, duration: 160, yoyo: true, repeat: 1 });
   }
 
   updateSolo() {
@@ -279,7 +315,8 @@ export class PopScene extends Phaser.Scene {
     state.pop.reached = Math.max(state.pop.reached ?? 0, Math.min(STAGES.length - 1, this.stageIdx + 1));
     save();
     const last = this.stageIdx === STAGES.length - 1;
-    const panel = this.panel(last ? SERIES.meta.popDone[0] : `${this.stage.name} 도장 쾅!`, last ? `${SERIES.meta.popDone[1]}\n이번 판 점수 ${this.score}` : `점수 ${this.score}\n다음 나라는 조금 더 빨라져요`, { stamp: true, buttons: 2 });
+    const mis = this.mission?.done ? ` · 미션 성공!` : '';
+    const panel = this.panel(last ? SERIES.meta.popDone[0] : `${this.stage.name} 도장 쾅!`, last ? `${SERIES.meta.popDone[1]}\n이번 판 점수 ${this.score}${mis}` : `점수 ${this.score}${mis}\n다음 나라는 조금 더 빨라져요`, { stamp: true, buttons: 2 });
     this.stamp(panel);
     if (!last) this.overlayBtn(panel, 0, `다음 나라로 · ${STAGES[this.stageIdx + 1].name}`, () => this.scene.start('Pop', { step: 'solo', stage: this.stageIdx + 1 }));
     else this.overlayBtn(panel, 0, '다시 하기', () => this.scene.start('Pop', { step: 'menu' }));
@@ -380,7 +417,7 @@ export class PopScene extends Phaser.Scene {
       next.list[0].clear().fillStyle(0x2b2d5a, 0.85).fillRoundedRect(-44, -22, 88, 44, 14);
       next.show = ((orig) => (pair) => {
         next.items.forEach((o) => o.destroy());
-        if (pair === 'hammer') { const im = this.add.image(0, 0, 'pop_hammer').setDisplaySize(40, 40); next.add(im); next.items = [im]; return; }
+        if (pair === 'hammer' || pair === 'firework') { const im = this.add.image(0, 0, `pop_${pair}`).setDisplaySize(40, 40); next.add(im); next.items = [im]; return; }
         next.items = pair.map((t, k) => {
           const ty = this.stage.types[t];
           const g = this.add.graphics().fillStyle(ty.bg, 1).fillCircle((k ? 1 : -1) * 20, 0, 18);

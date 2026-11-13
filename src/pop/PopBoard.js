@@ -86,13 +86,19 @@ export class PopBoard {
 
   // 몇 번째 묶음이 나무망치인지 (POP.hammer.at)
   isHammer(n) { return !!POP.hammer?.at.includes(n); }
+  // 몇 번째 묶음이 폭죽인지 (POP.firework.at, 2026-11-13)
+  isFirework(n) { return !!POP.firework?.at.includes(n); }
 
-  // 미리 보기에 보여 줄 다음 것: 묶음 [a, b] 또는 'hammer'
-  upcoming() { return this.isHammer((this.count ?? 0) + 1) ? 'hammer' : this.next; }
+  // 미리 보기에 보여 줄 다음 것: 묶음 [a, b] 또는 'hammer' · 'firework'
+  upcoming() {
+    const n = (this.count ?? 0) + 1;
+    return this.isHammer(n) ? 'hammer' : this.isFirework(n) ? 'firework' : this.next;
+  }
 
   spawn() {
     this.count = (this.count ?? 0) + 1;
-    if (this.isHammer(this.count)) { this.spawnHammer(); return; }
+    if (this.isHammer(this.count)) { this.spawnSpecial('hammer'); return; }
+    if (this.isFirework(this.count)) { this.spawnSpecial('firework'); return; }
     const [a, b] = this.next;
     this.next = this.randomPair();
     this.onNext?.(this.upcoming());
@@ -106,16 +112,18 @@ export class PopBoard {
     this.mode = 'falling';
   }
 
-  // 나무망치: 한 칸짜리. 쓱 옮겨 떨어뜨리면 내려앉은 자리 바로 밑 그림 하나가 콩! (묶음 순서는 그대로 — 각자 폰도 같게)
-  spawnHammer() {
+  // 나무망치·폭죽: 한 칸짜리 (묶음 순서는 그대로 — 각자 폰도 같게)
+  // 망치 = 내려앉은 자리 바로 밑 그림 하나 콩!, 폭죽 = 내려앉은 자리 둘레(POP.firework.radius칸)가 한꺼번에 펑!
+  spawnSpecial(kind) {
     this.onNext?.(this.upcoming());
-    const p = { r: 0, c: 2, rot: 0, hammer: true };
+    const p = { r: 0, c: 2, rot: 0, hammer: true, kind };
     if (!this.fits(p)) { this.topOut(); return; }
     const sa = this.scene.add.container(0, 0);
     const glow = this.scene.add.graphics();
-    glow.fillStyle(0xffd84a, 0.45).fillCircle(0, 0, this.cell * 0.5);
-    glow.lineStyle(3, 0xffd84a, 1).strokeCircle(0, 0, this.cell * 0.48);
-    sa.add([glow, this.scene.add.image(0, this.cell * 0.1, 'pop_hammer').setDisplaySize(this.cell * 1.08, this.cell * 1.08)]);
+    const glowColor = kind === 'firework' ? 0xff9fb8 : 0xffd84a;
+    glow.fillStyle(glowColor, 0.45).fillCircle(0, 0, this.cell * 0.5);
+    glow.lineStyle(3, glowColor, 1).strokeCircle(0, 0, this.cell * 0.48);
+    sa.add([glow, this.scene.add.image(0, kind === 'firework' ? 0 : this.cell * 0.1, `pop_${kind}`).setDisplaySize(this.cell * 1.08, this.cell * 1.08)]);
     this.scene.tweens.add({ targets: glow, alpha: 0.4, duration: 380, yoyo: true, repeat: -1 });
     this.layer.add(sa);
     p.sa = sa;
@@ -148,6 +156,44 @@ export class PopBoard {
         this.scene.tweens.add({ targets: sa, alpha: 0, scale: 0.6, duration: 220, delay: 120, onComplete: () => { this.scene.tweens.killTweensOf(sa.list); sa.destroy(); } });
         this.scene.time.delayedCall(260, () => { if (this.mode === 'resolving') this.fall(() => this.resolve(1)); });
       } });
+    } });
+  }
+
+  // 폭죽이 내려앉으면: 살짝 솟았다가 펑! 둘레 그림(구름도)이 한꺼번에 퐁 → 떨어진 뒤 이어지면 연쇄
+  fireworkBlast() {
+    const { r, c, sa } = this.piece;
+    this.piece = null;
+    this.mode = 'resolving';
+    const R = POP.firework?.radius ?? 1;
+    this.scene.tweens.add({ targets: sa, y: sa.y - this.cell * 0.3, scale: 1.25, duration: 160, ease: 'Quad.easeOut', onComplete: () => {
+      sfx('pop4');
+      const byType = {};
+      let n = 0;
+      for (let y = r - R; y <= r + R; y++) {
+        for (let x = c - R; x <= c + R; x++) {
+          if (y < 0 || y >= this.rows || x < 0 || x >= this.cols || this.grid[y][x] === null) continue;
+          const t = this.grid[y][x], s = this.sprites[y][x];
+          this.grid[y][x] = null; this.sprites[y][x] = null;
+          if (t !== CLOUD) { n++; byType[t] = (byType[t] ?? 0) + 1; }
+          this.scene.tweens.add({ targets: s, scale: 1.5, alpha: 0, duration: 260, ease: 'Quad.easeOut', onComplete: () => s.destroy() });
+        }
+      }
+      // 반짝 불꽃 (파티클 18개)
+      const q = this.at(r, c);
+      const colors = [0xff6b8a, 0xffd84a, 0x7ec8ff, 0x9edc7c, 0xb57be8];
+      for (let i = 0; i < 18; i++) {
+        const a = (i / 18) * Math.PI * 2, d = this.cell * (1.2 + (i % 3) * 0.35);
+        const st = this.scene.add.star(q.x, q.y, 5, this.cell * 0.06, this.cell * 0.14, colors[i % colors.length]);
+        this.layer.add(st);
+        this.scene.tweens.add({ targets: st, x: q.x + Math.cos(a) * d, y: q.y + Math.sin(a) * d, angle: 180, alpha: 0, scale: 0.5, duration: 520, ease: 'Quad.easeOut', onComplete: () => st.destroy() });
+      }
+      const t = this.scene.add.text(q.x, q.y - this.cell * 0.3, '펑!', { fontFamily: UI.fontTitle, fontSize: `${Math.round(this.cell * 0.6)}px`, color: '#e0557a', stroke: '#fffaf0', strokeThickness: 6 }).setOrigin(0.5);
+      this.layer.add(t);
+      this.scene.tweens.add({ targets: t, y: t.y - this.cell * 0.7, alpha: 0, duration: 650, ease: 'Quad.easeOut', onComplete: () => t.destroy() });
+      this.scene.tweens.killTweensOf(sa.list);
+      sa.destroy();
+      if (n) this.onPop?.(n, 1, byType);
+      this.scene.time.delayedCall(320, () => { if (this.mode === 'resolving') this.fall(() => this.resolve(2)); });
     } });
   }
 
@@ -191,7 +237,7 @@ export class PopBoard {
   lock() {
     const cells = this.cells();
     if (cells.some(([r]) => r < 0)) { this.topOut(); return; }
-    if (this.piece.hammer) { this.hammerHit(); return; }
+    if (this.piece.hammer) { if (this.piece.kind === 'firework') this.fireworkBlast(); else this.hammerHit(); return; }
     for (const [r, c, t, s] of cells) { this.grid[r][c] = t; this.sprites[r][c] = s; }
     this.piece = null;
     this.mode = 'resolving';
@@ -252,13 +298,15 @@ export class PopBoard {
       }
     }
     sfx(`pop${Math.min(chain, 5)}`);
+    const byType = {};
+    for (const [r, c] of pops) { const t = this.grid[r][c]; byType[t] = (byType[t] ?? 0) + 1; }
     for (const k of gone) {
       const r = Math.floor(k / 99), c = k % 99;
       const s = this.sprites[r][c];
       this.grid[r][c] = null; this.sprites[r][c] = null;
       this.scene.tweens.add({ targets: s, scale: 1.3, alpha: 0, duration: 230, ease: 'Quad.easeOut', onComplete: () => s.destroy() });
     }
-    this.onPop?.(pops.length, chain);
+    this.onPop?.(pops.length, chain, byType);
     this.scene.time.delayedCall(250, () => this.fall(() => this.resolve(chain + 1)));
   }
 

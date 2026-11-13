@@ -27,9 +27,7 @@ export const ASSETS = [
   ...PROPS,
   ...npc('dot', 128, 'boot'),
   ...npc('flower', 480, 'ch7'),
-  ...boss('dustmong', 'ch1'),
-  ...boss('silsili', 'ch1'),   // 한국 단계 두 번째 대결
-  ...boss('jjakjjak', 'ch1'),  // 한국 단계 세 번째 대결
+  // (먼지몽·실실이·짹짹이 = 한국 친구는 2026-11-13 1탄 미로에서 한국을 빼며 받지 않는다. 그림 파일은 public/assets/char에 남김)
   ...boss('bbangbbang', 'ch4'),
   ...boss('sappuni', 'ch5'),
   ...boss('dotori', 'ch6'),
@@ -39,7 +37,7 @@ export const ASSETS = [
   { key: 'home_bluenabi', file: 'assets/char/home_bluenabi.webp', width: 280, height: 280, release: true, group: 'boot' },
   { key: 'home_popo', file: 'assets/char/home_popo.webp', width: 280, height: 280, release: true, group: 'boot' },
   ...blue('caterpillar', 'boot'),
-  ...blue('moth', 'ch1'),       // 한국 단계 끝에 나방으로 진화
+  ...blue('moth', 'ch1'),       // 처음 시작할 때(배 타고 중국으로) 나방으로 진화 — 그룹 이름 ch1은 받는 순서(맨 앞)용
   ...blue('butterfly', 'ch5'),  // 일본 단계 끝에 나비로 진화
   // ── 2탄 「포포의 사계절 서울」: 1탄 그림을 다 받은 뒤 뒤에서 받는다 ──
   ...['popoSpring', 'popoSummer', 'popoAutumn', 'popoWinter'].flatMap((f) => blue(f, 's2')),

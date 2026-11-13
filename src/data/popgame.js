@@ -15,9 +15,14 @@ export const POP = {
   // 귀여운 나무망치 (2026-11-11): 이 번째 묶음 대신 망치 하나가 떨어진다. 쓱 옮겨 떨어뜨리면 내려앉은 자리 바로 밑 그림 하나가 콩! 사라진다.
   // 혼자·둘이서·각자 폰 모두 같은 차례에 나온다 (각자 폰 대결도 공평하게).
   hammer: { at: [8, 20] },
+  // 폭죽 기념품 (2026-11-13): 이 번째 묶음 대신 폭죽 하나가 떨어진다. 내려앉으면 둘레(가로·세로 radius칸) 그림이 한꺼번에 퐁!
+  // 망치처럼 묶음 순서는 그대로(각자 폰 대결도 같은 차례). 터진 그림은 점수·목표·미션에 들어간다.
+  firework: { at: [14, 27], radius: 1 },
+  // 나라 미션 (2026-11-13, 혼자 하기): 나라마다 정한 그림(types 번호)을 count개 퐁 하면 보너스 점수
+  missionBonus: 100,
   stages: [
     {
-      id: 'cn', chapter: 'ch4', name: '중국', dropMs: 800, goal: 30,
+      id: 'cn', chapter: 'ch4', name: '중국', dropMs: 800, goal: 30, mission: { type: 1, count: 6, name: '빵빵이' },
       types: [
         { icon: 'item_bambooLeaf', bg: 0xc9ecb4 },
         { icon: 'face_bbangbbang', frame: 1, bg: 0xfffaf0 },
@@ -26,7 +31,7 @@ export const POP = {
       ],
     },
     {
-      id: 'jp', chapter: 'ch5', name: '일본', dropMs: 650, goal: 34,
+      id: 'jp', chapter: 'ch5', name: '일본', dropMs: 650, goal: 34, mission: { type: 3, count: 7, name: '잉어' },
       types: [
         { icon: 'item_petal', bg: 0xffe3ec },
         { icon: 'face_sappuni', frame: 1, bg: 0xf3e0c8 },
@@ -35,7 +40,7 @@ export const POP = {
       ],
     },
     {
-      id: 'us', chapter: 'ch6', name: '미국', dropMs: 500, goal: 38,
+      id: 'us', chapter: 'ch6', name: '미국', dropMs: 500, goal: 38, mission: { type: 1, count: 8, name: '도토리대장' },
       types: [
         { icon: 'item_acorn', bg: 0xf3dcc0 },
         { icon: 'face_dotori', frame: 1, bg: 0xfff3c4 },
@@ -44,7 +49,7 @@ export const POP = {
       ],
     },
     {
-      id: 'ca', chapter: 'ch7', name: '캐나다', dropMs: 380, goal: 42,
+      id: 'ca', chapter: 'ch7', name: '캐나다', dropMs: 380, goal: 42, mission: { type: 3, count: 9, name: '튤립' },
       types: [
         { icon: 'item_nectar', bg: 0xfff0b8 },
         { icon: 'face_damdam', frame: 1, bg: 0xead8c8 },

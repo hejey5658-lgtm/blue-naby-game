@@ -2,7 +2,7 @@
 // 코드 = "BB2-" + 꼭 필요한 값(단계·모습·아이템·친구·별·퍼즐·설정)을 JSON → base64url + "-" + 확인 문자 4자리.
 // BB2 = 5단계 순서(2026-11-04~). 예전 BB1(7장 순서) 코드도 읽어서 5단계로 바꾼다.
 // 미로 위치는 넣지 않는다(장 처음부터 이어 하기). 비밀 정보가 아니며 어디로도 보내지 않는다.
-import { CHAPTERS, LEGACY_IDS, legacyStage, stageLabel } from './data/chapters.js';
+import { CHAPTERS, LEGACY_IDS, V5_IDS, legacyStage, v5Stage, stageLabel } from './data/chapters.js';
 import { BOSSES } from './data/bosses.js';
 import { ITEMS } from './data/items.js';
 import { PUZZLES } from './data/puzzles.js';
@@ -14,6 +14,7 @@ const FORMS_OF = { 1: ['caterpillar', 'moth', 'butterfly'], 2: ['popoSpring', 'p
 // 탄마다 앞글자가 다르다: 1탄 BB2-(예전 BB1-), 2탄 PP1-. 목록은 그 탄의 데이터로 (지금 하는 탄이 아니어도 읽을 수 있게)
 const keysOf = (n) => ({ items: Object.keys(DATA[n].ITEMS), friends: Object.keys(DATA[n].BOSSES), ids: DATA[n].CHAPTERS.map((c) => c.id) });
 const LEGACY_PREFIX = 'BB1-';
+const V5_PREFIX = 'BB2-'; // 5단계(한국 포함) 코드 — 4단계로 바꿔 읽는다 (2026-11-13)
 void ITEMS; void BOSSES;
 
 const bits = (keys, have) => keys.reduce((n, k, i) => (have.includes(k) ? n | (1 << i) : n), 0);
@@ -41,11 +42,13 @@ export function readSaveCode(raw) {
     let data = unpack(META[1].saveCode, raw);
     let legacy = false;
     if (!data) { data = unpack(META[2].saveCode, raw); series = 2; }
+    let v5 = false;
+    if (!data) { data = unpack(V5_PREFIX, raw); v5 = !!data; series = 1; }
     if (!data) { data = unpack(LEGACY_PREFIX, raw); legacy = true; series = 1; }
     const K = keysOf(series);
     if (!Array.isArray(data)) return null;
     let [chapter, form, items, friends, stars, puzzles, settings, cleared] = data;
-    const ids = legacy ? LEGACY_IDS : K.ids;
+    const ids = legacy ? LEGACY_IDS : v5 ? V5_IDS : K.ids;
     if (!Number.isInteger(chapter) || chapter < 1 || chapter > ids.length) return null;
     void stageLabel;
     let starMap = Object.fromEntries(ids.map((id, i) => [id, Number(String(stars)[i] ?? 0)]).filter(([, v]) => v > 0));
@@ -54,6 +57,12 @@ export function readSaveCode(raw) {
       starMap = mergeKoreaStars(starMap);
       chapter = koreaDone ? legacyStage(chapter) : 1;
       if (!koreaDone && form > 0) form = 0;
+    }
+    // 5단계(한국 포함) → 4단계: 한국 별은 빼고 단계 번호를 하나 당긴다
+    if (legacy || v5) {
+      delete starMap.ch1;
+      chapter = v5Stage(chapter);
+      if (form === 0 && (Object.keys(starMap).length || chapter > 1)) form = 1;
     }
     return {
       chapter,

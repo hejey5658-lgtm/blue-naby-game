@@ -217,11 +217,26 @@ export class PopBoard {
 
   move(dc) { if (this.mode === 'falling' && this.shift(0, dc)) sfx('tap'); }
 
-  // 톡: 시계 방향으로 돌린다. 벽에 막히면 옆으로 한 칸 비켜서 다시 해 본다.
-  rotate() {
+  // 톡 한 자리(월드 좌표) → 짝을 붙일 쪽 (2026-11-13~): 묶음 첫 그림보다 위·오른쪽·아래·왼쪽 중 더 많이 벗어난 쪽.
+  // 첫 그림 칸 안을 톡 하면 null (예전처럼 시계 방향으로 한 칸)
+  sideAt(wx, wy) {
+    if (!this.piece || this.piece.hammer) return null;
+    const m = this.layer.getWorldTransformMatrix();
+    const pt = m.applyInverse(wx, wy);
+    const q = this.at(this.piece.r, this.piece.c);
+    const dx = pt.x - q.x, dy = pt.y - q.y;
+    if (Math.abs(dx) < this.cell * 0.5 && Math.abs(dy) < this.cell * 0.5) return null;
+    if (Math.abs(dx) > Math.abs(dy)) return dx > 0 ? 1 : 3;
+    return dy > 0 ? 2 : 0;
+  }
+
+  // 톡: 톡 한 쪽(위 0·오른쪽 1·아래 2·왼쪽 3)으로 짝을 붙인다, 쪽이 없으면 시계 방향으로 한 칸.
+  // 벽에 막히면 옆으로 한 칸 비켜서 다시 해 본다.
+  rotate(side = null) {
     if (this.mode !== 'falling') return;
     if (this.piece.hammer) { this.scene.tweens.add({ targets: this.piece.sa, angle: { from: -14, to: 0 }, duration: 160, ease: 'Back.easeOut' }); sfx('toggle'); return; }
-    const rot = (this.piece.rot + 1) % 4;
+    if (side === this.piece.rot) { sfx('tap'); return; }
+    const rot = side ?? (this.piece.rot + 1) % 4;
     for (const dc of [0, -1, 1]) {
       const p = { ...this.piece, rot, c: this.piece.c + dc };
       if (this.fits(p)) { Object.assign(this.piece, { rot, c: p.c }); this.place(); sfx('toggle'); return; }

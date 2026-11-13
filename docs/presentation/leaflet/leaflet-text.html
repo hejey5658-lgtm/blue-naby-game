@@ -1,0 +1,100 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>블루나비와 포포의 여행 — 리플렛(글만)</title><style>
+/* 리플렛 글만 판 (A4 한 장, 2026-11-13): 그림 없이 글로만 — 게임명·한줄소개·장르·개발자명 + 게임 소개·플레이 방법·개발 이야기·개발자 소개.
+   원본 이 파일 → leaflet-text.pdf·leaflet-text.png (그림이 들어간 판은 leaflet.html 그대로) */
+@font-face{font-family:Jua;src:url(../../../public/fonts/Jua-subset.woff2)}
+@font-face{font-family:Gowun;src:url(../../../public/fonts/GowunDodum-subset.woff2)}
+@page{size:A4;margin:0}
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--ink:#2b2d5a;--blue:#2f7bff;--pink:#e0557a;--cream:#fffaf0;--paper:#f6ead0;--wood:#8f6440;--sub:#5a5c80}
+body{width:210mm;height:297mm;overflow:hidden;background:var(--cream);color:var(--ink);font-family:Gowun;word-break:keep-all;position:relative}
+/* 제목 띠 */
+.top{background:var(--wood);color:var(--cream);padding:8mm 14mm 7mm;text-align:center}
+.kicker{font-family:Jua;font-size:12pt;opacity:.85}
+h1{font-family:Jua;font-weight:normal;font-size:36pt;line-height:1.1;margin-top:2mm;text-shadow:0 1.2mm 0 #6e4a2e}
+h1 b{font-weight:normal;color:#9fd0ff}h1 i{font-style:normal;color:#ffb6c8}
+.chips{display:flex;justify-content:center;gap:2.5mm;margin-top:3mm}
+.chip{font-family:Jua;font-size:12pt;padding:1.2mm 4.5mm 1.6mm;border-radius:99px;color:var(--ink)}
+.chip.b{background:#d6eaff}.chip.p{background:#ffe0e8}.chip.g{background:#ffd84a;box-shadow:0 .8mm 0 #6e4a2e}
+/* 한줄소개 */
+.intro{margin:7mm 14mm 0;background:#fff;border:.8mm solid var(--ink);border-radius:5mm;padding:5mm 6mm 4.5mm;position:relative}
+.tag{position:absolute;top:-3.8mm;left:6mm;font-family:Jua;font-size:12pt;background:var(--ink);color:var(--cream);padding:.8mm 4mm 1.2mm;border-radius:99px}
+.intro p{font-size:13pt;line-height:1.6}
+.intro b{font-family:Jua;font-weight:normal;font-size:13.5pt}
+.bn{color:var(--blue)}.pp{color:var(--pink)}
+/* 기본 정보 */
+.facts{display:flex;gap:4mm;margin:5mm 14mm 0}
+.fact{flex:1;background:var(--paper);border-radius:4mm;padding:2.4mm 4mm 2.8mm}
+.fact .k{font-family:Jua;font-size:10.5pt;color:#8a6a48}
+.fact .v{font-family:Jua;font-size:12.5pt;line-height:1.3;margin-top:.6mm}
+.fact .v small{font-family:Gowun;font-size:10.5pt;color:var(--sub)}
+/* 섹션 */
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:7mm 4mm;margin:8mm 14mm 0}
+.sec{background:#fff;border:.7mm solid var(--ink);border-radius:5mm;padding:5.5mm 4.5mm 2.5mm;position:relative}
+.sec.wide{grid-column:1 / span 2}
+.sec h2{position:absolute;top:-3.8mm;left:5mm;font-family:Jua;font-weight:normal;font-size:12.5pt;background:var(--ink);color:var(--cream);padding:.8mm 4mm 1.2mm;border-radius:99px}
+.line{display:flex;gap:2.5mm;font-size:10.5pt;line-height:1.5;margin-bottom:1.8mm}
+.line .k{flex:0 0 12mm;font-family:Jua;font-size:10.5pt;color:#8a6a48;padding-top:.3mm}
+.line .v b{font-family:Jua;font-weight:normal;font-size:10.5pt}
+.wide .line .k{flex-basis:12mm}
+ul{list-style:none}
+li{position:relative;padding-left:3.6mm}
+li:before{content:'';position:absolute;left:.3mm;top:2.2mm;width:1.6mm;height:1.6mm;border-radius:50%;background:var(--blue)}
+.fix{color:var(--blue);font-family:Jua;font-size:10.5pt}
+/* 개발자 */
+.dev{margin:6mm 14mm 0;background:var(--paper);border-radius:5mm;padding:3.5mm 5mm;display:flex;align-items:baseline;gap:5mm}
+.dev .n{font-family:Jua;font-size:17pt;white-space:nowrap}.dev .n small{font-family:Gowun;font-size:11pt;color:var(--sub)}
+.dev .q{font-size:11.5pt;line-height:1.5}
+.dev .k{font-family:Jua;font-size:10.5pt;color:#8a6a48;white-space:nowrap}
+/* 아래 */
+.foot{position:absolute;left:14mm;right:14mm;bottom:7mm;text-align:center;border-top:.8mm solid var(--ink);padding-top:4.5mm}
+.url{font-family:Jua;font-size:20pt}
+.how{font-size:11.5pt;color:var(--sub);margin-top:1mm}
+</style></head><body>
+<div class="top">
+  <div class="kicker">링크 하나로 폰에서 바로 · 설치·가입 없이</div>
+  <h1><b>블루나비</b>와 <i>포포</i>의 여행</h1>
+  <div class="chips"><span class="chip b">1탄 세계여행</span><span class="chip p">2탄 사계절 서울</span><span class="chip g">장르 · 귀여운 캐주얼 퍼즐 어드벤처</span></div>
+</div>
+
+<div class="intro"><span class="tag">한줄소개</span>
+  <p><b>[블루나비와 포포의 여행]</b> 폰에서 바로 하는 귀여운 캐주얼 퍼즐 어드벤처예요. 파란 애벌레 <b class="bn">블루나비</b>는 세계를, 강아지 <b class="pp">포포</b>는 사계절 서울을 여행하며 미로 속 숨은 친구를 찾고 함께 자라요.</p>
+</div>
+
+<div class="facts">
+  <div class="fact"><div class="k">게임명</div><div class="v">블루나비와 포포의 여행</div></div>
+  <div class="fact"><div class="k">장르</div><div class="v">귀여운 캐주얼 퍼즐 어드벤처</div></div>
+  <div class="fact"><div class="k">개발자명</div><div class="v">장은영 <small>(블루나비)</small></div></div>
+</div>
+
+<div class="grid">
+  <div class="sec wide"><h2>게임 소개</h2>
+    <div class="line"><div class="k">세계관</div><div class="v">한국 창가 화분에서 태어난 애벌레 <b>블루나비</b>는 중국·일본·미국을 지나 캐나다 꽃밭까지, 친구 강아지 <b>포포</b>는 서울의 봄·여름·가을·겨울을 여행해요.</div></div>
+    <div class="line"><div class="k">컨셉</div><div class="v">싸우지 않고 <b>친구가 되는</b> 여행. 작은 존재가 세상으로 나아가며 애벌레 → 나방 → 나비로 자라요.</div></div>
+    <div class="line"><div class="k">경험</div><div class="v">귀엽고 따뜻한 <b>힐링</b>, 짧게 즐기는 미로와 퍼즐, 링크 하나로 친구와 겨루는 재미.</div></div>
+  </div>
+  <div class="sec"><h2>플레이 방법</h2>
+    <div class="line"><div class="k">목표</div><div class="v">미로의 수집품을 모두 모으고 <b>숨은 친구를 세 번</b> 찾아 출구로! 친구가 되면 다음 나라·계절로 떠나요.</div></div>
+    <div class="line"><div class="k">규칙</div><div class="v"><ul>
+      <li>쓱 밀거나 가고 싶은 칸을 톡 눌러 이동</li>
+      <li>방해물에 닿으면 <b>퐁!</b> 체크포인트에서 다시</li>
+      <li>피리·자전거·비눗방울 도구는 미로마다 한 번</li>
+      <li>기념품 퐁퐁: 같은 그림 3개 이으면 퐁, 나무망치로 콩!</li>
+    </ul></div></div>
+  </div>
+  <div class="sec"><h2>개발 이야기</h2>
+    <div class="line"><div class="k">기간</div><div class="v"><b>2026.10.30 ~ 11.11</b> (약 2주)<br>1탄 → 2탄 → 같이 하기까지</div></div>
+    <div class="line"><div class="k">어려움</div><div class="v"><ul>
+      <li>태블릿에서 Firebase 열쇠가 복사되지 않음<br><span class="fix">→ 복사 버튼을 따로 만들어 등록</span></li>
+      <li>자동 배포가 되지 않음<br><span class="fix">→ Claude가 직접 올려 첫 공개</span></li>
+      <li>대사가 끝나면 화면이 멈추는 버그<br><span class="fix">→ 지난 상태를 지우고, 겪은 문제는 규칙으로 기록</span></li>
+    </ul></div></div>
+  </div>
+</div>
+
+<div class="dev"><div class="k">개발자 소개</div><div class="n">장은영 <small>(블루나비)</small></div><div class="q">"작은 애벌레가 나비가 되듯, 게임을 만들며 저도 한 뼘 자랐어요!"</div></div>
+
+<div class="foot">
+  <div class="url">blue-naby-game.web.app</div>
+  <div class="how">설치·가입 없이 폰 브라우저에서 링크로 바로 시작해요</div>
+</div>
+</body></html>

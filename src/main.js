@@ -6,7 +6,7 @@ import { TitleScene } from './scenes/TitleScene.js';
 import { DialogueScene } from './scenes/DialogueScene.js';
 import { SettingsScene } from './scenes/SettingsScene.js';
 import { EntryScene } from './scenes/EntryScene.js';
-import { MazeScene } from './scenes/MazeScene.js';
+import { SpotScene } from './scenes/SpotScene.js'; // 틀린그림 찾기 (20절, 씬 이름 'Maze' 그대로 — 예전 미로 MazeScene.js 는 쓰지 않음)
 import { PauseScene } from './scenes/PauseScene.js';
 import { EvolutionScene } from './scenes/EvolutionScene.js';
 import { PreloadScene } from './scenes/PreloadScene.js';
@@ -51,7 +51,7 @@ const game = new Phaser.Game({
   // (저장 코드·이름을 적는 글자 칸은 HTML 상자라 그대로 입력된다)
   input: { activePointers: 2, keyboard: false },
   render: { antialias: true, powerPreference: 'high-performance' },
-  scene: [BootScene, PreloadScene, EntryScene, TitleScene, MazeScene, EvolutionScene, EndingScene, PopScene, DuoScene, MatchScene, Title2Scene, TogetherScene, DressScene, Ending2Scene, DialogueScene, PauseScene, SettingsScene],
+  scene: [BootScene, PreloadScene, EntryScene, TitleScene, SpotScene, EvolutionScene, EndingScene, PopScene, DuoScene, MatchScene, Title2Scene, TogetherScene, DressScene, Ending2Scene, DialogueScene, PauseScene, SettingsScene],
 });
 // 하는 탄 그림만 받기 (모바일 최적화): PreloadScene·waitForAssets 가 registry 'series'를 본다
 game.registry.set('series', state.series === 2 ? 2 : 1);

@@ -154,6 +154,32 @@ export function drawNature(scene, V, id, k = 1) {
   return scene.add.image(L, Tp, key).setOrigin(0).setScale(1 / k);
 }
 
+// 틀린그림 그림 바탕 (20절, 2026-11-15): 그림 칸(W×H) 하나에 하늘 → 먼 산 → 언덕 → 들판만 그린다 (소품·연못은 틀린그림 데이터가 따로 올림).
+// hzf = 지평선 높이(그림 높이에 대한 비율). g 는 (0,0)부터 그린다.
+export function drawBackdrop(g, W, H, id, hzf = 0.46) {
+  const T = THEMES[id];
+  const L = 0, Tp = 0, R = W, B = H;
+  const hz = Math.round(H * hzf);
+  const bands = 6;
+  for (let i = 0; i < bands; i++) {
+    const y0 = ((hz + 20) * i) / bands;
+    g.fillStyle(mix(T.sky[0], T.sky[1], i / (bands - 1)), 1).fillRect(L, y0, W, (hz + 20) / bands + 2);
+  }
+  for (let i = 0; i < 3; i++) cloud(g, W * (0.18 + i * 0.32) + (rnd(i + 3) - 0.5) * 50, H * 0.08 + rnd(i + 17) * H * 0.12, 0.55 + rnd(i + 5) * 0.25);
+  FAR[T.far](g, L, R, hz, T.farColor, H * 1.6, T);
+  for (let x = L - 120, i = 0; x < R + 160; x += 210, i++) g.fillStyle(T.mid[0], 1).fillEllipse(x, hz + 18, 340 + rnd(i) * 120, 110 + rnd(i + 9) * 40);
+  if (T.forest) for (let x = L - 30, i = 0; x < R + 40; x += 34, i++) pine(g, x, hz + 24 + rnd(i + 40) * 10, 0.36 + rnd(i) * 0.1, [0x4f8f5c, 0x3f7d4f]);
+  for (let x = L - 60, i = 0; x < R + 160; x += 260, i++) g.fillStyle(T.mid[1], 1).fillEllipse(x, hz + 42, 380 + rnd(i + 2) * 120, 100 + rnd(i + 11) * 30);
+  if (T.wall) greatWall(g, L, R, hz);
+  g.fillStyle(T.ground, 1).fillRect(L, hz + 46, W, B - hz - 46);
+  for (let i = 0; i < Math.round((W * (B - hz)) / 7000); i++) tuft(g, L + rnd(i + 200) * W, hz + 64 + rnd(i + 300) * (B - hz - 70), T.tuft);
+  return hz;
+}
+
+// 틀린그림에서 쓰는 퐁퐁 소품 그리기 (나무·꽃·동물·물 위 소품)
+export const NATURE_PROPS = {};
+export const NATURE_WATER = {};
+
 // ── 하늘 ──
 function sun(g, x, y, r) {
   g.fillStyle(0xffe58a, 0.5).fillCircle(x, y, r * 1.35);
@@ -431,3 +457,6 @@ function pine(g, x, y, s, [c1, c2]) {
   g.fillStyle(c2, 1).fillTriangle(x - 24 * s, y - 74 * s, x + 24 * s, y - 74 * s, x, y - 122 * s);
   g.fillStyle(0xffffff, 0.25).fillTriangle(x - 4 * s, y - 112 * s, x, y - 122 * s, x - 14 * s, y - 84 * s);
 }
+
+Object.assign(NATURE_PROPS, PROPS);
+Object.assign(NATURE_WATER, WATER);

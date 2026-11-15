@@ -61,7 +61,7 @@ export class TogetherScene extends Phaser.Scene {
     this.add.rectangle(-2000, -2000, 4720, 5280, CREAM).setOrigin(0);
     this.top = getSafeInsets(this.game).top;
     if (this.view === 'setup') this.makeSetup(); else this.makeStones();
-    // 아래: 대결함 하나 (가로는 징검다리 화면 왼쪽 칸 아래 · 고르기 화면 오른쪽 칸 아래). [홈으로] 칸은 2026-11-15 뺌 — 왼쪽 위 [◀ 홈]·[◀ 뒤로]로
+    // 아래: 대결함 하나 (가로는 징검다리 화면 왼쪽 칸 아래 · 고르기 화면 오른쪽 칸 아래). [홈으로] 칸은 2026-11-15 뺌 — 왼쪽 위 [◀ 여행 중](홈)·[◀ 뒤로]로
     const L = UI.landscape, setupL = L && this.view === 'setup';
     const bx = setupL ? 1080 : L ? 260 : UI.width / 2, yb = setupL ? 600 : L ? 650 : 1188;
     new Button(this, bx, yb, { ...SUB, label: '대결함', onPress: () => this.scene.start('Match', { step: 'box' }) });
@@ -75,15 +75,15 @@ export class TogetherScene extends Phaser.Scene {
   // 가로 (18·19절): 왼쪽 칸 · 오른쪽 칸
   landscapeView() { return landView(0.78, 720, 440); }
 
-  // 왼쪽 위 작은 알약 버튼 (◀ 홈 / ◀ 징검다리)
+  // 왼쪽 위 작은 알약 버튼 (◀ 여행 중 = 홈 / ◀ 뒤로 = 징검다리)
   backButton(label, onPress) {
     const back = this.add.container(110, 64 + this.top);
     const bg = this.add.graphics();
-    const w = label.length > 4 ? 210 : 172;
+    const w = label.length > 6 ? 210 : 172;
     bg.fillStyle(0xffffff, 0.95).fillRoundedRect(-w / 2, -30, w, 60, 30).lineStyle(3, INK, 0.2).strokeRoundedRect(-w / 2, -30, w, 60, 30);
     back.add([bg, this.add.text(0, 0, label, { fontFamily: UI.fontTitle, fontSize: '26px', color: '#2b2d5a' }).setOrigin(0.5)]);
     back.setSize(w + 8, 96).setInteractive({ useHandCursor: true }).on('pointerup', () => { sfx('tap'); onPress(); });
-    if (label.length > 4) back.x += (w - 172) / 2;
+    if (w > 172) back.x += (w - 172) / 2;
     this.backChip = back;
   }
 
@@ -94,7 +94,7 @@ export class TogetherScene extends Phaser.Scene {
   // ① 징검다리 화면
   makeStones() {
     const L = UI.landscape, top = this.top;
-    this.backButton('◀ 홈', () => this.scene.start('Title'));
+    this.backButton('◀ 여행 중', () => this.scene.start('Title')); // 홈으로 (2026-11-15~, 예전 [◀ 홈])
     // 왼쪽(세로는 위): 제목 · 몇 명?
     const cx = L ? 260 : UI.width / 2;
     this.title(cx, L ? 150 : 100, '같이 하기');

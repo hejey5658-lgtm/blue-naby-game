@@ -178,11 +178,11 @@ export class TitleScene extends Phaser.Scene {
     iconGear(gg, 0, 0, 46);
     this.gear.add(gg).setSize(96, 96).setInteractive({ useHandCursor: true }).on('pointerup', () => this.openSettings());
 
-    // 지구본 입구로 (왼쪽 위, 게임장 버튼이 있으면 그 아래)
+    // 지구본 입구로 (왼쪽 위, 게임장 버튼이 있으면 그 아래) — 이름 [◀ 여행 시작] (2026-11-15~, 예전 [◀ 지구본])
     const sw = this.add.container(130, window.BB_EMBED ? 140 : 64);
     const sg = this.add.graphics();
     sg.fillStyle(0xffffff, 0.95).fillRoundedRect(-106, -30, 212, 60, 30).lineStyle(3, C.ink, 0.2).strokeRoundedRect(-106, -30, 212, 60, 30);
-    sw.add([sg, this.add.text(0, 0, '◀ 지구본', { fontFamily: UI.fontTitle, fontSize: '26px', color: '#2b2d5a' }).setOrigin(0.5)]);
+    sw.add([sg, this.add.text(0, 0, '◀ 여행 시작', { fontFamily: UI.fontTitle, fontSize: '26px', color: '#2b2d5a' }).setOrigin(0.5)]);
     sw.setSize(216, 96).setInteractive({ useHandCursor: true }).on('pointerup', () => { sfx('tap'); this.scene.start('Entry'); });
     this.globeChip = sw;
 

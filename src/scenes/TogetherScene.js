@@ -61,11 +61,10 @@ export class TogetherScene extends Phaser.Scene {
     this.add.rectangle(-2000, -2000, 4720, 5280, CREAM).setOrigin(0);
     this.top = getSafeInsets(this.game).top;
     if (this.view === 'setup') this.makeSetup(); else this.makeStones();
-    // 아래 줄: 대결함 · 홈으로 (가로는 왼쪽 칸 아래)
+    // 아래: 대결함 하나 (가로는 왼쪽 칸 아래). [홈으로] 칸은 2026-11-15 뺌 — 왼쪽 위 [◀ 홈]·[◀ 뒤로]로
     const L = UI.landscape;
     const bx = L ? 260 : UI.width / 2, yb = L ? 650 : 1188;
-    new Button(this, bx - 160, yb, { ...SUB, label: '대결함', onPress: () => this.scene.start('Match', { step: 'box' }) });
-    new Button(this, bx + 160, yb, { ...SUB, label: '홈으로', onPress: () => this.scene.start('Title') });
+    new Button(this, bx, yb, { ...SUB, label: '대결함', onPress: () => this.scene.start('Match', { step: 'box' }) });
     if (L) {
       const v = this.landscapeView();
       const ins = getSafeInsets(this.game);

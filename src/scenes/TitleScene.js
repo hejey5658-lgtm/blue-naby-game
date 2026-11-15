@@ -29,16 +29,16 @@ function progressOf(n) {
   return (state.series === 2 ? 2 : 1) === n ? state : state.other;
 }
 
-// 버튼 아래 작은 글: "처음부터" / "이어하기 · 3단계 일본" / "여행 끝! 엔딩 보기"
+// 버튼 아래 작은 글: "여행 출발" / "여행 중 · 2단계 일본" / "여행 끝! 엔딩 보기" (2026-11-15~, 예전 "처음부터"·"이어하기")
 export function progressLabel(n) {
   const p = progressOf(n);
-  if (!p || !p.step || p.step === 'new') return '처음부터';
+  if (!p || !p.step || p.step === 'new') return '여행 출발';
   if (p.cleared && p.step === 'map') return '여행 끝! 엔딩 보기';
   const ch = DATA[n].CHAPTERS;
   // 미로 중이면 그 단계, 단계 사이(map)면 다음에 할 단계(아직 안 깬 첫 단계)
   let i = p.step === 'map' ? ch.findIndex((c) => !(p.stars?.[c.id] > 0)) : ch.findIndex((c) => c.id === p.playing);
   if (i < 0) i = Math.min(ch.length - 1, Math.max(0, (p.chapter ?? 1) - 1));
-  return `이어하기 · ${n === 1 ? `${i + 1}단계 ` : ''}${ch[i].name}`;
+  return `여행 중 · ${n === 1 ? `${i + 1}단계 ` : ''}${ch[i].name}`;
 }
 
 export class TitleScene extends Phaser.Scene {
@@ -168,7 +168,7 @@ export class TitleScene extends Phaser.Scene {
     this.togetherBtn = mkBtn({
       label: '같이 하기', color: C.orange, shade: 0xd98a2b, textColor: '#2b2d5a',
       onPress: () => { if (this.leaving) return; sfx('tap'); unlockAudio(); this.scene.start('Together'); },
-    }, '2~3명 · 미로 / 기념품 퐁퐁');
+    }, '혼자 · 2명 · 미로 / 기념품 퐁퐁');
 
     // 설정 (오른쪽 위)
     this.gear = this.add.container(UI.width - 64, 64);

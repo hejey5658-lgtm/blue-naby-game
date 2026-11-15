@@ -422,9 +422,10 @@ const bamboo = {
 };
 
 // ═════ 5장 일본 벚꽃 정원 ═════════════════════════════
-const POND = { x: UI.fullWidth / 2, y: UI.fullHeight - 70, w: 760, h: 230 };
+// 아래 풀밭 언덕 윗선 (2026-11-15~ 연못 뺌 — 화면이 돌면 크기가 바뀌므로 그릴 때 계산)
+const meadowTop = () => UI.fullHeight - 150;
 const garden = {
-  // 위: 벚꽃 가지 / 아래: 연잎이 뜬 연못
+  // 위: 벚꽃 가지 / 아래: 벚꽃 덤불이 핀 풀밭 언덕 (2026-11-15~ 연못·잉어 뺌)
   backdrop(scene, g, sc) {
     const { fullWidth: W, fullHeight: H } = UI;
     g.fillStyle(0xfbe0e6, 1).fillRect(0, 0, W, H);
@@ -439,12 +440,15 @@ const garden = {
       const bx = left ? 20 + hash(i, 1, 80) * 280 : W - 220 + hash(i, 1, 80) * 210;
       flower(g, bx, ty - 10 + hash(i, 2, 80) * 34, 6 + hash(i, 3, 80) * 3, sc.blossom[i % 2], 0xff9fb8);
     }
-    g.fillStyle(0x6fa86a, 1).fillEllipse(POND.x, POND.y, POND.w + 30, POND.h + 26);
-    g.fillStyle(sc.pond, 1).fillEllipse(POND.x, POND.y, POND.w, POND.h);
-    g.fillStyle(0xffffff, 0.25).fillEllipse(POND.x - 120, POND.y - 40, 220, 26);
-    for (const [px, py, r] of [[90, POND.y - 30, 26], [620, POND.y - 10, 30], [480, POND.y + 50, 22]]) {
-      g.fillStyle(sc.pad, 1).fillCircle(px, py, r);
-      g.fillStyle(sc.pond, 1).fillTriangle(px, py, px + r, py - r * 0.3, px + r, py + r * 0.3);
+    // 풀밭 언덕 두 겹 + 벚꽃 덤불 (분홍·흰 작은 꽃 — 수집품 꽃잎보다 훨씬 작게)
+    const top = meadowTop();
+    g.fillStyle(0x9fcf8a, 1).fillEllipse(W / 2, top + 150, W + 320, 300);
+    g.fillStyle(0xb5dc9c, 1).fillEllipse(W / 2, top + 175, W + 120, 250);
+    for (let i = 0, x = 20; x < W + 40; x += 92, i++) {
+      const y = top + 52 + hash(i, 4, 86) * 40, r = 30 + hash(i, 5, 86) * 12;
+      g.fillStyle(0x6fa86a, 1).fillCircle(x, y + 8, r);
+      g.fillStyle(0x86bf73, 1).fillCircle(x - 8, y, r * 0.8);
+      for (let k = 0; k < 4; k++) flower(g, x - r * 0.5 + hash(i, 10 + k, 86) * r, y - r * 0.5 + hash(i, 20 + k, 86) * r * 0.8, 4 + hash(i, 30 + k, 86) * 2, sc.blossom[k % 2], 0xff9fb8);
     }
   },
   // 자갈 정원: 가로로 고르게 그은 물결 결
@@ -468,28 +472,8 @@ const garden = {
   },
   ambient(scene, sc) {
     const { oy, bottom } = board(scene);
-    // 잉어: 연못 안을 천천히 한 바퀴
-    for (let i = 0; i < sc.koiCount; i++) {
-      const fish = scene.add.container(0, 0);
-      const fg = scene.add.graphics();
-      fg.fillStyle(sc.koi[i % 2], 1).fillEllipse(0, 0, 34, 14).fillTriangle(-16, 0, -28, -8, -28, 8);
-      fg.fillStyle(i % 2 ? 0xf59a3b : 0xfffaf0, 1).fillCircle(4, -2, 4);
-      fish.add(fg);
-      const place = (t) => {
-        const a = t * Math.PI * 2 + i * Math.PI;
-        fish.setPosition(POND.x + Math.cos(a) * POND.w * 0.34, POND.y + Math.sin(a) * POND.h * 0.24);
-        fish.setRotation(a + Math.PI / 2);
-      };
-      place(0);
-      if (!still()) scene.tweens.addCounter({ from: 0, to: 1, duration: 22000 + i * 6000, repeat: -1, onUpdate: (tw) => place(tw.getValue()) });
-    }
-    // 물결
-    for (let i = 0; i < sc.ripples; i++) {
-      const r = scene.add.circle(POND.x - 150 + i * 260, POND.y + 10 - i * 30, 18).setStrokeStyle(2, 0xffffff, 0.7).setScale(0.3);
-      tween(scene, { targets: r, scale: 1.6, alpha: 0, duration: 2600, delay: i * 1300, repeat: -1, repeatDelay: 1200, ease: 'Sine.easeOut' });
-    }
-    // 꽃잎: 판 바깥 여백(위 가지 아래, 연못 위)에서만 작게
-    const zones = [[scene.hudBottom, oy - 4], [bottom + 4, POND.y - 40]];
+    // 꽃잎: 판 바깥 여백(위 가지 아래, 풀밭 언덕 위)에서만 작게 (연못·잉어·물결은 2026-11-15 뺌)
+    const zones = [[scene.hudBottom, oy - 4], [bottom + 4, meadowTop() + 20]];
     for (let i = 0; i < sc.petals; i++) {
       const [y0, y1] = zones[i % 2];
       if (y1 - y0 < 20) continue;
@@ -575,7 +559,7 @@ function clouds(scene, n, y, room) {
 
 // ═════ 7장 캐나다 ═════════════════════════════════
 const maple = {
-  // 탁 트인 하늘 · 아래 단풍 산과 호수, 단풍 숲
+  // 탁 트인 하늘 · 아래 단풍 산과 풀밭(2026-11-15~ 호수 뺌), 단풍 숲
   backdrop(scene, g, sc) {
     const { fullWidth: W, fullHeight: H } = UI;
     g.fillStyle(0xcfe7ff, 1).fillRect(0, 0, W, H);
@@ -587,8 +571,8 @@ const maple = {
       g.fillStyle(sc.peaks[i % 2], 1).fillTriangle(cx - 140, base, cx + 140, base, cx, base - ph);
       g.fillStyle(0xfffaf0, 0.9).fillTriangle(cx - 22, base - ph + 22, cx + 22, base - ph + 22, cx, base - ph);
     }
-    g.fillStyle(sc.lake, 1).fillRect(0, base, W, 44);
-    g.fillStyle(0xffffff, 0.4).fillRect(40, base + 14, 160, 3).fillRect(420, base + 26, 200, 3);
+    g.fillStyle(sc.meadow, 1).fillRect(0, base, W, H - base);
+    for (let i = 0, x = 24; x < W; x += 58, i++) flower(g, x + hash(i, 1, 101) * 30, base + 12 + hash(i, 2, 101) * 24, 4, sc.flowers[i % 2], 0xf2a23a);
     for (let x = 0, i = 0; x < W + 40; x += 46, i++) {
       g.fillStyle(sc.bush[i % 3], 1).fillCircle(x, H - 34, 34);
       g.fillStyle(sc.bush[(i + 1) % 3], 1).fillCircle(x + 18, H - 50, 22);

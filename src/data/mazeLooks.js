@@ -47,8 +47,8 @@ export const LOOK = {
   },
   ch5: {
     floor: 0xfbeef1, floor2: 0xf6e3e8, wall: 0x6fa86a, wallTop: 0x8cc08a, wallFront: 0x4f7f4c, low: 0xb8b8c8, deco: 'blossom', wind: 0xf4b6c8, water: 0x7fc7c9, hud: [0x7a5a3e, 0xa98463, 0xf4b6c8],
-    // 일본 벚꽃 정원: 자갈 정원 결, 생울타리, 바깥 벚꽃 가지·연못(잉어·물결), 꽃잎은 바깥 여백에만 (수집품 벚꽃잎과 헷갈리지 않게)
-    scenery: { kind: 'garden', rake: 0xeedde2, blossom: [0xffffff, 0xffd0dc], branch: 0x8f6a55, pond: 0x7fc7c9, pad: 0x8cc08a, koi: [0xf59a3b, 0xfffaf0], koiCount: 2, ripples: 2, petals: 6 },
+    // 일본 벚꽃 정원: 자갈 정원 결, 생울타리, 바깥 벚꽃 가지·아래 벚꽃 덤불 풀밭(2026-11-15~ 연못·잉어 뺌), 꽃잎은 바깥 여백에만 (수집품 벚꽃잎과 헷갈리지 않게)
+    scenery: { kind: 'garden', rake: 0xeedde2, blossom: [0xffffff, 0xffd0dc], branch: 0x8f6a55, petals: 6 },
   },
   ch6: {
     floor: 0xd9ecc8, floor2: 0xcfe4bc, wall: 0xc9714f, wallTop: 0x7cc56a, wallFront: 0x9a523a, low: 0x8a6a4a, deco: 'windows', water: 0x7fb2ff, hud: [0x5d6f86, 0x8ea3bd, 0xe3edf7],
@@ -58,6 +58,6 @@ export const LOOK = {
   ch7: {
     floor: 0xe8f4d4, floor2: 0xdcedc6, wall: 0xc0563a, wallTop: 0xe8794f, wallFront: 0x8e3b28, low: 0x8a5a3a, deco: 'tulip', wind: 0xe8794f, water: 0x7fb2ff, hud: [0x4f8dff, 0x2f7bff, 0xffffff],
     // 캐나다: 작은 꽃이 핀 풀밭, 단풍 덤불·통나무, 바깥 단풍 산·호수·탁 트인 하늘, 천천히 떨어지는 단풍잎
-    scenery: { kind: 'maple', tuft: 0xcfe4b8, flowers: [0xffffff, 0xffd84a], bush: [0xe8794f, 0xc0563a, 0xf2a23a], log: [0xa8673c, 0xe0aa7e], lake: 0x9fd0ff, peaks: [0xd98a5a, 0xc0563a], leaves: 8, clouds: 2 },
+    scenery: { kind: 'maple', tuft: 0xcfe4b8, flowers: [0xffffff, 0xffd84a], bush: [0xe8794f, 0xc0563a, 0xf2a23a], log: [0xa8673c, 0xe0aa7e], meadow: 0xbcdc98, peaks: [0xd98a5a, 0xc0563a], leaves: 8, clouds: 2 },
   },
 };

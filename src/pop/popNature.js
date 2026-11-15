@@ -1,58 +1,58 @@
 // 기념품 퐁퐁 배경 = 그 나라의 귀여운 자연 풍경 (2026-11-11 "국가 자연 이미지를 귀엽게, 빈 곳이 없게").
-// 보이는 칸 전체(세로·길쭉한 폰·가로)를 하늘 → 먼 산 → 언덕 → 들판 → 물가 → 나무·꽃으로 채우고 한 장으로 굽는다.
+// 보이는 칸 전체(세로·길쭉한 폰·가로)를 하늘 → 먼 산 → 언덕 → 들판 → 나무·꽃으로 채우고 (물가 연못은 2026-11-15 뺌) 한 장으로 굽는다.
 // 나라 표현 규칙(CLAUDE.md 6절): 자연·명소·동물·꽃만, 국기·정치 상징 없음. 그림은 파일 없이 Graphics(캔버스·WebGL 같게).
 // 나라마다 색·산 모양·소품은 아래 THEMES에서 고친다.
 
 const INK = 0x2b2d5a;
 
 export const THEMES = {
-  // 중국: 계림 같은 둥근 봉우리 + 만리장성 언덕 + 대나무 숲·판다·연꽃 연못
+  // 중국: 계림 같은 둥근 봉우리 + 만리장성 언덕 + 대나무 숲·판다
   cn: {
     sky: [0xcfeedb, 0xf2f9ea], far: 'karst', farColor: [0x8fc3a0, 0xaed6b8], mid: [0xa9d68c, 0x93c878], wall: true,
-    ground: 0xc6e4a2, tuft: 0x9fcf7c, water: 0x9fd8d2, onWater: 'lotus',
+    ground: 0xc6e4a2, tuft: 0x9fcf7c,
     props: ['bamboo', 'bush', 'bamboo', 'pine', 'panda', 'bamboo', 'rock', 'bamboo', 'pine', 'bush', 'bamboo'], edge: 'bamboo',
   },
-  // 일본: 눈 덮인 큰 산 + 벚나무·돌등·잉어 연못
+  // 일본: 눈 덮인 큰 산 + 벚나무·돌등
   jp: {
     sky: [0xfde0e8, 0xfff5f1], far: 'fuji', farColor: [0x9ab4dc, 0xbccbe6], mid: [0xbfe0a8, 0xa8d391],
-    ground: 0xd3eab8, tuft: 0xb0d898, water: 0xa6d6ee, onWater: 'koi',
+    ground: 0xd3eab8, tuft: 0xb0d898,
     props: ['cherry', 'bush', 'cherry', 'lantern', 'cherry', 'rock', 'cherry', 'bush', 'cherry'], edge: 'cherry',
   },
-  // 미국: 붉은 협곡 바위산 + 큰 참나무·소나무·해바라기·오리 연못
+  // 미국: 붉은 협곡 바위산 + 큰 참나무·소나무·해바라기
   us: {
     sky: [0xcde7ff, 0xeef7ff], far: 'mesa', farColor: [0xe5a27a, 0xd0855e], mid: [0xa3d68c, 0x8cc877],
-    ground: 0xc2e4a2, tuft: 0x9fd07f, water: 0x9fd0f0, onWater: 'duck', sun: true,
+    ground: 0xc2e4a2, tuft: 0x9fd07f, sun: true,
     props: ['oak', 'sunflower', 'pine', 'oak', 'sunflower', 'bush', 'oak'], edge: 'oak',
   },
-  // 캐나다: 눈 덮인 로키 봉우리 + 침엽수 숲 + 단풍나무·튤립 밭·카누 호수
+  // 캐나다: 눈 덮인 로키 봉우리 + 침엽수 숲 + 단풍나무·튤립 밭
   ca: {
     sky: [0xd1e5ff, 0xf3f8ff], far: 'rocky', farColor: [0x8ea6cb, 0xb2c3df], mid: [0x6fae7a, 0x5d9c69], forest: true,
-    ground: 0xdbe9ac, tuft: 0xbcd88c, water: 0x8fc6ec, onWater: 'canoe', sun: true,
+    ground: 0xdbe9ac, tuft: 0xbcd88c, sun: true,
     props: ['maple', 'tulips', 'pine', 'maple', 'tulips', 'maple', 'pine'], edge: 'maple',
   },
   // ── 2탄 포포의 사계절 서울 (계절 자연 + 먼 곳에 남산 타워·빌딩) ──
   // 봄: 벚꽃 한강
   sp: {
     sky: [0xffe3ec, 0xfff6f2], far: 'seoul', farColor: [0xa9c7a0, 0xc9dcc0], city: [0xd8dff0, 0xc3cde6], mid: [0xbfe3a6, 0xaad694],
-    ground: 0xd6edbc, tuft: 0xb4dc9a, water: 0xa8d8f0, onWater: 'duck',
+    ground: 0xd6edbc, tuft: 0xb4dc9a,
     props: ['cherry', 'bush', 'cherry', 'tulips', 'cherry', 'bush', 'cherry'], edge: 'cherry',
   },
   // 여름: 초록 나무 + 물놀이 튜브 강
   su: {
     sky: [0xc8e8ff, 0xedf8ff], far: 'seoul', farColor: [0x7fbf7a, 0xa3d394], city: [0xd5e3f2, 0xbdd0e8], mid: [0x9fd98a, 0x86cc72],
-    ground: 0xbfe6a0, tuft: 0x98d27a, water: 0x8fcff2, onWater: 'tube', sun: true,
+    ground: 0xbfe6a0, tuft: 0x98d27a, sun: true,
     props: ['oak', 'sunflower', 'bush', 'oak', 'sunflower', 'pine', 'oak'], edge: 'oak',
   },
   // 가을: 은행나무·단풍 남산
   au: {
     sky: [0xffe9c8, 0xfff7ea], far: 'seoul', farColor: [0xe0a35e, 0xedc184], city: [0xeadfce, 0xdccdb6], mid: [0xe8c97a, 0xdcb865],
-    ground: 0xefdca4, tuft: 0xd9c27e, water: 0xa6d2e6, onWater: 'duck',
+    ground: 0xefdca4, tuft: 0xd9c27e,
     props: ['ginkgo', 'maple', 'bush', 'ginkgo', 'rock', 'maple', 'ginkgo'], edge: 'ginkgo',
   },
-  // 겨울: 눈 덮인 소나무·눈사람·꽁꽁 언 연못
+  // 겨울: 눈 덮인 소나무·눈사람
   wi: {
     sky: [0xdde9f8, 0xf6f9ff], far: 'seoul', farColor: [0xc9d6ea, 0xe3ebf6], city: [0xd4dcea, 0xc2cde0], mid: [0xf3f7ff, 0xe6eefa], snowy: true,
-    ground: 0xf6f9ff, tuft: 0xdbe5f3, water: 0xcfe6f6, onWater: 'ice',
+    ground: 0xf6f9ff, tuft: 0xdbe5f3,
     props: ['snowpine', 'snowman', 'snowpine', 'bush', 'snowpine', 'rock', 'snowpine'], edge: 'snowpine',
   },
 };
@@ -108,17 +108,7 @@ export function drawNature(scene, V, id, k = 1) {
     const x = L + rnd(i + 200) * W, y = hz + 70 + rnd(i + 300) * (B - hz - 70);
     tuft(g, x, y, T.tuft);
   }
-  // 물가 (연못·호수) — 아래쪽 줄에 띄엄띄엄
-  const ponds = [];
-  const py = hz + (B - hz) * (land ? 0.62 : 0.8);
-  for (let x = L + (land ? 160 : W * 0.5), i = 0; x < R; x += land ? 620 : 99999, i++) {
-    const pw = land ? 260 : Math.min(300, W * 0.42), ph = 74;
-    ponds.push([x, py, pw, ph]);
-    g.fillStyle(mix(T.water, INK, 0.18), 1).fillEllipse(x, py + 5, pw + 10, ph + 10);
-    g.fillStyle(T.water, 1).fillEllipse(x, py, pw, ph);
-    g.fillStyle(0xffffff, 0.55).fillEllipse(x - pw * 0.2, py - ph * 0.18, pw * 0.3, 8).fillEllipse(x + pw * 0.18, py + ph * 0.12, pw * 0.2, 6);
-    WATER[T.onWater](g, x, py, pw, ph, i);
-  }
+  // (물가 연못·호수는 2026-11-15 뺌 — 사용자 요청 "게임 속 연못 빼". 그 자리는 나무·꽃이 채운다)
   // 나무·꽃 (먼 줄부터 작게 → 가까운 줄 크게)
   const rows = [[0.16, 0.62], [0.42, 0.82], [0.7, 1.0], [0.95, 1.15]];
   let n = 0;
@@ -128,7 +118,6 @@ export function drawNature(scene, V, id, k = 1) {
     for (let x = L + (ri % 2) * step * 0.5 + 20; x < R + 20; x += step) {
       n++;
       const jx = x + (rnd(n) - 0.5) * 40, jy = y + (rnd(n + 50) - 0.5) * 24;
-      if (ponds.some(([px, pyy, pw, ph]) => Math.abs(jx - px) < pw / 2 + 40 * s && Math.abs(jy - pyy) < ph / 2 + 60 * s)) continue;
       const kind = T.props[(n * 3 + ri) % T.props.length];
       PROPS[kind](g, jx, jy, s * (0.9 + rnd(n + 9) * 0.2), n);
     }
@@ -256,56 +245,6 @@ function greatWall(g, L, R, hz) {
 function tuft(g, x, y, c) {
   g.fillStyle(c, 1).fillTriangle(x - 7, y, x - 2, y, x - 6, y - 10).fillTriangle(x - 2, y, x + 3, y, x, y - 13).fillTriangle(x + 3, y, x + 8, y, x + 7, y - 9);
 }
-
-// ── 물 위 ──
-const WATER = {
-  tube(g, x, y, w, h, i) {
-    [[-0.22, 0xff8fae], [0.05, 0xffd84a], [0.26, 0x7ec8ff]].forEach(([dx, c], j) => {
-      const px = x + dx * w, py = y + (j % 2 ? 8 : -6);
-      g.fillStyle(c, 1).fillEllipse(px, py, 40, 18);
-      g.fillStyle(0xffffff, 1).fillEllipse(px, py - 1, 16, 7);
-    });
-  },
-  ice(g, x, y, w, h, i) {
-    g.fillStyle(0xffffff, 0.7).fillEllipse(x, y, w * 0.8, h * 0.6);
-    g.lineStyle(2, 0x9fbfe0, 0.9); g.beginPath(); g.arc(x - 20, y, 26, 0.3, 2.6); g.strokePath();
-    g.beginPath(); g.arc(x + 24, y - 4, 20, 3.4, 5.9); g.strokePath();
-  },
-  lotus(g, x, y, w, h, i) {
-    for (let j = 0; j < 4; j++) {
-      const px = x + (j - 1.5) * w * 0.22 + (rnd(i * 9 + j) - 0.5) * 12, py = y + (rnd(i * 7 + j) - 0.5) * h * 0.4;
-      g.fillStyle(0x7cbf6a, 1).fillEllipse(px, py, 34, 16);
-      if (j % 2 === 0) {
-        g.fillStyle(0xff9fb8, 1).fillEllipse(px - 6, py - 8, 10, 16).fillEllipse(px + 6, py - 8, 10, 16);
-        g.fillStyle(0xffc4d4, 1).fillEllipse(px, py - 10, 10, 18);
-      }
-    }
-  },
-  koi(g, x, y, w, h, i) {
-    for (let j = 0; j < 3; j++) {
-      const px = x + (j - 1) * w * 0.26, py = y + (j % 2 ? 8 : -8), d = j % 2 ? -1 : 1;
-      g.fillStyle(j === 1 ? 0xfffaf0 : 0xf59a3b, 1).fillEllipse(px, py, 30, 13);
-      g.fillTriangle(px - d * 14, py, px - d * 24, py - 7, px - d * 24, py + 7);
-      g.fillStyle(0xe8584a, 1).fillCircle(px + d * 2, py - 2, 3.5);
-      g.fillStyle(INK, 1).fillCircle(px + d * 10, py - 2, 2);
-    }
-    g.fillStyle(0x8cc08a, 1).fillEllipse(x + w * 0.36, y - h * 0.1, 28, 13);
-  },
-  duck(g, x, y, w, h, i) {
-    for (let j = 0; j < 2; j++) {
-      const px = x + (j ? 0.18 : -0.2) * w, py = y + (j ? 6 : -4), s = j ? 0.75 : 1;
-      g.fillStyle(0xfff3c4, 1).fillEllipse(px, py, 34 * s, 18 * s).fillCircle(px + 12 * s, py - 12 * s, 9 * s);
-      g.fillStyle(0xf59a3b, 1).fillTriangle(px + 19 * s, py - 13 * s, px + 27 * s, py - 10 * s, px + 19 * s, py - 8 * s);
-      g.fillStyle(INK, 1).fillCircle(px + 14 * s, py - 14 * s, 1.8 * s);
-    }
-  },
-  canoe(g, x, y, w, h, i) {
-    g.fillStyle(0xc0563a, 1).fillEllipse(x, y + 2, 92, 20);
-    g.fillStyle(0xe8794f, 1).fillEllipse(x, y - 1, 84, 12);
-    g.fillStyle(0x8f6440, 1).fillRect(x + 6, y - 22, 4, 30);
-    g.fillStyle(0x8f6440, 1).fillEllipse(x + 8, y + 10, 8, 14);
-  },
-};
 
 // ── 나무·꽃 (x, y = 밑동, s = 크기) ──
 const PROPS = {

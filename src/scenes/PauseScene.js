@@ -13,7 +13,7 @@ export class PauseScene extends Phaser.Scene {
     this.chapter = data.chapter;
     this.frame = data.frame ?? 'woodWindow';
     this.under = data.under ?? 'Maze';
-    this.restartLabel = data.restartLabel ?? '미로 처음부터';
+    this.restartLabel = data.restartLabel ?? '처음부터 다시';
     this.restartData = data.restartData ?? { chapter: data.chapter, fresh: true };
     // 게임 화면의 [나가기] (애벌레·발바닥 버튼): "홈으로 나갈까?" [나가기] [전 단계로 되돌아가기 → 밑 화면의 restartPrev()] [계속하기] (2026-11-11)
     this.confirmExit = data.confirmExit || null; // { title, sub, firstLabel }

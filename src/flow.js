@@ -17,7 +17,6 @@ export function nextChapterId() {
 export function afterChapter(scene, id) {
   const ch = chapterById(id);
   const nextIdx = CHAPTERS.indexOf(ch) + 1;
-  const nextStarted = nextIdx < CHAPTERS.length && (isCleared(CHAPTERS[nextIdx].id) || state.chapter > nextIdx);
   state.step = 'map';
   if (stageNo(id) === 1 && !state.persistAsked && platform.can.persist) {
     state.persistAsked = true;
@@ -30,11 +29,8 @@ export function afterChapter(scene, id) {
     scene.scene.start(state.cleared ? 'Title' : SERIES.meta.endingScene);
     return;
   }
-  if ((ch.evolveTo || ch.dressTo) && !nextStarted) {
-    scene.scene.start(SERIES.meta.dressScene, { chapter: id });
-  } else {
-    startChapter(scene, CHAPTERS[nextIdx].id);
-  }
+  // 2026-11-15~ 틀린그림 찾기: 진화·옷 갈아입기 장면 없이 바로 다음 그림
+  startChapter(scene, CHAPTERS[nextIdx].id);
 }
 
 // 이 장 다음 장 id (진화·옷 갈아입기 뒤에 이어 갈 곳)

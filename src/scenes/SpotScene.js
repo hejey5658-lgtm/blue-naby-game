@@ -122,6 +122,8 @@ export class SpotScene extends Phaser.Scene {
       state.playing = this.chapter.id;
       state.step = `${this.chapter.id}_maze`;
       state.mazeState = null;
+      // 진화·옷 갈아입기 장면이 없어져서 그 단계 모습으로 맞춘다 (엔딩·기록 카드 그림)
+      if (this.chapter.form) state.form = this.chapter.form;
       save();
     }
     if (this.startWait) this.readyBand();

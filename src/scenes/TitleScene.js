@@ -168,7 +168,7 @@ export class TitleScene extends Phaser.Scene {
     this.togetherBtn = mkBtn({
       label: '같이 하기', color: C.orange, shade: 0xd98a2b, textColor: '#2b2d5a',
       onPress: () => { if (this.leaving) return; sfx('tap'); unlockAudio(); this.scene.start('Together'); },
-    }, '혼자 · 2명 · 미로 / 기념품 퐁퐁');
+    }, '혼자 · 2명 · 틀린그림 / 기념품 퐁퐁');
 
     // 설정 (오른쪽 위)
     this.gear = this.add.container(UI.width - 64, 64);
@@ -286,8 +286,6 @@ export class TitleScene extends Phaser.Scene {
       const nx = nextChapterId();
       return nx ? go('Maze', prepareChapter(nx)) : go(SERIES.meta.endingScene);
     }
-    // 1탄은 처음에 진화 장면(애벌레 → 나방, 배 타고 중국으로) 뒤 1단계 미로 (2026-11-13~ 한국 미로 뺌)
-    if (n === 1) return go('Evolution', { start: true });
     Object.assign(state, { step: `${ch[0].id}_maze`, chapter: 1, playing: ch[0].id, mazeState: null });
     save();
     return go('Maze', { chapter: ch[0].id, fresh: true });

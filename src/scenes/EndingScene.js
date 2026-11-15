@@ -156,15 +156,15 @@ export class EndingScene extends Phaser.Scene {
     g.fillStyle(0x2b2d5a, 0.15).fillRoundedRect(44, 966, 632, 168, 28);
     g.fillStyle(0xffffff, 0.94).fillRoundedRect(40, 958, 640, 168, 28);
     card.add(g);
-    const total = CHAPTERS.reduce((n, c) => n + (state.stars[c.id] ?? 0), 0);
+    const total = CHAPTERS.filter((c) => (state.stars[c.id] ?? 0) > 0).length; // 2026-11-15~ 별 대신 '다 찾은 그림' 수
     const totalSec = CHAPTERS.reduce((n, c) => n + (state.records[c.id]?.mazeSec ?? 0), 0);
-    card.add(this.add.text(70, 990, `모은 별 ${total} / ${CHAPTERS.length * 3}`, { fontFamily: UI.fontTitle, fontSize: '28px', color: '#2b2d5a' }).setOrigin(0, 0.5));
-    card.add(this.add.text(650, 990, `미로 시간 합계 ${fmt(totalSec)}`, { fontFamily: UI.font, fontSize: '22px', color: '#5a5c88' }).setOrigin(1, 0.5));
+    card.add(this.add.text(70, 990, `다 찾은 그림 ${total} / ${CHAPTERS.length}`, { fontFamily: UI.fontTitle, fontSize: '28px', color: '#2b2d5a' }).setOrigin(0, 0.5));
+    card.add(this.add.text(650, 990, `틀린그림 시간 합계 ${fmt(totalSec)}`, { fontFamily: UI.font, fontSize: '22px', color: '#5a5c88' }).setOrigin(1, 0.5));
     CHAPTERS.forEach((c, i) => {
       const x = 92 + i * 89;
       card.add(this.add.text(x, 1036, `${i + 1}단계`, { fontFamily: UI.fontTitle, fontSize: '22px', color: '#2b2d5a' }).setOrigin(0.5));
       const sg = this.add.graphics();
-      for (let k = 0; k < 3; k++) iconStar(sg, x + (k - 1) * 22, 1070, 22, k < (state.stars[c.id] ?? 0) ? 0xffd84a : 0xd8c8a8);
+      iconStar(sg, x, 1070, 26, (state.stars[c.id] ?? 0) > 0 ? 0xffd84a : 0xd8c8a8);
       card.add(sg);
       const sec = state.records[c.id]?.mazeSec;
       card.add(this.add.text(x, 1100, sec != null ? fmt(sec) : '-', { fontFamily: UI.font, fontSize: '22px', color: '#5a5c88' }).setOrigin(0.5));

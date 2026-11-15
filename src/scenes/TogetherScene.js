@@ -86,12 +86,12 @@ export class TogetherScene extends Phaser.Scene {
     q(A.x0, A.q2, '무엇을? 돌을 톡!');
     const gp = [[A.x0 - 150, A.games + top], [A.x0 + 150, A.games + top - 10]];
     this.pebbles(gp[0], gp[1], 3);
-    [['maze', '미로 여행'], ['pop', '기념품 퐁퐁']].forEach(([g, name], k) => {
+    [['maze', '틀린그림'], ['pop', '기념품 퐁퐁']].forEach(([g, name], k) => {
       const off = this.players === 1 && g === 'maze';
       this.stone(gp[k][0], gp[k][1], 236, name, {
         on: this.game_ === g, open: !off, color: PICKED.game, k,
         onPick: () => this.redraw({ game: g }),
-        why: '혼자 미로는 홈의 1탄·2탄 여행으로!',
+        why: '혼자 틀린그림은 홈의 1탄·2탄 여행으로!',
       });
     });
 
@@ -121,7 +121,7 @@ export class TogetherScene extends Phaser.Scene {
       this.chips(B.q4 + 62, [['local', '한 폰으로'], ['remote', '각자 폰']], this.how, (v) => this.redraw({ how: v }), { dx: B.x0 - UI.width / 2 });
       const help = this.how === 'remote'
         ? '대결장 링크를 친구에게 보내 각자 폰으로 겨뤄요'
-        : this.game_ === 'maze' ? '한 폰으로 번갈아 같은 미로, 더 빨리 나온 사람이 이겨요' : '한 화면을 반씩 나눠 동시에 겨뤄요';
+        : this.game_ === 'maze' ? '한 폰으로 번갈아 같은 그림, 더 빨리 다 찾은 사람이 이겨요' : '한 화면을 반씩 나눠 동시에 겨뤄요';
       this.add.text(B.x0, B.q4 + 122 + top, help, { fontFamily: UI.font, fontSize: '24px', color: '#5a5c88', align: 'center' }).setOrigin(0.5);
       yEnd = B.q4 + 122;
     }

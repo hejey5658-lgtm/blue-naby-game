@@ -77,7 +77,7 @@ export class MatchScene extends Phaser.Scene {
       this.add.text(nx, y - 22, r.name, { fontFamily: UI.fontTitle, fontSize: '34px', color: '#2b2d5a' }).setOrigin(0, 0.5);
       let main = r.me ? '아직 안 했어요' : '결과를 기다리는 중', sub = '';
       if (r.rec && hidden) { main = '기록 도착!'; sub = '내가 끝내면 보여요'; }
-      else if (r.rec) { main = scoreText(m, r.rec); sub = m.game === 'maze' ? `퐁 ${r.rec.rolls}번` : `퐁 ${r.rec.rolls}개`; }
+      else if (r.rec) { main = scoreText(m, r.rec); sub = m.game === 'maze' ? (r.rec.rolls ? `못 찾은 곳 ${r.rec.rolls}개` : '다 찾음') : `퐁 ${r.rec.rolls}개`; }
       this.add.text(nx, y + 24, sub, { fontFamily: UI.font, fontSize: '22px', color: '#2b2d5a' }).setOrigin(0, 0.5);
       this.add.text(604, y, main, { fontFamily: UI.fontTitle, fontSize: r.rec && !hidden ? '50px' : '28px', color: '#2b2d5a' }).setOrigin(1, 0.5);
     });

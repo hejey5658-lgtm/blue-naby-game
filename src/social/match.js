@@ -13,7 +13,7 @@ import { nickname, askNickname, baseUrl, fmt } from './social.js';
 const PREFIX = 'D2-';      // [종류, id, 놀이, 판, 시드, 보낸 사람, 보낸 기기, 인원] (+ 결과: 닉네임, 기기, 기록, 퐁)
 const OLD_PREFIX = 'D1-';  // 2명만 (인원 칸 없음)
 const MAX = 5;
-export const GAME_NAME = { maze: '미로', pop: '기념품 퐁퐁' };
+export const GAME_NAME = { maze: '틀린그림', pop: '기념품 퐁퐁' };
 
 // 이 기기를 알아보는 무작위 글자 (내 링크를 내가 열었을 때 상대 기록으로 착각하지 않게). 개인정보 아님.
 function deviceId() {

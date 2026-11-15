@@ -30,6 +30,7 @@ export class DuoScene extends Phaser.Scene {
     this.chapterId = data.chapter ?? opened()[0].id;
     this.turn = data.turn ?? 1;
     this.results = data.results ?? [];
+    this.seed = data.step === 'turn' && this.turn === 2 ? data.seed : null; // 틀린그림: 2P도 1P와 같은 다른 곳
   }
 
   create() {
@@ -65,8 +66,8 @@ export class DuoScene extends Phaser.Scene {
       });
     });
     this.add.text(UI.width / 2, 322 + this.top, remote
-      ? '친구에게 대결장 링크를 보내고, 각자 폰에서\n같은 미로를 해요. 더 빨리 나온 사람이 이겨요!'
-      : '한 폰으로 번갈아 같은 미로를 해요.\n더 빨리 출구에 닿는 사람이 이겨요!', {
+      ? '친구에게 대결장 링크를 보내고, 각자 폰에서\n같은 그림을 찾아요. 더 빨리 다 찾은 사람이 이겨요!'
+      : '한 폰으로 번갈아 같은 그림을 찾아요.\n더 빨리 다 찾은 사람이 이겨요!', {
       fontFamily: UI.font, fontSize: '27px', color: '#5a5c88', align: 'center', lineSpacing: 8,
     }).setOrigin(0.5);
     if (remote) this.drawMyName(); else this.drawNames();
@@ -166,19 +167,19 @@ export class DuoScene extends Phaser.Scene {
       label: '준비됐어요!',
       onPress: () => {
         unlockAudio();
-        this.scene.start('Maze', { chapter: this.chapterId, fresh: true, intro: false, duo: { names: this.names, turn: this.turn, results: this.results } });
+        this.scene.start('Maze', { chapter: this.chapterId, fresh: true, intro: false, duo: { names: this.names, turn: this.turn, results: this.results, ...(this.seed != null ? { seed: this.seed } : {}) } });
       },
     });
     this.input.keyboard?.on('keydown-ENTER', () => this.readyBtn.trigger());
     this.input.keyboard?.on('keydown-SPACE', () => this.readyBtn.trigger());
   }
 
-  // ── 결과: 두 사람 시간·퐁 횟수, 더 빠른 사람이 이김 ──
+  // ── 결과: 두 사람 시간·못 찾은 곳, 더 빠른 사람이 이김 (못 찾은 곳 하나에 10초 더함) ──
   drawResult() {
     const [a, b] = this.results;
     const win = a.sec === b.sec ? 0 : a.sec < b.sec ? 1 : 2;
     this.title(win ? `${this.names[win - 1]} 승리!` : '둘 다 멋졌어!', 170);
-    this.add.text(UI.width / 2, 250 + this.top, win ? `${fmt(Math.abs(a.sec - b.sec))} 차이로 먼저 나왔어요` : '똑같은 시간이에요!', { fontFamily: UI.font, fontSize: '28px', color: '#5a5c88' }).setOrigin(0.5);
+    this.add.text(UI.width / 2, 250 + this.top, win ? `${fmt(Math.abs(a.sec - b.sec))} 차이로 먼저 다 찾았어요` : '똑같은 시간이에요!', { fontFamily: UI.font, fontSize: '28px', color: '#5a5c88' }).setOrigin(0.5);
     [a, b].forEach((r, i) => {
       const y = 400 + this.top + i * 190;
       const g = this.add.graphics();
@@ -191,7 +192,7 @@ export class DuoScene extends Phaser.Scene {
       }
       if (this.names[i] !== `${i + 1}P`) this.add.text(186, y + 30, `${i + 1}P`, { fontFamily: UI.fontTitle, fontSize: '30px', color: '#2b2d5a' }).setOrigin(0.5);
       this.add.text(270, y - 22, this.names[i], { fontFamily: UI.fontTitle, fontSize: '40px', color: '#2b2d5a' }).setOrigin(0, 0.5);
-      this.add.text(270, y + 26, `퐁 ${r.rolls}번`, { fontFamily: UI.font, fontSize: '24px', color: '#2b2d5a' }).setOrigin(0, 0.5);
+      this.add.text(270, y + 26, r.rolls ? `못 찾은 곳 ${r.rolls}개` : '다 찾았어요!', { fontFamily: UI.font, fontSize: '24px', color: '#2b2d5a' }).setOrigin(0, 0.5);
       this.add.text(600, y, fmt(r.sec), { fontFamily: UI.fontTitle, fontSize: '56px', color: '#2b2d5a' }).setOrigin(1, 0.5);
     });
     sfx(win ? 'win' : 'respawn');

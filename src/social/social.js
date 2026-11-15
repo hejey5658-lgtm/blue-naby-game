@@ -116,7 +116,7 @@ export function activeChallenge() {
 // 타이틀 띠에 쓸 한 줄: 아직 못 이긴 장 중 하나
 export function challengeHeadline(c) {
   const id = CHAPTERS.map((x) => x.id).find((k) => c.times[k] && !(state.records[k]?.mazeSec <= c.times[k])) ?? Object.keys(c.times)[0];
-  return `${c.nick}의 도전장! ${nameOf(id)} 미로 ${fmtLong(c.times[id])}를 넘어 보세요`;
+  return `${c.nick}의 도전장! ${nameOf(id)} 틀린그림 ${fmtLong(c.times[id])}를 넘어 보세요`;
 }
 
 // 미로를 끝냈을 때 도전 결과
@@ -130,11 +130,11 @@ export function challengeResult(id, sec) {
 export async function sendChallenge() {
   await askNickname();
   if (!myTimes().some((t) => t > 0)) {
-    openBox({ title: '도전장 보내기', text: '먼저 미로를 하나 끝내야 도전장을 만들 수 있어요!', field: 'none', buttons: [{ label: '알겠어요', onClick: (b) => b.close() }] });
+    openBox({ title: '도전장 보내기', text: '먼저 틀린그림을 하나 다 찾아야 도전장을 만들 수 있어요!', field: 'none', buttons: [{ label: '알겠어요', onClick: (b) => b.close() }] });
     return;
   }
   const url = makeChallengeLink();
-  const text = `${SERIES.meta.title} — ${nickname()}의 도전장! 내 미로 기록을 넘어 봐 🦋`;
+  const text = `${SERIES.meta.title} — ${nickname()}의 도전장! 내 틀린그림 기록을 넘어 봐 🦋`;
   try {
     if (platform.can.share) { await navigator.share({ title: '블루나비 도전장', text, url }); return; }
   } catch (e) { if (e?.name === 'AbortError') return; }
@@ -150,7 +150,7 @@ export async function sendChallenge() {
   });
 }
 
-// ── 기록 카드 1080×1350 (지금 블루나비 모습, 닉네임, 장별 별과 시간, 제목과 주소) ──
+// ── 기록 카드 1080×1350 (지금 블루나비 모습, 닉네임, 단계별 다 찾음 ★과 시간, 제목과 주소) ──
 export async function makeRecordCard(game) {
   const W = 1080;
   const H = 1350;
@@ -183,12 +183,12 @@ export async function makeRecordCard(game) {
     x.drawImage(tex.getSourceImage(), fr.cutX, fr.cutY, fr.cutWidth, fr.cutHeight, W / 2 - 230, 250, 460, 460);
   } catch { /* 그림이 없으면 건너뜀 */ }
   // 장별 기록
-  const total = CHAPTERS.reduce((n, ch) => n + (state.stars[ch.id] ?? 0), 0);
+  const total = CHAPTERS.filter((ch) => (state.stars[ch.id] ?? 0) > 0).length; // 2026-11-15~ 틀린그림: 별 대신 다 찾은 그림 수
   x.fillStyle = 'rgba(255,255,255,0.92)';
   x.beginPath(); x.roundRect(90, 720, W - 180, 470, 36); x.fill();
   x.fillStyle = '#2b2d5a';
   x.font = '44px Jua, sans-serif';
-  x.fillText(SERIES.meta.stars ? `모은 별 ${total} / ${CHAPTERS.length * 3}` : `사귄 친구 ${state.friends.length}명`, W / 2, 790);
+  x.fillText(`다 찾은 그림 ${total} / ${CHAPTERS.length}`, W / 2, 790);
   x.font = '32px "Gowun Dodum", sans-serif';
   CHAPTERS.forEach((ch, i) => {
     const y = 856 + i * 64;
@@ -199,7 +199,7 @@ export async function makeRecordCard(game) {
     x.fillText(stageLabel(ch).replace(' · ', ' '), 140, y);
     x.textAlign = 'center';
     x.fillStyle = '#ffb800';
-    if (SERIES.meta.stars) x.fillText('★'.repeat(st) + '☆'.repeat(3 - st), 700, y);
+    if (st) x.fillText('★', 700, y);
     x.textAlign = 'right';
     x.fillStyle = '#5a5c88';
     x.fillText(sec != null ? fmt(sec) : '-', W - 140, y);
@@ -230,7 +230,7 @@ export function openInbox(onChange) {
   const lines = list.map((c, i) => `${i === (state.activeChallenge ?? 0) ? '▶ ' : '   '}${c.nick} · ${Object.entries(c.times).map(([k, t]) => `${nameOf(k)} ${fmt(t)}`).join(', ')}`).join('\n');
   openBox({
     title: '도전장함',
-    text: '▶ 표시가 지금 도전 중인 친구예요. 미로에 그 친구 기록이 깃발로 떠요.',
+    text: '▶ 표시가 지금 도전 중인 친구예요. 틀린그림 화면에 그 친구 기록이 떠요.',
     value: lines,
     readonly: true,
     buttons: [
@@ -250,7 +250,7 @@ export function openInbox(onChange) {
 export function openShareMenu(game, onChange) {
   openBox({
     title: '친구와 함께',
-    text: `${nickname()} · 내 기록을 그림으로 보내거나, 도전장을 보내 친구가 내 미로 기록에 도전하게 해 보세요.`,
+    text: `${nickname()} · 내 기록을 그림으로 보내거나, 도전장을 보내 친구가 내 틀린그림 기록에 도전하게 해 보세요.`,
     field: 'none',
     column: true,
     buttons: [

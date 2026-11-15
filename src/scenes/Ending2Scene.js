@@ -3,7 +3,6 @@ import { afterDialogue } from '../ui/afterDialogue.js';
 import { UI, landView } from '../data/ui.js';
 import { drawSkyline, drawRoad, addCars } from '../maze/seoulCity.js';
 import { CHAPTERS } from '../data/chapters.js';
-import { BOSSES } from '../data/bosses.js';
 import { state, save } from '../state.js';
 import { setTheme } from '../ui/theme.js';
 import { Button } from '../ui/Button.js';
@@ -68,13 +67,13 @@ export class Ending2Scene extends Phaser.Scene {
     // 가로: 가운데 마당은 그대로, 제목은 왼쪽 칸, 기록 카드·버튼은 오른쪽 칸
     if (land) { t.setPosition(-230, 520).setFontSize(46); t2.setPosition(-230, 600); }
     this.tweens.add({ targets: [t, t2], alpha: 1, duration: 700 });
-    // 계절별 미로 시간 + 사귄 친구 수 (별 없음)
+    // 계절별 틀린그림 시간 + 다 찾은 그림 수 (별 없음)
     const card = this.add.container(0, 0).setAlpha(0);
     const cg = this.add.graphics();
     cg.fillStyle(0x2b2d5a, 0.15).fillRoundedRect(44, 916, 632, 170, 28).fillStyle(0xffffff, 0.95).fillRoundedRect(40, 908, 640, 170, 28);
     card.add(cg);
-    const friends = Object.keys(BOSSES).filter((b) => state.friends.includes(b)).length;
-    card.add(this.add.text(70, 942, `사귄 친구 ${friends}명`, { fontFamily: UI.fontTitle, fontSize: '28px', color: '#2b2d5a' }).setOrigin(0, 0.5));
+    const found = CHAPTERS.filter((c) => (state.stars?.[c.id] ?? 0) > 0).length; // 2026-11-15~ 틀린그림: 다 찾은 그림 수
+    card.add(this.add.text(70, 942, `다 찾은 그림 ${found} / ${CHAPTERS.length}`, { fontFamily: UI.fontTitle, fontSize: '28px', color: '#2b2d5a' }).setOrigin(0, 0.5));
     CHAPTERS.forEach((c, i) => {
       const x = 120 + i * 160;
       card.add(this.add.text(x, 996, c.name, { fontFamily: UI.fontTitle, fontSize: '26px', color: '#2b2d5a' }).setOrigin(0.5));

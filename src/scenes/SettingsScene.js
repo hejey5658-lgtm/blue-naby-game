@@ -51,7 +51,6 @@ export class SettingsScene extends Phaser.Scene {
     const rows = [
       { label: '소리', key: 'sound', options: [[true, '켜기'], [false, '끄기']] },
       platform.can.vibrate && { label: '진동', key: 'vibrate', options: [[true, '켜기'], [false, '끄기']] },
-      { label: '미로 조작', key: 'control', options: [['swipe', '쓱 밀기'], ['dpad', '방향 버튼']] },
       { label: '대사 속도', key: 'textSpeed', options: [['normal', '보통'], ['fast', '빠르게']] },
     ].filter(Boolean);
     for (const row of rows) { this.makeToggleRow(root, y, row); y += ROW_H; }
@@ -178,7 +177,7 @@ export class SettingsScene extends Phaser.Scene {
     const code = makeSaveCode();
     openBox({
       title: '저장 코드',
-      text: '이 글자를 다른 브라우저의 [저장 코드 넣기]에 붙여 넣으면 여기까지 이어서 할 수 있어요. 미로 안 위치는 그 단계 처음부터예요.',
+      text: '이 글자를 다른 브라우저의 [저장 코드 넣기]에 붙여 넣으면 여기까지 이어서 할 수 있어요. 하던 그림은 그 단계 처음부터예요.',
       value: code,
       readonly: true,
       buttons: [

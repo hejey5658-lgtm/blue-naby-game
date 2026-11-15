@@ -91,7 +91,7 @@ export function activeChallenge() {
 // 타이틀 띠에 쓸 한 줄: 아직 못 이긴 장 중 하나
 export function challengeHeadline(c) {
   const id = CHAPTERS.map((x) => x.id).find((k) => c.times[k] && !(state.records[k]?.mazeSec <= c.times[k])) ?? Object.keys(c.times)[0];
-  return `${c.nick}의 도전장! ${nameOf(id)} 틀린그림 ${fmtLong(c.times[id])}를 넘어 보세요`;
+  return `${c.nick}의 도전장! ${nameOf(id)} 틀린그림 찾기 ${fmtLong(c.times[id])} 기록을 넘어 보세요`;
 }
 
 // 미로를 끝냈을 때 도전 결과
@@ -109,7 +109,7 @@ export async function sendChallenge() {
     return;
   }
   const url = makeChallengeLink();
-  const text = `${SERIES.meta.title} — ${nickname()}의 도전장! 내 틀린그림 기록을 넘어 봐 🦋`;
+  const text = `${SERIES.meta.title} — ${nickname()}의 도전장! 그림 속 다른 곳 5개, 나보다 빨리 찾을 수 있어? 🦋`;
   try {
     if (platform.can.share) { await navigator.share({ title: '블루나비 도전장', text, url }); return; }
   } catch (e) { if (e?.name === 'AbortError') return; }

@@ -148,18 +148,22 @@ async function share(title, text, url, help) {
   });
 }
 
+// 링크 설명 글의 놀이 이름: 틀린그림 찾기 · 기념품 퐁퐁
+const playName = (m) => (m.game === 'maze' ? '틀린그림 찾기' : GAME_NAME[m.game]);
+const placeName = (m) => stageName(m).replace(/^\d+단계 · /, ''); // "2단계 · 미국" → "미국"
+
 export async function sendInvite(m) {
   await askNickname();
   m.host = nickname();
   keep(m);
   const who = m.players === 3 ? '3명이서 ' : '';
-  await share('블루나비 대결장', `${nickname()}의 대결장! 블루나비와 포포의 여행 ${GAME_NAME[m.game]} ${stageName(m)}에서 ${who}각자 폰으로 겨뤄 보자 🦋`, linkFor(m, false),
+  await share('블루나비 대결장', `${nickname()}의 대결장! 블루나비와 포포의 여행 「${placeName(m)} ${playName(m)}」 ${who}각자 폰으로 겨뤄 보자 🦋 ${m.game === 'maze' ? '다른 곳 5개를 누가 더 빨리 찾을까?' : '2분 동안 누가 더 많이 퐁 할까?'}`, linkFor(m, false),
     m.players === 3 ? '이 링크를 단톡방에 올려 주세요. 두 친구가 열면 같은 판으로 대결이 시작돼요.' : '이 링크를 친구에게 보내 주세요. 친구가 열면 같은 판으로 대결이 시작돼요.');
 }
 
 export async function sendResult(m) {
   await askNickname();
-  await share('블루나비 대결 결과', `${nickname()}의 ${GAME_NAME[m.game]} ${stageName(m)} 기록 ${scoreText(m, m.mine)}! 열어서 승패를 확인해 봐`, linkFor(m, true),
+  await share('블루나비 대결 결과', `${nickname()}의 「${placeName(m)} ${playName(m)}」 기록 ${scoreText(m, m.mine)}! 열어서 승패를 확인해 봐`, linkFor(m, true),
     m.players === 3
       ? '이 링크를 단톡방에 올려 주세요. 친구들이 열면 세 사람 기록과 등수가 보여요. (아직 안 한 친구는 같은 판으로 바로 할 수 있어요)'
       : '이 링크를 친구에게 보내 주세요. 친구가 열면 두 사람 기록이 나란히 보여요. (친구가 아직 안 했으면 같은 판으로 바로 할 수 있어요)');

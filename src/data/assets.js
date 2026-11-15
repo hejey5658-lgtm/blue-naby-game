@@ -39,7 +39,7 @@ export const ASSETS = [
   ...blue('caterpillar', 'boot'),
   ...blue('moth', 'ch1'),       // 처음 시작할 때(배 타고 중국으로) 나방으로 진화 — 그룹 이름 ch1은 받는 순서(맨 앞)용
   ...blue('butterfly', 'ch5'),  // 일본 단계 끝에 나비로 진화
-  // ── 2탄 「포포의 사계절 서울」: 1탄 그림을 다 받은 뒤 뒤에서 받는다 ──
+  // ── 2탄 「포포의 서울여행」: 1탄 그림을 다 받은 뒤 뒤에서 받는다 ──
   ...['popoSpring', 'popoSummer', 'popoAutumn', 'popoWinter'].flatMap((f) => blue(f, 's2')),
   ...['kkakkak', 'gaegul', 'bamtol', 'mungchi', 'gomsil'].flatMap((k) => boss(k, 's2')),
   { key: 'face_bluenabi', file: 'assets/face/face_bluenabi.webp', width: 560, height: 280, frameWidth: 280, frameHeight: 280, release: true, group: 's2' },

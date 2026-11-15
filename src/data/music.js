@@ -44,7 +44,7 @@ export const SONGS = {
     melody: bars('E5 - - - G5 - - -', 'F5 - E5 - D5 - - -', 'C5 - D5 - E5 - G5 -', 'A5 - - - G5 - - -', 'F5 - - - A5 - - -', 'G5 - F5 - E5 - - -', 'D5 - E5 - F5 - D5 -', 'C5 - - - - - - -'),
     bassline: bars('C3 - - - G2 - - -', 'D3 - - - G2 - - -', 'A2 - - - E2 - - -', 'F2 - - - G2 - - -') },
 
-  // ── 2탄 「포포의 사계절 서울」 ─────────────────────
+  // ── 2탄 「포포의 서울여행」 ─────────────────────
   title2: { bpm: 112, lead: 'triangle', bass: 'sine', level: 0.8, drums: 'khshkksh',
     melody: bars('G5 - B5 - D6 - B5 .', 'C6 - B5 - A5 - - .', 'G5 - A5 - B5 D6 B5 A5', 'G5 - - . . . . .', 'E5 - G5 - C6 - B5 A5', 'B5 - A5 - G5 - - .', 'A5 B5 C6 B5 A5 G5 A5 -', 'G5 - - . . . . .'),
     bassline: bars('G2 . D3 . G2 . D3 .', 'C3 . G3 . C3 . G3 .', 'E2 . B2 . E2 . B2 .', 'D3 . A2 . D3 . F#3 .') },

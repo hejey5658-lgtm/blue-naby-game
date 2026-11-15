@@ -14,14 +14,14 @@ import { drawSkyline } from '../maze/seoulCity.js';
 import { SERIES, DATA, useSeries } from '../series.js';
 
 // 홈 「블루나비와 포포의 여행」 (design-brief 19절, 2026-11-10~): 1탄·2탄 타이틀을 한 화면으로 합쳤다.
-// 지구본 입구에서 무엇을 눌러도 여기로 온다. 버튼 [1탄 세계여행] [2탄 사계절 서울] [같이 하기].
+// 지구본 입구에서 무엇을 눌러도 여기로 온다. 버튼 [1탄 세계여행] [2탄 서울여행] [같이 하기].
 // 배경은 썸네일과 같은 그림(하늘·튤립 꽃밭 언덕·서울 빌딩과 남산 타워). 파일 없이 그린다(첫 화면 가볍게).
 // 씬 이름은 'Title' 그대로 — 여러 화면의 "처음 화면으로"가 모두 여기로 온다.
 const C = { ink: 0x2b2d5a, blue: 0x2f7bff, pink: 0xff7fa3, orange: 0xffb347, sky: 0x8ccbff, sky2: 0xd6efff, hill: 0x7fcf6a, grass: 0x6cc35a, grass2: 0x5fb84e };
 
 const SERIES_BTN = {
   1: { label: '1탄 세계여행', color: C.blue, shade: 0x1f5fd6, textColor: '#ffffff' },
-  2: { label: '2탄 사계절 서울', color: C.pink, shade: 0xe0557a, textColor: '#ffffff' },
+  2: { label: '2탄 서울여행', color: C.pink, shade: 0xe0557a, textColor: '#ffffff' },
 };
 
 // 탄마다의 진행 (지금 탄은 state 맨 위, 다른 탄은 state.other)

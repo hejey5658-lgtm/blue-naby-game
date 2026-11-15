@@ -30,7 +30,7 @@ export const THEMES = {
     ground: 0xdbe9ac, tuft: 0xbcd88c, water: 0x8fc6ec, onWater: 'canoe', sun: true,
     props: ['maple', 'tulips', 'pine', 'maple', 'tulips', 'maple', 'pine'], edge: 'maple',
   },
-  // ── 2탄 포포의 사계절 서울 (계절 자연 + 먼 곳에 남산 타워·빌딩) ──
+  // ── 2탄 포포의 서울여행 (계절 자연 + 먼 곳에 남산 타워·빌딩) ──
   // 봄: 벚꽃 한강
   sp: {
     sky: [0xffe3ec, 0xfff6f2], far: 'seoul', farColor: [0xa9c7a0, 0xc9dcc0], city: [0xd8dff0, 0xc3cde6], mid: [0xbfe3a6, 0xaad694],

@@ -298,7 +298,7 @@ export class EntryScene extends Phaser.Scene {
       if (this.textures.exists(key)) c.add(this.add.image(0, 0, key).setDisplaySize(size, size));
       else { const g = this.add.graphics(); if (n === 1) drawButterfly(g, 0, 0, 3); else drawPaw(g, 0, 0, 3); c.add(g); }
       // 누구인지 작은 이름 (상자 없이)
-      c.add(this.add.text(0, size * 0.56, n === 1 ? '1탄 세계여행' : '2탄 사계절 서울', { fontFamily: UI.fontTitle, fontSize: `${Math.round(30 * fs)}px`, color: n === 1 ? '#2f7bff' : '#d0537a', stroke: '#fffaf0', strokeThickness: 8 }).setOrigin(0.5));
+      c.add(this.add.text(0, size * 0.56, n === 1 ? '1탄 세계여행' : '2탄 서울여행', { fontFamily: UI.fontTitle, fontSize: `${Math.round(30 * fs)}px`, color: n === 1 ? '#2f7bff' : '#d0537a', stroke: '#fffaf0', strokeThickness: 8 }).setOrigin(0.5));
       c.setSize(size, size * 1.3).setInteractive({ useHandCursor: true }).on('pointerup', () => this.enter(n));
       c.on('pointerdown', () => c.setScale(0.94));
       c.on('pointerout', () => c.setScale(1));

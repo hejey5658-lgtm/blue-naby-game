@@ -1,9 +1,8 @@
 // 친구와 함께 (systems.md 10절): 닉네임, 기록 카드(그림), 도전 링크(#c=C2-…), 도전장함.
 // C2 = 5단계 순서(2026-11-04~), C1 = 예전 7장 순서 — C1은 중국~캐나다 기록만 읽는다(한국 미로가 바뀌어서).
 // 모든 정보는 플레이어가 직접 공유한 링크·그림 안에만 담기고, 어디에도 자동으로 보내지 않는다.
-import { CHAPTERS, LEGACY_IDS, V5_IDS, stageLabel } from '../data/chapters.js';
-import { MAZES } from '../data/mazes.js';
-import { FORMS } from '../data/forms.js';
+import { SPOT } from '../data/spot.js';
+import { CHAPTERS, LEGACY_IDS, V5_IDS, V4_IDS, S4_IDS, stageLabel } from '../data/chapters.js';
 import { state, save } from '../state.js';
 import { platform } from '../platform.js';
 import { pack, unpack } from './codec.js';
@@ -41,34 +40,8 @@ export function askNickname({ force = false } = {}) {
   });
 }
 
-// ── 너무 짧은 기록 거르기: 그 미로의 최단 길을 가장 빠른 모습으로 지나는 시간보다 짧으면 표시하지 않는다 ──
-const minCache = {};
-export function minMazeSec(id) {
-  if (minCache[id] != null) return minCache[id];
-  const m = MAZES[id] ?? DATA[1].MAZES[id] ?? DATA[2].MAZES[id];
-  if (!m) return Infinity;
-  const g = m.grid;
-  const F = FORMS[m.form] ?? DATA[1].FORMS[m.form] ?? DATA[2].FORMS[m.form];
-  const hop = F.canHop;
-  const find = (ch) => g.flatMap((r, y) => [...r].map((c, x) => (c === ch ? [x, y] : null))).filter(Boolean);
-  const S = find('S')[0];
-  const E = find('E')[0];
-  const dist = new Map([[S.join(), 0]]);
-  const q = [S];
-  while (q.length) {
-    const [x, y] = q.shift();
-    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
-      const c = g[y + dy]?.[x + dx];
-      const k = `${x + dx},${y + dy}`;
-      if (!c || c === '#' || (c === 'b' && !hop) || dist.has(k)) continue;
-      dist.set(k, dist.get(`${x},${y}`) + 1);
-      q.push([x + dx, y + dy]);
-    }
-  }
-  minCache[id] = ((dist.get(E.join()) ?? 0) * F.stepMs) / 1000;
-  return minCache[id];
-}
-export const believable = (id, sec) => sec > 0 && sec >= minMazeSec(id) * 0.9;
+// ── 너무 짧은 기록 거르기 (2026-11-15~ 틀린그림): 다른 곳 5개를 3초보다 빨리 찾거나 제한 시간을 넘긴 기록은 표시하지 않는다 ──
+export const believable = (id, sec) => sec >= 3 && sec <= SPOT.timeSec;
 
 // ── 도전 코드: [닉네임, 장별 미로 시간(초, 없으면 0), 장별 별] ──
 export function myTimes() {
@@ -83,12 +56,14 @@ export function readChallenge(raw) {
   let d = unpack(META[1].challenge, raw);
   let ids = DATA[1].CHAPTERS.map((c) => c.id);
   if (!d) { d = unpack(META[2].challenge, raw); ids = DATA[2].CHAPTERS.map((c) => c.id); }
+  if (!d) { d = unpack('C3-', raw); ids = V4_IDS; } // 4단계 도전장 (2026-11-13~11-15) — 빠진 일본 기록은 안 보임
+  if (!d) { d = unpack('P1-', raw); ids = S4_IDS; } // 2탄 4계절 도전장 — 빠진 여름 기록은 안 보임
   if (!d) { d = unpack('C2-', raw); ids = V5_IDS.map((id) => (id === 'ch1' ? null : id)); } // 5단계(한국 포함) 도전장 — 한국 기록만 뺀다
   if (!d) { d = unpack(LEGACY_PREFIX, raw); ids = LEGACY_IDS.map((id, i) => (i < 3 ? null : id)); }
   if (!Array.isArray(d) || !Array.isArray(d[1])) return null;
   const nick = String(d[0] || ANON).slice(0, 8);
   const times = {};
-  ids.forEach((id, i) => { const t = Number(d[1][i]) || 0; if (id && believable(id, t)) times[id] = t; });
+  ids.forEach((id, i) => { const t = Number(d[1][i]) || 0; if (id && nameOf(id) !== id && believable(id, t)) times[id] = t; /* 빠진 단계(일본·여름) 기록은 버림 */ });
   if (!Object.keys(times).length) return null;
   return { nick, times, stars: String(d[2] || ''), code: String(raw).trim(), at: Date.now() };
 }

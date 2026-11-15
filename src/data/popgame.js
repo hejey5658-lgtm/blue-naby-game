@@ -1,5 +1,5 @@
 // 기념품 퐁퐁 (design-brief 10절): 떨어지는 기념품 두 개 묶음, 같은 그림 3개 이상 이어지면 퐁!
-// 지도 순서(중국 → 일본 → 미국 → 캐나다)대로 떨어지는 속도가 빨라진다. 기획자가 직접 고쳐도 된다.
+// 지도 순서(중국 → 미국 → 캐나다)대로 떨어지는 속도가 빨라진다. 기획자가 직접 고쳐도 된다.
 // icon: 그림 키 (item_*·face_*·enemy_*는 게임 그림, pop_*는 src/pop/icons.js가 그린다), frame: 시트의 칸 번호
 // bg: 기념품 밑 동그라미 색 — 나라 안에서 네 가지가 색으로도 모양으로도 구분되게
 export const POP = {
@@ -20,6 +20,7 @@ export const POP = {
   firework: { at: [14, 27], radius: 1 },
   // 나라 미션 (2026-11-13, 혼자 하기): 나라마다 정한 그림(types 번호)을 count개 퐁 하면 보너스 점수
   missionBonus: 100,
+  // 2026-11-15~ 3판(중국 → 미국 → 캐나다): 일본 판은 뺐다(CUT_STAGES). 빠르기는 3판에 맞춰 고르게.
   stages: [
     {
       id: 'cn', chapter: 'ch4', name: '중국', dropMs: 800, goal: 30, mission: { type: 1, count: 6, name: '빵빵이' },
@@ -31,16 +32,7 @@ export const POP = {
       ],
     },
     {
-      id: 'jp', chapter: 'ch5', name: '일본', dropMs: 650, goal: 34, mission: { type: 3, count: 7, name: '잉어' },
-      types: [
-        { icon: 'item_petal', bg: 0xffe3ec },
-        { icon: 'face_sappuni', frame: 1, bg: 0xf3e0c8 },
-        { icon: 'pop_umbrella', bg: 0xcfe2ff },
-        { icon: 'pop_koi', bg: 0xc4ecec },
-      ],
-    },
-    {
-      id: 'us', chapter: 'ch6', name: '미국', dropMs: 500, goal: 38, mission: { type: 1, count: 8, name: '도토리대장' },
+      id: 'us', chapter: 'ch6', name: '미국', dropMs: 580, goal: 36, mission: { type: 1, count: 8, name: '도토리대장' },
       types: [
         { icon: 'item_acorn', bg: 0xf3dcc0 },
         { icon: 'face_dotori', frame: 1, bg: 0xfff3c4 },
@@ -49,7 +41,7 @@ export const POP = {
       ],
     },
     {
-      id: 'ca', chapter: 'ch7', name: '캐나다', dropMs: 380, goal: 42, mission: { type: 3, count: 9, name: '튤립' },
+      id: 'ca', chapter: 'ch7', name: '캐나다', dropMs: 400, goal: 40, mission: { type: 3, count: 9, name: '튤립' },
       types: [
         { icon: 'item_nectar', bg: 0xfff0b8 },
         { icon: 'face_damdam', frame: 1, bg: 0xead8c8 },
@@ -59,3 +51,16 @@ export const POP = {
     },
   ],
 };
+
+// 빠진 판 (다시 넣을 때 POP.stages에 옮기면 된다)
+export const CUT_STAGES = [
+    {
+      id: 'jp', chapter: 'ch5', name: '일본', dropMs: 650, goal: 34, mission: { type: 3, count: 7, name: '잉어' },
+      types: [
+        { icon: 'item_petal', bg: 0xffe3ec },
+        { icon: 'face_sappuni', frame: 1, bg: 0xf3e0c8 },
+        { icon: 'pop_umbrella', bg: 0xcfe2ff },
+        { icon: 'pop_koi', bg: 0xc4ecec },
+      ],
+    },
+];

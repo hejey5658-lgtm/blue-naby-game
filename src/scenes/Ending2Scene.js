@@ -75,7 +75,7 @@ export class Ending2Scene extends Phaser.Scene {
     const found = CHAPTERS.filter((c) => (state.stars?.[c.id] ?? 0) > 0).length; // 2026-11-15~ 틀린그림: 다 찾은 그림 수
     card.add(this.add.text(70, 942, `다 찾은 그림 ${found} / ${CHAPTERS.length}`, { fontFamily: UI.fontTitle, fontSize: '28px', color: '#2b2d5a' }).setOrigin(0, 0.5));
     CHAPTERS.forEach((c, i) => {
-      const x = 120 + i * 160;
+      const x = 360 + (i - (CHAPTERS.length - 1) / 2) * 200; // 단계 수에 맞춰 가운데로
       card.add(this.add.text(x, 996, c.name, { fontFamily: UI.fontTitle, fontSize: '26px', color: '#2b2d5a' }).setOrigin(0.5));
       const sec = state.records[c.id]?.mazeSec;
       card.add(this.add.text(x, 1040, sec != null ? fmt(sec) : '-', { fontFamily: UI.font, fontSize: '24px', color: '#5a5c88' }).setOrigin(0.5));

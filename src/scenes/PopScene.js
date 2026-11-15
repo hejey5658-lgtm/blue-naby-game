@@ -18,7 +18,7 @@ import { SERIES } from '../series.js';
 import { addExitButton } from '../ui/exitButton.js';
 
 // 기념품 퐁퐁 (design-brief 10·12절). scene.start('Pop', { step: 'menu' | 'solo' | 'duo' | 'remote', stage, match })
-// 혼자 하기: 중국 → 일본 → 미국 → 캐나다, 나라마다 목표만큼 퐁 하면 도장 쾅 → 다음 나라(더 빨라짐).
+// 혼자 하기: 중국 → 미국 → 캐나다 (2026-11-15~ 3판), 나라마다 목표만큼 퐁 하면 도장 쾅 → 다음 나라(더 빨라짐).
 // 둘이서 대결: 한 화면 두 판(왼쪽 1P · 오른쪽 2P) 동시에, 많이 퐁 하면 상대 판에 구름 블록. 먼저 꼭대기에 닿으면 진다.
 // 각자 폰 대결(remote): 대결장의 시드로 두 폰에 같은 순서, POP.remoteSec 동안 점수 겨루기 → 대결 화면(Match)으로.
 const STAGES = POP.stages;
@@ -213,7 +213,7 @@ export class PopScene extends Phaser.Scene {
     this.backdrop(POP.cols, POP.rows, cell, ox, oy);
     this.hudBar();
     const top = this.top;
-    this.text(UI.width / 2, 40 + top, `${this.stageIdx + 1}/4 · ${this.stage.name}`, 32).setOrigin(0.5);
+    this.text(UI.width / 2, 40 + top, `${this.stageIdx + 1}/${STAGES.length} · ${this.stage.name}`, 32).setOrigin(0.5);
     this.scoreText = this.text(UI.width - 36, 44 + top, '0', 34).setOrigin(1, 0.5);
     const big = UI.landscape ? 1.35 : 1; // 가로는 화면을 줄여 보므로 작은 글자를 키운다
     this.goalText = this.text(UI.width / 2, 82 + top, '', Math.round(20 * big), '#ffe9a8', UI.font).setOrigin(0.5);

@@ -2,7 +2,7 @@
 // 코드 = "BB2-" + 꼭 필요한 값(단계·모습·아이템·친구·별·퍼즐·설정)을 JSON → base64url + "-" + 확인 문자 4자리.
 // BB2 = 5단계 순서(2026-11-04~). 예전 BB1(7장 순서) 코드도 읽어서 5단계로 바꾼다.
 // 미로 위치는 넣지 않는다(장 처음부터 이어 하기). 비밀 정보가 아니며 어디로도 보내지 않는다.
-import { CHAPTERS, LEGACY_IDS, V5_IDS, legacyStage, v5Stage, stageLabel } from './data/chapters.js';
+import { CHAPTERS, LEGACY_IDS, V5_IDS, V4_IDS, S4_IDS, legacyStage, v5Stage, v4Stage, stageLabel } from './data/chapters.js';
 import { BOSSES } from './data/bosses.js';
 import { ITEMS } from './data/items.js';
 import { PUZZLES } from './data/puzzles.js';
@@ -15,6 +15,8 @@ const FORMS_OF = { 1: ['caterpillar', 'moth', 'butterfly'], 2: ['popoSpring', 'p
 const keysOf = (n) => ({ items: Object.keys(DATA[n].ITEMS), friends: Object.keys(DATA[n].BOSSES), ids: DATA[n].CHAPTERS.map((c) => c.id) });
 const LEGACY_PREFIX = 'BB1-';
 const V5_PREFIX = 'BB2-'; // 5단계(한국 포함) 코드 — 4단계로 바꿔 읽는다 (2026-11-13)
+// 4단계 코드(1탄 BB3·2탄 PP1, 2026-11-13~11-15) — 3단계로 바꿔 읽는다 (2026-11-15 일본·여름 뺌)
+const V4_PREFIX = { 1: 'BB3-', 2: 'PP1-' };
 void ITEMS; void BOSSES;
 
 const bits = (keys, have) => keys.reduce((n, k, i) => (have.includes(k) ? n | (1 << i) : n), 0);
@@ -42,13 +44,16 @@ export function readSaveCode(raw) {
     let data = unpack(META[1].saveCode, raw);
     let legacy = false;
     if (!data) { data = unpack(META[2].saveCode, raw); series = 2; }
+    let v4 = false;
+    if (!data) { data = unpack(V4_PREFIX[1], raw); v4 = !!data; series = 1; }
+    if (!data) { data = unpack(V4_PREFIX[2], raw); v4 = !!data; series = 2; }
     let v5 = false;
     if (!data) { data = unpack(V5_PREFIX, raw); v5 = !!data; series = 1; }
     if (!data) { data = unpack(LEGACY_PREFIX, raw); legacy = true; series = 1; }
     const K = keysOf(series);
     if (!Array.isArray(data)) return null;
     let [chapter, form, items, friends, stars, puzzles, settings, cleared] = data;
-    const ids = legacy ? LEGACY_IDS : v5 ? V5_IDS : K.ids;
+    const ids = legacy ? LEGACY_IDS : v5 ? V5_IDS : v4 ? (series === 2 ? S4_IDS : V4_IDS) : K.ids;
     if (!Number.isInteger(chapter) || chapter < 1 || chapter > ids.length) return null;
     void stageLabel;
     let starMap = Object.fromEntries(ids.map((id, i) => [id, Number(String(stars)[i] ?? 0)]).filter(([, v]) => v > 0));
@@ -64,6 +69,8 @@ export function readSaveCode(raw) {
       chapter = v5Stage(chapter);
       if (form === 0 && (Object.keys(starMap).length || chapter > 1)) form = 1;
     }
+    // 4단계 → 3단계 (2번째 단계가 빠짐)
+    if (legacy || v5 || v4) chapter = v4Stage(chapter);
     return {
       chapter,
       form: FORMS_OF[series][form] ?? FORMS_OF[series][0],

@@ -12,7 +12,7 @@ import { createMatch, sendInvite } from '../social/match.js';
 // [같이 하기] (design-brief 19절, 2026-11-15 바뀜): 한 화면, 모두 작은 징검다리 돌로 고른다.
 //  몇 명이서? (혼자·2명 — 3명은 2026-11-15 뺌)
 //  무엇을? 돌 두 개 [미로 여행]·[기념품 퐁퐁] (혼자는 퐁퐁만 — 미로 돌 흐림)
-//  어디서? 징검다리 두 줄: 1탄 길(중국 → 일본 → 미국 → 캐나다)·2탄 길(봄 → 여름 → 가을 → 겨울), 돌 사이 조약돌
+//  어디서? 징검다리 두 줄: 1탄 길(중국 → 미국 → 캐나다)·2탄 길(봄 → 가을 → 겨울) (2026-11-15~ 3단계), 돌 사이 조약돌
 //  어떻게? (2명 = 한 폰으로·각자 폰) → [시작하기] / [대결장 보내기]
 // 예전의 첫 화면(큰 돌·미로/퐁퐁 그림을 톡 → 다음 화면)과 네모 연못 칸은 2026-11-15 뺌.
 // 고른 것은 scene.restart 로 다시 그린다 (data = { players, game, pick: 'n:i', how }).
@@ -103,9 +103,9 @@ export class TogetherScene extends Phaser.Scene {
       const y = ly + top;
       const items = list.filter((s) => s.n === n);
       this.add.text(qx(B.x0) + 34, y, `${n}탄`, { fontFamily: UI.fontTitle, fontSize: '26px', color: '#ffffff', backgroundColor: n === 1 ? '#2f7bff' : '#e0557a', padding: { x: 10, y: 6 } }).setOrigin(0.5);
-      const x1 = qx(B.x0) + 132, step = 146;
+      const x1 = qx(B.x0) + 132, step = 438 / Math.max(1, items.length - 1); // 돌 수(3개)에 맞춰 줄 끝까지
       const pos = items.map((_, i) => [x1 + i * step, y + ZIG[i % ZIG.length]]);
-      for (let i = 0; i + 1 < pos.length; i++) this.pebbles(pos[i], pos[i + 1], 2);
+      for (let i = 0; i + 1 < pos.length; i++) this.pebbles(pos[i], pos[i + 1], step > 180 ? 3 : 2);
       items.forEach((s, i) => this.stone(pos[i][0], pos[i][1], 124, s.name, {
         on: s.n === this.pick.n && s.i === this.pick.i, open: s.open, color: PICKED[n], k: i + n * 4,
         hero: n === 1 ? 'home_bluenabi' : 'home_popo',

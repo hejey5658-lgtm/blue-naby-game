@@ -12,7 +12,7 @@ import { createMatch, sendInvite } from '../social/match.js';
 // [같이 하기] (design-brief 19절, 2026-11-15 바뀜): 두 화면.
 //  ① 징검다리 (view 'stones'): 몇 명? (혼자·2명 — 3명은 2026-11-15 뺌) + 물 위 징검다리 돌 두 개
 //     [미로 여행 돌]·[기념품 퐁퐁 돌]을 톡 → 바로 그 놀이의 고르기 화면으로. 혼자는 퐁퐁 돌만.
-//  ② 고르기 (view 'setup', 왼쪽 위 [◀ 뒤로] = 징검다리로): 어디서? (1탄 나라·2탄 계절, 열린 곳) → 어떻게? (2명 = 한 폰으로·각자 폰) → [시작하기] / [대결장 보내기].
+//  ② 고르기 (view 'setup', 왼쪽 위 [◀ 뒤로] = 징검다리로): 어디서? (징검다리 두 줄: 1탄 나라·2탄 계절 돌, 열린 곳) → 어떻게? (2명 = 한 폰으로·각자 폰) → [시작하기] / [대결장 보내기].
 // 고른 것은 scene.restart 로 다시 그린다 (data = { view, players, game, pick: 'n:i', how }).
 // (옛 3명 대결장 링크 D2-…는 match.js 가 그대로 읽는다 — 같이 하기에서 새로 만들지만 않음)
 const CREAM = 0xf3e3c3, INK = 0x2b2d5a;
@@ -61,9 +61,9 @@ export class TogetherScene extends Phaser.Scene {
     this.add.rectangle(-2000, -2000, 4720, 5280, CREAM).setOrigin(0);
     this.top = getSafeInsets(this.game).top;
     if (this.view === 'setup') this.makeSetup(); else this.makeStones();
-    // 아래: 대결함 하나 (가로는 왼쪽 칸 아래). [홈으로] 칸은 2026-11-15 뺌 — 왼쪽 위 [◀ 홈]·[◀ 뒤로]로
-    const L = UI.landscape;
-    const bx = L ? 260 : UI.width / 2, yb = L ? 650 : 1188;
+    // 아래: 대결함 하나 (가로는 징검다리 화면 왼쪽 칸 아래 · 고르기 화면 오른쪽 칸 아래). [홈으로] 칸은 2026-11-15 뺌 — 왼쪽 위 [◀ 홈]·[◀ 뒤로]로
+    const L = UI.landscape, setupL = L && this.view === 'setup';
+    const bx = setupL ? 1080 : L ? 260 : UI.width / 2, yb = setupL ? 600 : L ? 650 : 1188;
     new Button(this, bx, yb, { ...SUB, label: '대결함', onPress: () => this.scene.start('Match', { step: 'box' }) });
     if (L) {
       const v = this.landscapeView();
@@ -119,7 +119,7 @@ export class TogetherScene extends Phaser.Scene {
   }
 
   // 물: 둥근 연못 + 물결 줄 + 연잎 (Graphics만 — 캔버스에서도 같게)
-  drawWater(W) {
+  drawWater(W, deco = true) {
     const g = this.add.graphics();
     g.fillStyle(0x7fc8a0, 1).fillRoundedRect(W.x - 14, W.y - 14, W.w + 28, W.h + 28, 54); // 둑 (풀빛)
     g.fillStyle(0x9fdcf2, 1).fillRoundedRect(W.x, W.y, W.w, W.h, 44);
@@ -133,6 +133,7 @@ export class TogetherScene extends Phaser.Scene {
       g.beginPath(); g.arc(x - 12, y, 12, Math.PI, 0, false); g.strokePath();
       g.beginPath(); g.arc(x + 12, y, 12, Math.PI, 0, false); g.strokePath();
     }
+    if (!deco) return;
     // 연잎 (작은 틈이 있는 초록 동그라미)
     const pads = [[0.88, 0.45, 30], [0.08, 0.78, 26], [0.62, 0.08, 22]];
     for (const [fx, fy, r] of pads) {
@@ -197,32 +198,39 @@ export class TogetherScene extends Phaser.Scene {
     this.title(UI.width / 2 + (L ? 360 : 0), L ? 60 : 100, GAME_NAME[this.game_], 60);
     this.add.text(UI.width / 2 + (L ? 360 : 0), (L ? 118 : 160) + top, this.players === 1 ? '혼자 하기' : '2명이서', { fontFamily: UI.font, fontSize: '26px', color: '#5a5c88' }).setOrigin(0.5);
 
-    // 어디서? (1탄 파랑 · 2탄 분홍, 열린 곳만) — 가로는 왼쪽 칸
-    const y3 = L ? 230 : 230;
-    q(60, y3, '어디서?');
+    // 어디서? = 징검다리 두 줄 (2026-11-15~): 1탄 길(중국 → 일본 → 미국 → 캐나다)·2탄 길(봄 → 여름 → 가을 → 겨울),
+    // 돌 사이를 작은 조약돌이 이어 준다. 열린 돌만 톡 (고른 돌은 탄 색 + 블루나비/포포가 올라섬) — 가로는 왼쪽 칸
+    const y3 = L ? 124 : 204;
+    q(60, y3, '어디서? 돌을 톡!');
     const list = stagesFor(this.game_, this.players);
-    const per = 3, cw = 196, ch = 70;
-    list.forEach((s, k) => {
-      const x = UI.width / 2 + ((k % per) - 1) * (cw + 14), y = y3 + 60 + Math.floor(k / per) * (ch + 14) + top;
-      const on = s.n === this.pick.n && s.i === this.pick.i;
-      const c = this.add.container(x, y);
-      const g = this.add.graphics();
-      const base = s.n === 1 ? 0xd8e8ff : 0xffdbe5, act = s.n === 1 ? 0x2f7bff : 0xff7fa3;
-      g.fillStyle(on ? act : base, s.open ? 1 : 0.45).fillRoundedRect(-cw / 2, -ch / 2, cw, ch, 24);
-      g.lineStyle(on ? 5 : 3, INK, s.open ? (on ? 1 : 0.35) : 0.15).strokeRoundedRect(-cw / 2, -ch / 2, cw, ch, 24);
-      const label = `${s.n}탄 ${s.name}`;
-      c.add([g, this.add.text(0, 0, label, { fontFamily: UI.fontTitle, fontSize: label.length > 6 ? '26px' : '28px', color: on ? '#ffffff' : '#2b2d5a' }).setOrigin(0.5).setAlpha(s.open ? 1 : 0.4)]);
-      c.setSize(cw, ch + 10).setInteractive({ useHandCursor: true }).on('pointerup', () => {
-        if (!s.open) { this.say(this.game_ === 'pop' ? '혼자 하기는 앞 나라를 깨면 열려요' : '이야기를 더 진행하면 열려요'); return; }
-        this.redraw({ pick: `${s.n}:${s.i}` });
-      });
-    });
-    const rows = Math.ceil(list.length / per);
-    const yAfter3 = y3 + 60 + (rows - 1) * (ch + 14) + ch / 2;
+    const P = L ? { x: 40, y: 165 + top, w: 640, h: 430 } : { x: 40, y: 250 + top, w: 640, h: 440 };
+    this.drawWater(P, false);
+    const lanes = [1, 2].map((n, k) => ({ n, y: P.y + (k === 0 ? 150 : 350) - (L ? 0 : 0) }));
+    const ZIG = [0, -20, 8, -14];
+    for (const lane of lanes) {
+      const items = list.filter((s) => s.n === lane.n);
+      const pos = items.map((_, i) => [P.x + (P.w * (i + 0.5)) / items.length, lane.y + ZIG[i % ZIG.length]]);
+      // 탄 이름표 (길 왼쪽 위)
+      const tagCol = lane.n === 1 ? '#2f7bff' : '#e0557a';
+      this.add.text(P.x + 24, lane.y - 118, lane.n === 1 ? '1탄 세계여행' : '2탄 사계절 서울', { fontFamily: UI.fontTitle, fontSize: '24px', color: '#ffffff', backgroundColor: tagCol, padding: { x: 14, y: 5 } }).setOrigin(0, 0.5);
+      // 돌 사이 조약돌 (돌을 하나하나 이어 주는 작은 돌 두 개씩)
+      const pg = this.add.graphics();
+      for (let i = 0; i + 1 < pos.length; i++) {
+        const [ax, ay] = pos[i], [bx, by] = pos[i + 1];
+        for (const t of [0.36, 0.64]) {
+          const x = ax + (bx - ax) * t, y = ay + (by - ay) * t + 6;
+          pg.fillStyle(0x000000, 0.12).fillEllipse(x, y + 4, 30, 12);
+          pg.fillStyle(0xcfc8b4, 1).fillEllipse(x, y, 26, 14);
+          pg.lineStyle(2, INK, 0.35).strokeEllipse(x, y, 26, 14);
+        }
+      }
+      items.forEach((s, i) => this.stageStone(pos[i][0], pos[i][1], s));
+    }
+    const yAfter3 = P.y - top + P.h;
 
     // 어떻게? (2명만) — 가로는 오른쪽 칸
     const R = L ? { dx: 720, dy: 0 } : { dx: 0, dy: 0 };
-    const y4 = L ? 230 : yAfter3 + 50;
+    const y4 = L ? 230 : yAfter3 + 52;
     if (this.players > 1) {
       q(60 + R.dx, y4, '어떻게?');
       this.chips(y4 + 64, [['local', '한 폰으로'], ['remote', '각자 폰']], this.how, (v) => this.redraw({ how: v }), () => false, R);
@@ -237,6 +245,41 @@ export class TogetherScene extends Phaser.Scene {
     const label = this.how === 'remote' ? '대결장 보내기' : '시작하기';
     this.startBtn = new Button(this, UI.width / 2 + R.dx, yStart, { label, onPress: () => this.start() });
     this.toastText = this.add.text(UI.width / 2 + R.dx, yStart - 92, '', { fontFamily: UI.font, fontSize: '24px', color: '#c0563a' }).setOrigin(0.5);
+  }
+
+  // 나라·계절 돌 하나: 고른 돌 = 탄 색(1탄 파랑·2탄 분홍) + 블루나비/포포가 올라섬, 안 열린 돌 = 흐리게
+  stageStone(x, y, s) {
+    const on = s.n === this.pick.n && s.i === this.pick.i;
+    const c = this.add.container(x, y).setDepth(on ? 3 : 2);
+    const g = this.add.graphics();
+    const w = 136, h = 78;
+    g.lineStyle(3, 0xffffff, 0.55).strokeEllipse(0, 16, w + 34, h - 14);
+    g.fillStyle(0x000000, 0.14).fillEllipse(0, 18, w, h - 18);
+    g.fillStyle(on ? (s.n === 1 ? 0x1f5fd6 : 0xd65a80) : 0x8a8474, 1).fillEllipse(0, 10, w, h);
+    g.fillStyle(on ? (s.n === 1 ? 0x2f7bff : 0xff7fa3) : 0xddd6c2, 1).fillEllipse(0, 2, w - 8, h - 10);
+    g.fillStyle(0xffffff, on ? 0.3 : 0.4).fillEllipse(-30, -16, 44, 12);
+    g.lineStyle(on ? 5 : 3, INK, on ? 1 : 0.7).strokeEllipse(0, 2, w - 8, h - 10);
+    const label = this.add.text(0, 3, s.name, { fontFamily: UI.fontTitle, fontSize: s.name.length > 2 ? '26px' : '30px', color: on ? '#ffffff' : '#2b2d5a' }).setOrigin(0.5);
+    c.add([g, label]);
+    if (on) {
+      const key = s.n === 1 ? 'home_bluenabi' : 'home_popo';
+      if (this.textures.exists(key)) {
+        const hero = this.add.image(0, -52, key).setDisplaySize(70, 70);
+        c.add(hero);
+        if (!platform.reducedMotion) this.tweens.add({ targets: hero, y: -60, duration: 480, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+      }
+    }
+    if (!s.open) c.setAlpha(0.42);
+    c.setSize(w + 10, h + 20).setInteractive({ useHandCursor: true });
+    c.on('pointerdown', () => { if (s.open && !on) c.setScale(0.94); });
+    c.on('pointerout', () => c.setScale(1));
+    c.on('pointerup', () => {
+      c.setScale(1);
+      if (!s.open) { this.say(this.game_ === 'pop' ? '혼자 하기는 앞 나라를 깨면 열려요' : '이야기를 더 진행하면 열려요'); return; }
+      if (on) return;
+      this.redraw({ pick: `${s.n}:${s.i}` });
+    });
+    return c;
   }
 
   // 고르기 칩 줄: items = [[값, 글]], dim(v) = 고를 수 없음

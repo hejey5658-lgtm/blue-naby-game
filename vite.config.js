@@ -36,7 +36,7 @@ export default defineConfig(({ mode }) => mode === 'single' ? single : {
         id: '/',
         name: '블루나비와 포포의 여행',
         short_name: '블루나비와 포포의 여행',
-        description: '1탄 세계여행 · 2탄 서울여행 — 블루나비와 포포의 그림 속 다른 곳 5개를 톡! 귀여운 틀린그림 찾기와 기념품 퐁퐁',
+        description: '1탄 세계여행 · 2탄 서울여행 — 블루나비와 포포의 그림 속 다른 곳을 톡! 귀여운 틀린그림 찾기와 기념품 퐁퐁',
         lang: 'ko',
         start_url: '/',
         scope: '/',

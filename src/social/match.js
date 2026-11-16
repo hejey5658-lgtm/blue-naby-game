@@ -157,7 +157,7 @@ export async function sendInvite(m) {
   m.host = nickname();
   keep(m);
   const who = m.players === 3 ? '3명이서 ' : '';
-  await share('블루나비 대결장', `${nickname()}의 대결장! 블루나비와 포포의 여행 「${placeName(m)} ${playName(m)}」 ${who}각자 폰으로 겨뤄 보자 🦋 ${m.game === 'maze' ? '다른 곳 5개를 누가 더 빨리 찾을까?' : '2분 동안 누가 더 많이 퐁 할까?'}`, linkFor(m, false),
+  await share('블루나비 대결장', `${nickname()}의 대결장! 블루나비와 포포의 여행 「${placeName(m)} ${playName(m)}」 ${who}각자 폰으로 겨뤄 보자 🦋 ${m.game === 'maze' ? '다른 곳을 누가 더 빨리 다 찾을까?' : '2분 동안 누가 더 많이 퐁 할까?'}`, linkFor(m, false),
     m.players === 3 ? '이 링크를 단톡방에 올려 주세요. 두 친구가 열면 같은 판으로 대결이 시작돼요.' : '이 링크를 친구에게 보내 주세요. 친구가 열면 같은 판으로 대결이 시작돼요.');
 }
 

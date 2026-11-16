@@ -40,7 +40,7 @@ export function askNickname({ force = false } = {}) {
   });
 }
 
-// ── 너무 짧은 기록 거르기 (2026-11-15~ 틀린그림): 다른 곳 5개를 3초보다 빨리 찾거나 제한 시간을 넘긴 기록은 표시하지 않는다 ──
+// ── 너무 짧은 기록 거르기 (2026-11-15~ 틀린그림): 다른 곳을 3초보다 빨리 찾거나 제한 시간을 넘긴 기록은 표시하지 않는다 ──
 export const believable = (id, sec) => sec >= 3 && sec <= SPOT.timeSec;
 
 // ── 도전 코드: [닉네임, 장별 미로 시간(초, 없으면 0), 장별 별] ──
@@ -109,7 +109,7 @@ export async function sendChallenge() {
     return;
   }
   const url = makeChallengeLink();
-  const text = `${SERIES.meta.title} — ${nickname()}의 도전장! 그림 속 다른 곳 5개, 나보다 빨리 찾을 수 있어? 🦋`;
+  const text = `${SERIES.meta.title} — ${nickname()}의 도전장! 그림 속 다른 곳, 나보다 빨리 다 찾을 수 있어? 🦋`;
   try {
     if (platform.can.share) { await navigator.share({ title: '블루나비 도전장', text, url }); return; }
   } catch (e) { if (e?.name === 'AbortError') return; }

@@ -2,7 +2,9 @@
 // 그림 한 쌍 = 같은 풍경 두 장(위 원래 그림 · 아래 다른 곳이 숨은 그림). 판마다 diffs 후보 중 find 개를 골라 쓴다.
 // 소품 { k, x, y, s, n, c, w, h, img, d } — 좌표는 그림 칸(W×H) 기준, (x, y) = 밑동(하늘에 뜬 것은 가운데). 그리기는 src/spot/props.js
 // 다른 곳 { t: 'hide' 없어짐 | 'color' 색 바뀜(c) | 'size' 크기 바뀜(s) | 'flip' 좌우 뒤집힘 | 'add' 하나 더 생김(p), i = 소품 번호 }
+// findByStage = 단계(1·2·3)마다 찾을 다른 곳 수 (2026-11-16 사용자 지시 "2번째는 7개, 세 번째는 9개", 1탄·2탄 같음)
 export const SPOT = {
+  findByStage: [5, 7, 9],
   W: 680, H: 470,      // 그림 칸 크기 (화면에 맞춰 줄여 보인다)
   timeSec: 90,         // 제한 시간
   find: 5,             // 찾을 곳 수 (후보 중에서 고름)
@@ -112,6 +114,8 @@ export const PICTURES = {
       { t: 'hide', i: 4 },
       { t: 'flip', i: 11 },
       { t: 'hide', i: 5 },
+      { t: 'color', i: 12, c: YELLOW },
+      { t: 'size', i: 7, s: 0.78 },
     ],
   },
   // ── 1탄 4단계 · 캐나다: 눈 봉우리 · 침엽수 숲 · 단풍나무 · 오두막 · 카누 · 튤립 ──
@@ -145,6 +149,10 @@ export const PICTURES = {
       { t: 'hide', i: 14 },
       { t: 'flip', i: 11 },
       { t: 'hide', i: 5 },
+      { t: 'color', i: 0, c: ORANGE },
+      { t: 'hide', i: 3 },
+      { t: 'size', i: 13, s: 0.75 },
+      { t: 'add', p: { k: 'bird', x: 120, y: 92, s: 0.85, c: SKY } },
     ],
   },
   // ── 2탄 봄 · 한강 벚꽃길: 벚나무 · 연 · 오리 연못 · 튤립 · 포포 ──
@@ -241,6 +249,8 @@ export const PICTURES = {
       { t: 'hide', i: 13 },
       { t: 'add', p: { k: 'leaf', x: 150, y: 456, c: YELLOW } },
       { t: 'flip', i: 0 },
+      { t: 'hide', i: 4 },
+      { t: 'color', i: 3, c: GREEN },
     ],
   },
   // ── 2탄 겨울 · 광화문 눈 광장: 눈 덮인 소나무 · 눈사람 · 기와집 · 얼음 연못 · 붕어빵 ──
@@ -274,6 +284,10 @@ export const PICTURES = {
       { t: 'color', i: 3, c: YELLOW },
       { t: 'add', p: { k: 'snowflake', x: 250, y: 168, c: 0x9fbfe0 } },
       { t: 'hide', i: 5 },
+      { t: 'hide', i: 0 },
+      { t: 'size', i: 9, s: 0.78 },
+      { t: 'add', p: { k: 'balloon', x: 110, y: 200, s: 0.9, c: YELLOW } },
+      { t: 'add', p: { k: 'bird', x: 440, y: 150, s: 0.8, c: SKY } },
     ],
   },
 };

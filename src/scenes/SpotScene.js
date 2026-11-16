@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { UI } from '../data/ui.js';
-import { CHAPTERS, stageLabel } from '../data/chapters.js';
+import { CHAPTERS, stageLabel, stageNo } from '../data/chapters.js';
 import { SPOT, PICTURES } from '../data/spot.js';
 import { LOOK } from '../data/mazeLooks.js';
 import { drawBackdrop, THEMES } from '../pop/popNature.js';
@@ -20,7 +20,7 @@ import { afterChapter, startChapter } from '../flow.js';
 
 // 틀린그림 찾기 (20절, 2026-11-15 — 미로 대신). 씬 이름은 예전 미로와 같은 'Maze'라서
 // 홈 이어하기·단계 흐름(flow.js)·나가기 창(PauseScene)·둘이서(DuoScene)·각자 폰 대결(MatchScene)이 그대로 이어진다.
-// 위 = 원래 그림, 아래 = 다른 곳 5개가 숨은 그림 (가로 화면은 왼쪽·오른쪽). 위·아래 어느 쪽을 톡 해도 된다.
+// 위 = 원래 그림, 아래 = 다른 곳(1단계 5개 · 2단계 7개 · 3단계 9개)이 숨은 그림 (가로 화면은 왼쪽·오른쪽). 위·아래 어느 쪽을 톡 해도 된다.
 // scene.start('Maze', { chapter, fresh, duo?: { names, turn, results, remote?, seed? }, resume?: { seed, elapsed, found } })
 const INK = 0x2b2d5a;
 const fmtTime = (sec) => `${Math.floor(sec / 60)}:${String(Math.floor(sec % 60)).padStart(2, '0')}`;
@@ -47,6 +47,7 @@ export class SpotScene extends Phaser.Scene {
     this.found = new Set(r?.found ?? []);
     // 씬은 다시 쓰이므로 지난 판의 표시를 지운다
     Object.assign(this, { finished: false, resultShown: false, lockUntil: 0, hurry: false, lastTick: -1, startWait: this.duo && !r ? 1300 : 0 });
+    this.need = SPOT.findByStage?.[stageNo(this.chapter.id) - 1] ?? SPOT.find; // 단계마다 5·7·9개
     this.pickDiffs();
   }
 
@@ -63,7 +64,7 @@ export class SpotScene extends Phaser.Scene {
       if (d.i != null && used.has(d.i)) continue;
       if (d.i != null) used.add(d.i);
       this.diffs.push(d);
-      if (this.diffs.length === SPOT.find) break;
+      if (this.diffs.length === this.need) break;
     }
     // 맞히는 자리 (크기가 바뀌면 둘 중 큰 쪽)
     this.hits = this.diffs.map((d) => {
@@ -179,13 +180,13 @@ export class SpotScene extends Phaser.Scene {
     this.add.text(cx, 34 + top, stageLabel(this.chapter), { fontFamily: UI.fontTitle, fontSize: '34px', color: '#ffffff' }).setOrigin(0.5).setDepth(6);
     const dn = this.duo?.names[this.duo.turn - 1];
     const best = state.records[this.chapter.id]?.mazeSec;
-    const sub = this.remote ? '각자 폰 대결' : this.duo ? (dn === `${this.duo.turn}P` ? `${dn} 차례` : `${this.duo.turn}P ${dn} 차례`) : best != null ? `다른 곳 ${SPOT.find}개 · 최고 ${fmtTime(best)}` : `다른 곳 ${SPOT.find}개를 톡!`;
+    const sub = this.remote ? '각자 폰 대결' : this.duo ? (dn === `${this.duo.turn}P` ? `${dn} 차례` : `${this.duo.turn}P ${dn} 차례`) : best != null ? `다른 곳 ${this.need}개 · 최고 ${fmtTime(best)}` : `다른 곳 ${this.need}개를 톡!`;
     this.add.text(cx, 68 + top, sub, { fontFamily: UI.font, fontSize: '23px', color: '#fff6e6' }).setOrigin(0.5).setDepth(6);
     this.timeText = this.add.text(W - 40, 40 + top, '', { fontFamily: UI.fontTitle, fontSize: '40px', color: '#ffffff' }).setOrigin(1, 0.5).setDepth(6);
     // 찾은 곳 동그라미
     const dy = L ? 66 + top : 110 + top;
-    const dx0 = L ? W - 40 - (SPOT.find - 1) * 36 - 24 : W / 2 - ((SPOT.find - 1) * 44) / 2;
-    this.dots = Array.from({ length: SPOT.find }, (_, k) => this.add.circle(dx0 + k * (L ? 36 : 44), dy + (L ? 10 : 0), L ? 12 : 15, 0xffffff, 0.35).setStrokeStyle(3, 0xffffff, 0.9).setDepth(6));
+    const dx0 = L ? W - 40 - (this.need - 1) * 36 - 24 : W / 2 - ((this.need - 1) * 44) / 2;
+    this.dots = Array.from({ length: this.need }, (_, k) => this.add.circle(dx0 + k * (L ? 36 : 44), dy + (L ? 10 : 0), L ? 12 : 15, 0xffffff, 0.35).setStrokeStyle(3, 0xffffff, 0.9).setDepth(6));
     // 남은 시간 막대
     const by = L ? 92 + top : 138 + top;
     const bx = L ? W / 2 - 300 : 40, bw = L ? 520 : W - 80;

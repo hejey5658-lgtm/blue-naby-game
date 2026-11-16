@@ -19,8 +19,15 @@ h1 b{font-weight:normal;color:#9fd0ff}h1 i{font-style:normal;color:#ffb6c8}
 .hero-chars{position:absolute;right:10mm;top:5mm;display:flex;align-items:flex-end;gap:1mm}
 .hero-chars img{height:30mm}
 /* 큰 그림 */
-.hero{margin:7mm 12mm 0;border:1.2mm solid var(--ink);border-radius:5mm;overflow:hidden;box-shadow:0 1.6mm 0 var(--ink)}
-.hero img{display:block;width:100%;height:72mm;object-fit:cover;object-position:center 58%}
+/* 2026-11-16: 큰 그림 = 캐나다 틀린그림(41:23, canada-41x23.png)을 자르지 않고 + 오른쪽 설명 칸 */
+.hero{margin:7mm 12mm 0;display:flex;gap:5mm;align-items:stretch}
+.hero .pic{flex:none;width:128.3mm;height:72mm;border:1.2mm solid var(--ink);border-radius:5mm;overflow:hidden;box-shadow:0 1.6mm 0 var(--ink)}
+.hero .pic img{display:block;width:100%;height:100%;object-fit:cover}
+.hero .cap{flex:1;background:var(--paper);border:0.8mm solid var(--ink);border-radius:5mm;padding:5mm 4.5mm;display:flex;flex-direction:column;justify-content:center;gap:2.6mm}
+.hero .cap .k{align-self:flex-start;font-family:Jua;font-size:10.5pt;color:#fff;background:var(--blue);padding:.8mm 3mm 1.2mm;border-radius:99px}
+.hero .cap .t{font-family:Jua;font-size:15pt;line-height:1.25}
+.hero .cap .d{font-size:10.5pt;line-height:1.55}
+.hero .cap .d b{color:var(--pink)}
 /* 한줄 소개 */
 .intro{margin:6.5mm 12mm 0;background:#fff;border:0.8mm solid var(--ink);border-radius:5mm;padding:5mm 6mm 5.5mm;position:relative}
 .intro .tag{position:absolute;top:-3.6mm;left:6mm;font-family:Jua;font-size:11pt;background:var(--ink);color:var(--cream);padding:.8mm 3.5mm 1.2mm;border-radius:99px}
@@ -57,7 +64,10 @@ h1 b{font-weight:normal;color:#9fd0ff}h1 i{font-style:normal;color:#ffb6c8}
   <div class="hero-chars"><img src="../../../art/thumbnail/blue_butterfly.png" alt=""><img src="../../../art/thumbnail/blue_popoSpring.png" alt=""></div>
 </div>
 
-<div class="hero"><img src="../../../public/og-image-v14.png" alt="게임 첫 화면"></div>
+<div class="hero">
+  <div class="pic"><img src="canada-41x23.png" alt="1탄 캐나다 틀린그림 화면"></div>
+  <div class="cap"><span class="k">1탄 3단계 · 캐나다</span><div class="t">두 그림에서<br>다른 곳을 톡!</div><div class="d">단풍 숲과 튤립 꽃밭 그림 속 <b>다른 곳 9개</b>를 90초 안에 찾아요. 찾으면 두 그림에 동그라미!</div></div>
+</div>
 
 <div class="intro"><span class="tag">한줄소개</span>
   <p><b>[블루나비와 포포의 여행]</b> 폰에서 바로 하는 귀여운 여행 퍼즐 게임이에요. 파란 나비 <b class="bn">블루나비</b>는 세계를, 강아지 <b class="pp">포포</b>는 서울을 여행하며 두 그림 속 다른 곳을 찾아요.</p>

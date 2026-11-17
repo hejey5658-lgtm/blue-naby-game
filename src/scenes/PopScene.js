@@ -15,6 +15,7 @@ import { makeProp } from '../spot/props.js';
 import { matchById, saveMyResult, seededRandom } from '../social/match.js';
 import { SERIES } from '../series.js';
 import { addExitButton } from '../ui/exitButton.js';
+import { setMusicTempo } from '../ui/music.js';
 
 // 퐁퐁 (design-brief 21절, 2026-11-17~ — 예전 '기념품 퐁퐁'의 떨어지는 묶음 놀이를 바꿈)
 // 아래 귀여운 조이스틱을 끌어 겨누고 손을 떼면 기념품 공이 퐁 날아간다. 내려오는 기념품 무리 중 같은 그림에 맞으면
@@ -44,6 +45,8 @@ export class PopScene extends Phaser.Scene {
     this.ended = false;
     this.running = false;
     this.elapsed = 0;
+    this.hurry = false; // 남은 10초: 배경음을 조금 빠르게
+    setMusicTempo(1);
     this.penalty = 0;
     this.clusters = [];
     this.ball = null;
@@ -464,6 +467,7 @@ export class PopScene extends Phaser.Scene {
       this.timeText.setText(fmt(Math.ceil(left)));
       this.bar.width = Math.max(0, this.barW * (left / PONG.timeSec));
       this.bar.setFillStyle(left <= 10 ? 0xff7f6e : 0x8ee07a);
+      if (left <= 10 && !this.hurry) { this.hurry = true; setMusicTempo(1.15); }
       if (left <= 0) { this.timeUp(); return; }
     }
     this.moveClusters(dt, time);
@@ -621,6 +625,7 @@ export class PopScene extends Phaser.Scene {
   complete() {
     if (this.ended) return;
     this.ended = true;
+    setMusicTempo(1);
     this.running = false;
     const sec = Math.round((this.elapsed + this.penalty) * 10) / 10;
     if (this.step === 'duo') { this.finishDuo(sec, 0, true); return; }
@@ -649,6 +654,7 @@ export class PopScene extends Phaser.Scene {
   timeUp() {
     if (this.ended) return;
     this.ended = true;
+    setMusicTempo(1);
     this.running = false;
     const missing = this.pieces - this.filled;
     if (this.step === 'duo') { this.finishDuo(PONG.timeSec + missing * PONG.missPieceSec, missing, false); return; }

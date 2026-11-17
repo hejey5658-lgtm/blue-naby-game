@@ -70,9 +70,36 @@ export const SONGS = {
   ending2: { bpm: 88, lead: 'sine', bass: 'sine', level: 0.85, drums: 'k..hk..h',
     melody: bars('B4 - - - D5 - - -', 'C5 - B4 - A4 - - -', 'G4 - A4 - B4 - D5 -', 'E5 - - - D5 - - -', 'C5 - - - E5 - - -', 'D5 - C5 - B4 - - -', 'A4 - B4 - C5 - A4 -', 'G4 - - - - - - -'),
     bassline: bars('G2 - - - D3 - - -', 'A2 - - - D3 - - -', 'E2 - - - B2 - - -', 'C3 - - - D3 - - -') },
+  // ── 퐁퐁 (2026-11-17 사용자 요청 "퐁퐁게임에 배경음악 어울리게"): 판(나라·계절)마다 다른 곡 `pong_<판 id>`.
+  //    공을 톡톡 쏘는 놀이라 짧게 끊어 튀는 음 + 쉼, 미로 곡과 같은 나라 느낌(음계)으로. 판이 갈수록 조금씩 빠르게.
+  //    남은 10초에는 PopScene이 빠르기를 1.15배로 올린다 (music.js setMusicTempo).
+  // 1판 중국: 대나무 숲 다섯 음, 콩콩
+  pong_cn: { bpm: 132, lead: 'triangle', bass: 'triangle', level: 0.75, drums: 'khshkhsh',
+    melody: bars('A5 . B5 . D6 . B5 A5', 'F#5 . A5 . E5 - - .', 'D5 . E5 . F#5 A5 B5 .', 'A5 - - . . . . .', 'B5 . D6 . E6 . D6 B5', 'A5 . F#5 . A5 - - .', 'E5 F#5 A5 . B5 A5 F#5 E5', 'D5 - - . . . . .'),
+    bassline: bars('D3 . A2 . D3 . A2 .', 'B2 . F#2 . B2 . F#2 .', 'G2 . D3 . G2 . D3 .', 'A2 . E3 . A2 . C#3 .') },
+  // 2판 미국: 공원에서 통통 튀는 공
+  pong_us: { bpm: 144, lead: 'square', bass: 'triangle', level: 0.55, drums: 'xhshxhsh',
+    melody: bars('C6 . G5 . A5 . G5 E5', 'F5 . E5 . D5 - - .', 'E5 . G5 . C6 . D6 .', 'E6 - D6 . C6 - - .', 'A5 . C6 . A5 . G5 E5', 'G5 . E5 . C5 - - .', 'D5 E5 G5 . A5 G5 E5 D5', 'C5 - - . . . . .'),
+    bassline: bars('C3 . G2 C3 . . G2 .', 'F2 . C3 F2 . . C3 .', 'A2 . E3 A2 . . E3 .', 'G2 . D3 G2 . . B2 .') },
+  // 3판 캐나다: 단풍 숲, 신나게 톡톡
+  pong_ca: { bpm: 152, lead: 'triangle', bass: 'triangle', level: 0.75, drums: 'xhshkhsh',
+    melody: bars('F5 . A5 . C6 . A5 .', 'Bb5 . A5 . G5 - - .', 'G5 . Bb5 . D6 . C6 A5', 'A5 - - . . . . .', 'D6 . C6 . A5 . F5 .', 'G5 . A5 . C6 - - .', 'Bb5 A5 G5 . F5 G5 A5 .', 'F5 - - . . . . .'),
+    bassline: bars('F2 . C3 . F2 . C3 .', 'Bb2 . F3 . Bb2 . F3 .', 'G2 . D3 . C3 . G3 .', 'F2 . C3 . C3 . E3 .') },
+  // 1판 봄: 벚꽃잎처럼 살랑 콩콩
+  pong_sp: { bpm: 136, lead: 'triangle', bass: 'triangle', level: 0.75, drums: 'khshkhsh',
+    melody: bars('F#5 . A5 . D6 . A5 .', 'B5 . A5 . F#5 - - .', 'G5 . B5 . D6 . C#6 B5', 'A5 - - . . . . .', 'D6 . C#6 . B5 . A5 .', 'B5 . A5 . F#5 - - .', 'G5 A5 B5 . A5 G5 F#5 E5', 'D5 - - . . . . .'),
+    bassline: bars('D3 . A3 . D3 . A3 .', 'B2 . F#3 . B2 . F#3 .', 'G2 . D3 . G2 . D3 .', 'A2 . E3 . A2 . C#3 .') },
+  // 2판 가을: 은행잎 바스락, 통통
+  pong_au: { bpm: 144, lead: 'triangle', bass: 'triangle', level: 0.75, drums: 'khshkhsh',
+    melody: bars('A5 . C6 . E6 . C6 .', 'A5 . C6 . F5 - - .', 'G5 . C6 . E6 . D6 C6', 'B5 - - . . . . .', 'A5 . E5 . A5 . C6 .', 'F5 . A5 . C6 - - .', 'C6 B5 A5 . G5 A5 B5 .', 'A5 - - . . . . .'),
+    bassline: bars('A2 . E3 . A2 . E3 .', 'F2 . C3 . F2 . C3 .', 'C3 . G3 . C3 . G3 .', 'E2 . B2 . E2 . G#2 .') },
+  // 3판 겨울: 눈 광장 방울 소리, 딸랑딸랑
+  pong_wi: { bpm: 150, lead: 'sine', bass: 'sine', level: 0.85, drums: 'khshkhsh',
+    melody: bars('C6 . A5 . F6 . C6 .', 'D6 . C6 . A5 - - .', 'Bb5 . D6 . F6 . E6 D6', 'C6 - - . . . . .', 'A5 . C6 . F6 . E6 .', 'D6 . C6 . A5 - - .', 'G5 . Bb5 . A5 . G5 .', 'F5 - - . . . . .'),
+    bassline: bars('F2 . C3 . F2 . C3 .', 'D3 . A2 . D3 . A2 .', 'Bb2 . F2 . Bb2 . F2 .', 'C3 . G2 . C3 . E2 .') },
 };
 
-// 어떤 화면에서 어떤 곡을: 미로는 그 단계 곡(속 id), 2탄 대결·엔딩·타이틀은 2탄 곡
+// 어떤 화면에서 어떤 곡을: 미로는 그 단계 곡(속 id), 퐁퐁은 그 판 곡(pong_<판 id>, 없으면 pop), 2탄 대결·엔딩·타이틀은 2탄 곡
 export const SCENE_SONG = {
   1: { Entry: 'title', Title: 'title', Pop: 'pop', Ending: 'ending', Map: 'title', Duo: 'title', Match: 'title', Evolution: 'ending' },
   2: { Entry: 'title', Title2: 'title2', Pop: 'pop', Ending2: 'ending2', Duo: 'title2', Match: 'title2', Dress: 'ending2' },

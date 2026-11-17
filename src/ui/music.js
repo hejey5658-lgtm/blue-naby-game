@@ -139,6 +139,12 @@ export function wantMusic(key) { wanted = key; playMusic(key); }
 export function refreshMusic() { if (state.settings.sound) { const k = wanted; cur = null; if (k) playMusic(k); } else stopMusic(); }
 export const nowPlaying = () => cur?.key ?? null;
 
+// 지금 곡 빠르기를 원래의 mult배로 (퐁퐁 남은 10초 = 1.15배, 1 = 원래대로). 박자는 끊기지 않고 다음 칸부터 바뀐다.
+export function setMusicTempo(mult = 1) {
+  if (!cur) return;
+  cur.stepDur = 60 / (cur.song.bpm * mult) / 2;
+}
+
 // 해설 음성을 읽는 동안 배경음을 잠깐 작게 (on = 작게, off = 원래대로)
 export function duckMusic(on) {
   const ctx = audioContext();

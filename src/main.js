@@ -26,7 +26,8 @@ import { readMatchFromUrl } from './social/match.js';
 import { suspendAudio, unlockAudio } from './ui/feedback.js';
 import { wantMusic, refreshMusic, nowPlaying } from './ui/music.js';
 import { unlockSpeech } from './ui/narrator.js';
-import { SCENE_SONG } from './data/music.js';
+import { SCENE_SONG, SONGS } from './data/music.js';
+import { POP } from './data/popgame.js';
 
 // 마지막에 하던 탄(1탄 블루나비 / 2탄 포포)의 데이터로
 initSeries();
@@ -64,6 +65,8 @@ game.events.once('ready', () => {
     const sc = game.scene.getScene(key);
     sc?.events.on('create', () => {
       if (key === 'Maze') { if (sc.chapter) wantMusic(sc.chapter.id); return; }
+      // 퐁퐁: 그 판(나라·계절) 곡. 그림을 받는 동안(stage 없음)에는 판 번호로 찾는다
+      if (key === 'Pop') { const id = sc.stage?.id ?? POP.stages[sc.stageIdx ?? 0]?.id; wantMusic(SONGS[`pong_${id}`] ? `pong_${id}` : 'pop'); return; }
       const song = SCENE_SONG[SERIES.n][key] ?? SCENE_SONG[1][key];
       if (song) wantMusic(song);
     });

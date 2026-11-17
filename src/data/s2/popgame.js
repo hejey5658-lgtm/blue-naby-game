@@ -6,7 +6,7 @@ export const STAGES = [
   { id: 'au', chapter: 's3', name: '가을', dropMs: 580, goal: 36, mission: { type: 3, count: 8, name: '감' },
     types: [{ icon: 'item_ginkgo', bg: 0xfff0b8 }, { icon: 'face_bamtol', frame: 1, bg: 0xf3e0c8 }, { icon: 'pop_roastnut', bg: 0xead8c8 }, { icon: 'pop_persimmon', bg: 0xffd8b8 }] },
   { id: 'wi', chapter: 's4', name: '겨울', dropMs: 400, goal: 40, mission: { type: 2, count: 9, name: '붕어빵' },
-    types: [{ icon: 'item_snowflake', bg: 0xdcecff }, { icon: 'face_gomsil', frame: 1, bg: 0xf0dcc8 }, { icon: 'pop_bungeo', bg: 0xffe3b8 }, { icon: 'pop_mitten', bg: 0xffd8e0 }] },
+    types: [{ icon: 'item_snowflake', bg: 0xdcecff }, { icon: 'face_gomsil', frame: 1, bg: 0xf0dcc8 }, { icon: 'pop_bungeo', bg: 0xffe3b8 }, { icon: 'pop_mitten', bg: 0xffd8e0 }, { icon: 'face_mungchi', frame: 1, bg: 0xe3f0ff }] }, // 2026-11-17 새 퐁퐁 3판은 5가지
 ];
 
 // 빠진 판

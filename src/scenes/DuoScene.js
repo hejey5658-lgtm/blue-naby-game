@@ -11,6 +11,8 @@ import { sfx, vibrate, unlockAudio } from '../ui/feedback.js';
 import { getSafeInsets } from '../ui/safeArea.js';
 import { nickname, askNickname } from '../social/social.js';
 import { createMatch, sendInvite } from '../social/match.js';
+import { POP } from '../data/popgame.js';
+import { SERIES } from '../series.js';
 
 // 둘이서 하기 (design-brief 9-2·12): [한 폰으로] 1P·2P가 같은 미로를 번갈아 하고, 더 빨리 나온 사람이 이긴다.
 // [각자 폰으로] 대결장 링크를 보내고 각자 폰에서 같은 미로 → 결과 링크를 주고받는다 (MatchScene).
@@ -28,6 +30,9 @@ export class DuoScene extends Phaser.Scene {
     this.mode = data.mode ?? 'local';
     this.names = data.names ?? ['1P', '2P'];
     this.chapterId = data.chapter ?? opened()[0].id;
+    // 2026-11-17~ 퐁퐁도 한 폰 번갈아 (game 'pop', stage = 판 번호)
+    this.game_ = data.game === 'pop' ? 'pop' : 'maze';
+    this.stage = Math.max(0, Math.min(POP.stages.length - 1, data.stage ?? 0));
     this.turn = data.turn ?? 1;
     this.results = data.results ?? [];
     this.seed = data.step === 'turn' && this.turn === 2 ? data.seed : null; // 틀린그림: 2P도 1P와 같은 다른 곳
@@ -157,7 +162,7 @@ export class DuoScene extends Phaser.Scene {
     this.add.text(UI.width / 2, 430, `${this.turn}P`, { fontFamily: UI.fontTitle, fontSize: '64px', color: '#2b2d5a' }).setOrigin(0.5);
     this.add.text(UI.width / 2, 570, `${name} 차례!`, { fontFamily: UI.fontTitle, fontSize: '56px', color: '#2b2d5a' }).setOrigin(0.5);
     this.add.text(UI.width / 2, 650, this.turn === 1 ? `폰을 ${name}에게 주세요` : `폰을 ${name}에게 넘겨 주세요`, { fontFamily: UI.font, fontSize: '30px', color: '#5a5c88' }).setOrigin(0.5);
-    this.add.text(UI.width / 2, 720, label(ch), { fontFamily: UI.fontTitle, fontSize: '30px', color: '#2f7bff' }).setOrigin(0.5);
+    this.add.text(UI.width / 2, 720, this.game_ === 'pop' ? `퐁퐁 ${this.stage + 1}/${POP.stages.length} · ${POP.stages[this.stage].name}` : label(ch), { fontFamily: UI.fontTitle, fontSize: '30px', color: '#2f7bff' }).setOrigin(0.5);
     if (this.turn === 2 && this.results[0]) {
       this.add.text(UI.width / 2, 790, `${this.names[0]} 기록 ${fmt(this.results[0].sec)}`, { fontFamily: UI.font, fontSize: '26px', color: '#2b2d5a' }).setOrigin(0.5);
     }
@@ -167,7 +172,9 @@ export class DuoScene extends Phaser.Scene {
       label: '준비됐어요!',
       onPress: () => {
         unlockAudio();
-        this.scene.start('Maze', { chapter: this.chapterId, fresh: true, intro: false, duo: { names: this.names, turn: this.turn, results: this.results, ...(this.seed != null ? { seed: this.seed } : {}) } });
+        const duo = { names: this.names, turn: this.turn, results: this.results, ...(this.seed != null ? { seed: this.seed } : {}) };
+        if (this.game_ === 'pop') this.scene.start('Pop', { step: 'duo', stage: this.stage, duo });
+        else this.scene.start('Maze', { chapter: this.chapterId, fresh: true, intro: false, duo });
       },
     });
     this.input.keyboard?.on('keydown-ENTER', () => this.readyBtn.trigger());
@@ -179,7 +186,8 @@ export class DuoScene extends Phaser.Scene {
     const [a, b] = this.results;
     const win = a.sec === b.sec ? 0 : a.sec < b.sec ? 1 : 2;
     this.title(win ? `${this.names[win - 1]} 승리!` : '둘 다 멋졌어!', 170);
-    this.add.text(UI.width / 2, 250 + this.top, win ? `${fmt(Math.abs(a.sec - b.sec))} 차이로 먼저 다 찾았어요` : '똑같은 시간이에요!', { fontFamily: UI.font, fontSize: '28px', color: '#5a5c88' }).setOrigin(0.5);
+    const pop = this.game_ === 'pop';
+    this.add.text(UI.width / 2, 250 + this.top, win ? `${fmt(Math.abs(a.sec - b.sec))} 차이로 먼저 ${pop ? '그림을 완성했어요' : '다 찾았어요'}` : '똑같은 시간이에요!', { fontFamily: UI.font, fontSize: '28px', color: '#5a5c88' }).setOrigin(0.5);
     [a, b].forEach((r, i) => {
       const y = 400 + this.top + i * 190;
       const g = this.add.graphics();
@@ -192,20 +200,21 @@ export class DuoScene extends Phaser.Scene {
       }
       if (this.names[i] !== `${i + 1}P`) this.add.text(186, y + 30, `${i + 1}P`, { fontFamily: UI.fontTitle, fontSize: '30px', color: '#2b2d5a' }).setOrigin(0.5);
       this.add.text(270, y - 22, this.names[i], { fontFamily: UI.fontTitle, fontSize: '40px', color: '#2b2d5a' }).setOrigin(0, 0.5);
-      this.add.text(270, y + 26, r.rolls ? `못 찾은 곳 ${r.rolls}개` : '다 찾았어요!', { fontFamily: UI.font, fontSize: '24px', color: '#2b2d5a' }).setOrigin(0, 0.5);
+      this.add.text(270, y + 26, r.rolls ? (pop ? `못 채운 조각 ${r.rolls}개` : `못 찾은 곳 ${r.rolls}개`) : (pop ? '그림 완성!' : '다 찾았어요!'), { fontFamily: UI.font, fontSize: '24px', color: '#2b2d5a' }).setOrigin(0, 0.5);
       this.add.text(600, y, fmt(r.sec), { fontFamily: UI.fontTitle, fontSize: '56px', color: '#2b2d5a' }).setOrigin(1, 0.5);
     });
     sfx(win ? 'win' : 'respawn');
     vibrate('special');
 
-    const list = opened();
-    const idx = list.findIndex((c) => c.id === this.chapterId);
+    const list = pop ? POP.stages.map((s, i) => ({ id: i, name: s.name })) : opened();
+    const idx = pop ? this.stage : list.findIndex((c) => c.id === this.chapterId);
     const next = list[idx + 1];
-    const again = () => this.scene.start('Duo', { step: 'turn', names: this.names, chapter: this.chapterId, turn: 1, results: [] });
+    const go = (id) => this.scene.start('Duo', pop ? { step: 'turn', game: 'pop', stage: id, names: this.names, turn: 1, results: [] } : { step: 'turn', names: this.names, chapter: id, turn: 1, results: [] });
+    const again = () => go(pop ? this.stage : this.chapterId);
     let y = 860;
     const m0 = mark(this);
     if (next) {
-      this.nextBtn = new Button(this, UI.width / 2, y, { label: `다음 나라로 · ${next.name}`, fontSize: 32, onPress: () => this.scene.start('Duo', { step: 'turn', names: this.names, chapter: next.id, turn: 1, results: [] }) });
+      this.nextBtn = new Button(this, UI.width / 2, y, { label: `다음 ${SERIES.n === 2 ? '계절' : '나라'}로 · ${next.name}`, fontSize: 32, onPress: () => go(next.id) });
       y += 150;
     }
     this.againBtn = new Button(this, UI.width / 2, y, { width: 400, height: 104, fontSize: 32, label: '다시 겨루기', color: 0xffb347, shade: 0xd98a2b, textColor: '#2b2d5a', onPress: again });

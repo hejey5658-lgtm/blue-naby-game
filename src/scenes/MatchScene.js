@@ -10,6 +10,7 @@ import { state } from '../state.js';
 import { POP } from '../data/popgame.js';
 import { SERIES, useSeries } from '../series.js';
 import { nickname } from '../social/social.js';
+import { openBox } from '../ui/htmlBox.js';
 import { matchById, createMatch, sendInvite, sendResult, stageName, amHost, opponentName, scoreText, verdict, ranking, allDone, GAME_NAME } from '../social/match.js';
 
 // 각자 폰 대결 화면 (design-brief 12절, 3명 19절). scene.start('Match', { id }) = 대결 카드, { step: 'box' } = 대결함.
@@ -77,7 +78,7 @@ export class MatchScene extends Phaser.Scene {
       this.add.text(nx, y - 22, r.name, { fontFamily: UI.fontTitle, fontSize: '34px', color: '#2b2d5a' }).setOrigin(0, 0.5);
       let main = r.me ? '아직 안 했어요' : '결과를 기다리는 중', sub = '';
       if (r.rec && hidden) { main = '기록 도착!'; sub = '내가 끝내면 보여요'; }
-      else if (r.rec) { main = scoreText(m, r.rec); sub = m.game === 'maze' ? (r.rec.rolls ? `못 찾은 곳 ${r.rec.rolls}개` : '다 찾음') : `퐁 ${r.rec.rolls}개`; }
+      else if (r.rec) { main = scoreText(m, r.rec); sub = m.game === 'maze' ? (r.rec.rolls ? `못 찾은 곳 ${r.rec.rolls}개` : '다 찾음') : m.game === 'pong' ? (r.rec.rolls ? `못 채운 조각 ${r.rec.rolls}개` : '그림 완성') : `퐁 ${r.rec.rolls}개`; }
       this.add.text(nx, y + 24, sub, { fontFamily: UI.font, fontSize: '22px', color: '#2b2d5a' }).setOrigin(0, 0.5);
       this.add.text(604, y, main, { fontFamily: UI.fontTitle, fontSize: r.rec && !hidden ? '50px' : '28px', color: '#2b2d5a' }).setOrigin(1, 0.5);
     });
@@ -119,8 +120,17 @@ export class MatchScene extends Phaser.Scene {
     if ((m.series === 2 ? 2 : 1) !== SERIES.n) useSeries(m.series === 2 ? 2 : 1);
     if (m.game === 'maze') {
       this.scene.start('Maze', { chapter: m.stage, fresh: true, intro: false, duo: { remote: m.id, names: [nickname()], turn: 1, results: [] } });
-    } else {
+    } else if (m.game === 'pong') {
       this.scene.start('Pop', { step: 'remote', match: m.id });
+    } else {
+      // 예전 퐁퐁(점수) 대결장: 놀이가 바뀌어서 같은 판으로 새 퐁퐁 대결장을 만들어 보낸다 (2026-11-17)
+      openBox({
+        title: '예전 퐁퐁 대결이에요', text: '퐁퐁이 새 놀이로 바뀌었어요. 같은 판으로 새 퐁퐁 대결장을 만들어 친구에게 보낼까요?', field: 'none',
+        buttons: [
+          { label: '새 대결장 보내기', onClick: async (b) => { b.close(); const n = createMatch('pong', m.stage, 2); await sendInvite(n); this.scene.start('Match', { id: n.id }); } },
+          { label: '닫기', sub: true, onClick: (b) => b.close() },
+        ],
+      });
     }
   }
 

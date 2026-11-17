@@ -13,7 +13,9 @@ import { nickname, askNickname, baseUrl, fmt } from './social.js';
 const PREFIX = 'D2-';      // [종류, id, 놀이, 판, 시드, 보낸 사람, 보낸 기기, 인원] (+ 결과: 닉네임, 기기, 기록, 퐁)
 const OLD_PREFIX = 'D1-';  // 2명만 (인원 칸 없음)
 const MAX = 5;
-export const GAME_NAME = { maze: '틀린그림', pop: '기념품 퐁퐁' };
+// pong = 2026-11-17~ 새 퐁퐁(그림 완성 시간으로 겨룸), pop = 예전 퐁퐁(점수) 대결장 — 받은 링크만 읽는다
+export const GAME_NAME = { maze: '틀린그림', pong: '퐁퐁', pop: '예전 퐁퐁' };
+const timed = (m) => m.game === 'maze' || m.game === 'pong';
 
 // 이 기기를 알아보는 무작위 글자 (내 링크를 내가 열었을 때 상대 기록으로 착각하지 않게). 개인정보 아님.
 function deviceId() {
@@ -43,10 +45,10 @@ export const opponentName = (m) => (m.others?.length ? m.others.map((o) => o.nic
 // 모두 끝났나 (나 + 친구 인원-1명)
 export const allDone = (m) => !!m.mine && (m.others?.length ?? 0) >= m.players - 1;
 // 기록 글자: 미로 = 시간, 퐁퐁 = 점수
-export const scoreText = (m, r) => (m.game === 'maze' ? fmt(r.score) : `${r.score}점`);
+export const scoreText = (m, r) => (timed(m) ? fmt(r.score) : `${r.score}점`);
 
 // 두 기록 비교: 음수면 a가 앞 (미로 = 빠를수록·퐁 적을수록, 퐁퐁 = 점수 높을수록)
-const better = (m, a, b) => (m.game === 'maze' ? (a.score - b.score) || (a.rolls - b.rolls) : b.score - a.score);
+const better = (m, a, b) => (timed(m) ? (a.score - b.score) || (a.rolls - b.rolls) : b.score - a.score);
 
 // 등수표: [{ nick, score, rolls, me, rank }] (같은 기록은 같은 등수). 내 기록 + 받은 친구 기록
 export function ranking(m) {
@@ -107,7 +109,7 @@ export function readMatch(raw) {
   const game = String(rawGame).replace(/2$/, '');
   if (typeof id !== 'string' || !GAME_NAME[game] || !Number.isInteger(seed)) return null;
   if (game === 'maze' && !DATA[series].CHAPTERS.some((c) => c.id === stage)) return null;
-  if (game === 'pop' && !(Number.isInteger(stage) && DATA[series].STAGES[stage])) return null;
+  if ((game === 'pop' || game === 'pong') && !(Number.isInteger(stage) && DATA[series].STAGES[stage])) return null;
   const m = matchById(id) ?? norm({ id, game, stage, seed, series, players: players === 3 ? 3 : 2, host: String(host || '친구').slice(0, 8), hostDev: String(hostDev || ''), mine: null, others: [], at: Date.now() });
   if (kind === 'r' && dev !== deviceId() && Number.isFinite(score)) {
     const rec = { dev: String(dev || ''), nick: String(nick || '친구').slice(0, 8), score: Math.round(score), rolls: Number(rolls) || 0 };
@@ -148,8 +150,8 @@ async function share(title, text, url, help) {
   });
 }
 
-// 링크 설명 글의 놀이 이름: 틀린그림 찾기 · 기념품 퐁퐁
-const playName = (m) => (m.game === 'maze' ? '틀린그림 찾기' : GAME_NAME[m.game]);
+// 링크 설명 글의 놀이 이름: 틀린그림 찾기 · 퐁퐁
+const playName = (m) => (m.game === 'maze' ? '틀린그림 찾기' : '퐁퐁');
 const placeName = (m) => stageName(m).replace(/^\d+단계 · /, ''); // "2단계 · 미국" → "미국"
 
 export async function sendInvite(m) {
@@ -157,7 +159,7 @@ export async function sendInvite(m) {
   m.host = nickname();
   keep(m);
   const who = m.players === 3 ? '3명이서 ' : '';
-  await share('블루나비 대결장', `${nickname()}의 대결장! 블루나비와 포포의 여행 「${placeName(m)} ${playName(m)}」 ${who}각자 폰으로 겨뤄 보자 🦋 ${m.game === 'maze' ? '다른 곳을 누가 더 빨리 다 찾을까?' : '2분 동안 누가 더 많이 퐁 할까?'}`, linkFor(m, false),
+  await share('블루나비 대결장', `${nickname()}의 대결장! 블루나비와 포포의 여행 「${placeName(m)} ${playName(m)}」 ${who}각자 폰으로 겨뤄 보자 🦋 ${m.game === 'maze' ? '다른 곳을 누가 더 빨리 다 찾을까?' : '그림을 누가 더 빨리 완성할까?'}`, linkFor(m, false),
     m.players === 3 ? '이 링크를 단톡방에 올려 주세요. 두 친구가 열면 같은 판으로 대결이 시작돼요.' : '이 링크를 친구에게 보내 주세요. 친구가 열면 같은 판으로 대결이 시작돼요.');
 }
 

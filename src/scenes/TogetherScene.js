@@ -11,7 +11,7 @@ import { createMatch, sendInvite } from '../social/match.js';
 
 // [같이 하기] (design-brief 19절, 2026-11-15 바뀜): 한 화면, 모두 작은 징검다리 돌로 고른다.
 //  몇 명이서? (혼자·2명 — 3명은 2026-11-15 뺌)
-//  무엇을? 돌 두 개 [미로 여행]·[기념품 퐁퐁] (혼자는 퐁퐁만 — 미로 돌 흐림)
+//  무엇을? 돌 두 개 [틀린그림]·[퐁퐁] (혼자는 퐁퐁만 — 미로 돌 흐림)
 //  어디서? 징검다리 두 줄: 1탄 길(중국 → 미국 → 캐나다)·2탄 길(봄 → 가을 → 겨울) (2026-11-15~ 3단계), 돌 사이 조약돌
 //  어떻게? (2명 = 한 폰으로·각자 폰) → [시작하기] / [대결장 보내기]
 // 예전의 첫 화면(큰 돌·미로/퐁퐁 그림을 톡 → 다음 화면)과 네모 연못 칸은 2026-11-15 뺌.
@@ -86,7 +86,7 @@ export class TogetherScene extends Phaser.Scene {
     q(A.x0, A.q2, '무엇을? 돌을 톡!');
     const gp = [[A.x0 - 150, A.games + top], [A.x0 + 150, A.games + top - 10]];
     this.pebbles(gp[0], gp[1], 3);
-    [['maze', '틀린그림'], ['pop', '기념품 퐁퐁']].forEach(([g, name], k) => {
+    [['maze', '틀린그림'], ['pop', '퐁퐁']].forEach(([g, name], k) => {
       const off = this.players === 1 && g === 'maze';
       this.stone(gp[k][0], gp[k][1], 236, name, {
         on: this.game_ === g, open: !off, color: PICKED.game, k,
@@ -121,7 +121,7 @@ export class TogetherScene extends Phaser.Scene {
       this.chips(B.q4 + 62, [['local', '한 폰으로'], ['remote', '각자 폰']], this.how, (v) => this.redraw({ how: v }), { dx: B.x0 - UI.width / 2 });
       const help = this.how === 'remote'
         ? '대결장 링크를 친구에게 보내 각자 폰으로 겨뤄요'
-        : this.game_ === 'maze' ? '한 폰으로 번갈아 같은 그림, 더 빨리 다 찾은 사람이 이겨요' : '한 화면을 반씩 나눠 동시에 겨뤄요';
+        : this.game_ === 'maze' ? '한 폰으로 번갈아 같은 그림, 더 빨리 다 찾은 사람이 이겨요' : '한 폰으로 번갈아, 그림을 더 빨리 완성한 사람이 이겨요';
       this.add.text(B.x0, B.q4 + 122 + top, help, { fontFamily: UI.font, fontSize: '24px', color: '#5a5c88', align: 'center' }).setOrigin(0.5);
       yEnd = B.q4 + 122;
     }
@@ -224,13 +224,14 @@ export class TogetherScene extends Phaser.Scene {
     const s = this.pick;
     useSeries(s.n);
     if (this.how === 'remote') {
-      const m = createMatch(this.game_, s.id, 2);
+      const m = createMatch(this.game_ === 'pop' ? 'pong' : this.game_, s.id, 2);
       await sendInvite(m);
       this.scene.start('Match', { id: m.id });
       return;
     }
     if (this.game_ === 'pop') {
-      this.scene.start('Pop', { step: this.players === 1 ? 'solo' : 'duo', stage: s.i });
+      if (this.players === 1) this.scene.start('Pop', { step: 'solo', stage: s.i });
+      else this.scene.start('Duo', { step: 'turn', game: 'pop', stage: s.i, names: ['1P', '2P'], turn: 1, results: [] });
       return;
     }
     this.scene.start('Duo', { step: 'turn', names: ['1P', '2P'], chapter: s.id, turn: 1, results: [] });

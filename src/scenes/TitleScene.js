@@ -168,7 +168,7 @@ export class TitleScene extends Phaser.Scene {
     this.togetherBtn = mkBtn({
       label: '같이 하기', color: C.orange, shade: 0xd98a2b, textColor: '#2b2d5a',
       onPress: () => { if (this.leaving) return; sfx('tap'); unlockAudio(); this.scene.start('Together'); },
-    }, '혼자 · 2명 · 틀린그림 / 기념품 퐁퐁');
+    }, '혼자 · 2명 · 틀린그림 / 퐁퐁');
 
     // 설정 (오른쪽 위)
     this.gear = this.add.container(UI.width - 64, 64);

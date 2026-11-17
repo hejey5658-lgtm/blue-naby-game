@@ -1,0 +1,40 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+@font-face{font-family:Jua;src:url(../../public/fonts/Jua-subset.woff2)}
+@font-face{font-family:Gowun;src:url(../../public/fonts/GowunDodum-subset.woff2)}
+*{margin:0;box-sizing:border-box}
+body{width:390px;height:844px;overflow:hidden;font-family:Gowun;color:#2b2d5a;background:linear-gradient(#cfe8ff 0,#e8f6ff 55%,#cfe8b8 55%,#b9dca0 100%);position:relative}
+.hud{position:absolute;left:8px;right:8px;top:8px;height:54px;background:#7aa6d8;border-radius:16px;display:flex;align-items:center;padding:0 10px;color:#fff;font-family:Jua}
+.hud .p{width:34px;height:34px;border-radius:50%;background:#fffaf0;color:#2b2d5a;display:flex;align-items:center;justify-content:center;font-size:15px}
+.hud .t{flex:1;text-align:center;font-size:17px}.hud .tm{font-size:20px}
+.pic{position:absolute;left:14px;top:72px;width:230px;height:172px;border:3px solid #2b2d5a;border-radius:10px;overflow:hidden;background:#fffaf0;display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(3,1fr)}
+.pic div{border:1px dashed #c9bfa8;display:flex;align-items:center;justify-content:center;font-family:Jua;color:#c9bfa8;font-size:18px}
+.pic div.on{border:0;background-size:230px 172px}
+.side{position:absolute;left:254px;right:12px;top:80px;font-family:Jua}
+.side .k{font-size:13px;color:#5a5c88}.side .n{font-size:26px}.bar{height:10px;border-radius:5px;background:#fff;margin:6px 0 12px;overflow:hidden}.bar i{display:block;height:100%;width:72%;background:#6cc35a}
+.b{position:absolute;width:58px;height:58px;border-radius:50%;background:rgba(255,255,255,.55);border:2px solid rgba(255,255,255,.95);display:flex;align-items:center;justify-content:center;font-size:30px;box-shadow:inset -6px -6px 0 rgba(126,200,255,.25)}
+.guide{position:absolute;left:0;top:0}
+.ball{position:absolute;left:166px;top:640px;width:58px;height:58px;border-radius:50%;background:#fffaf0;border:3px solid #2b2d5a;display:flex;align-items:center;justify-content:center;font-size:30px}
+.next{position:absolute;left:250px;top:652px;width:40px;height:40px;border-radius:50%;background:#fffaf0;border:2px solid #2b2d5a;display:flex;align-items:center;justify-content:center;font-size:20px;opacity:.9}
+.next+span{position:absolute;left:296px;top:662px;font-family:Jua;font-size:13px}
+.joy{position:absolute;left:125px;top:712px;width:140px;height:120px}
+.base{position:absolute;left:10px;top:4px;width:120px;height:110px;border-radius:50%;background:#fffaf0;border:4px solid #2b2d5a;box-shadow:0 5px 0 #2b2d5a}
+.knob{position:absolute;left:30px;top:12px;width:64px;height:64px;border-radius:50%;background:#7ec8ff;border:4px solid #2b2d5a;display:flex;align-items:center;justify-content:center;font-size:24px}
+.pop{position:absolute;font-family:Jua;color:#ff7fa3;font-size:22px}
+.fly{position:absolute;left:150px;top:240px;width:44px;height:34px;border:3px solid #ffd84a;border-radius:6px;background:#ffe9a8}
+.lab{position:absolute;left:10px;bottom:6px;font-family:Jua;font-size:11px;color:#2b2d5a;opacity:.7}
+</style></head><body>
+<div class="hud"><div class="p">‖</div><div class="t">퐁퐁 1/3 · 중국</div><div class="tm">1:12</div></div>
+<div class="pic" id="pic"></div>
+<div class="side"><div class="k">완성할 그림</div><div class="n">조각 5/12</div><div class="bar"><i></i></div><div class="k" style="line-height:1.5">같은 기념품을<br>맞히면 한 칸!</div></div>
+<div class="b" style="left:40px;top:300px">🐼</div><div class="b" style="left:150px;top:330px">🏮</div><div class="b" style="left:270px;top:290px">🥟</div>
+<div class="b" style="left:85px;top:420px">🏮</div><div class="b" style="left:225px;top:450px">🐼</div>
+<div class="pop" style="left:220px;top:418px">퐁!</div><div class="fly"></div>
+<svg class="guide" width="390" height="844"><path d="M195 640 L330 520 L250 450" fill="none" stroke="#2b2d5a" stroke-width="4" stroke-dasharray="2 12" stroke-linecap="round" opacity=".6"/></svg>
+<div class="ball">🐼</div><div class="next">🏮</div><span>다음</span>
+<div class="joy"><div class="base"></div><div class="knob" style="transform:translate(22px,-2px)">◕‿◕</div></div>
+<div class="lab">시안 · 그림은 실제 게임 그림체로</div>
+<script>
+const pic=document.getElementById('pic');const on=[0,2,5,7,10];
+for(let i=0;i<12;i++){const d=document.createElement('div');if(on.includes(i)){d.className='on';const x=i%4,y=Math.floor(i/4);d.style.backgroundImage='linear-gradient(#bfe3ff,#d8f0c8)';d.style.background=['#bfe3ff','#cfe8b8','#ffd9e4','#d8f0c8','#fff0b8'][i%5];d.textContent=['🦋','🎋','🐼','🏯','🌿'][i%5];d.style.color='#2b2d5a'}else d.textContent='?';pic.appendChild(d)}
+</script>
+</body></html>
